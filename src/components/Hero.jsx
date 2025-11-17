@@ -24,21 +24,21 @@ const Hero = () => {
           <div className="flex flex-wrap justify-center gap-8 mt-12">
             <motion.div 
               whileHover={{ scale: 1.05 }}
-              className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg px-6 py-4"
+              className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg px-6 py-4 w-50"
             >
               <Search className="w-6 h-6 text-green-300" />
               <span className="font-medium">Easy Search</span>
             </motion.div>
             <motion.div 
               whileHover={{ scale: 1.05 }}
-              className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg px-6 py-4"
+              className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg px-6 py-4 w-49"
             >
               <MapPin className="w-6 h-6 text-green-300" />
               <span className="font-medium">Location Based</span>
             </motion.div>
             <motion.div 
               whileHover={{ scale: 1.05 }}
-              className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg px-6 py-4"
+              className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg px-6 py-4 w-59.999"
             >
               <Clock className="w-6 h-6 text-green-300" />
               <span className="font-medium">Quick Booking</span>

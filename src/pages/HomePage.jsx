@@ -20,7 +20,7 @@ const HomePage = () => {
             <ClinicGrid />
           </div>
           <div className="lg:col-span-1">
-            <MapSection />
+            <MapSection/>
           </div>
         </div>
       </div>

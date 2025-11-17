@@ -51,10 +51,10 @@ const Footer = () => {
                 <Phone className="w-4 h-4" />
                 <span className="text-sm">(555) 123-HEALTH</span>
               </div>
-              <div className="flex items-center space-x-2 text-gray-400">
+              {/* <div className="flex items-center space-x-2 text-gray-400">
                 <Mail className="w-4 h-4" />
                 <span className="text-sm">support@healthprovida.com</span>
-              </div>
+              </div> */}
               <div className="flex items-center space-x-2 text-gray-400">
                 <MapPin className="w-4 h-4" />
                 <span className="text-sm">Serving Sub-Saharan Africa</span>

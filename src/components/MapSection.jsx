@@ -13,7 +13,7 @@ const MapSection = () => {
       transition={{ duration: 0.6, delay: 0.3 }}
       className="sticky top-24"
     >
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden hide-on-small">
         <div className="p-4 border-b border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Clinic Locations</h3>
           <div className="flex space-x-2">
