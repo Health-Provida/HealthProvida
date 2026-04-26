@@ -27,7 +27,7 @@ import imgPrivateRoom from '../assets/gallery/private_patient_room_1777236673043
 export const commonGallery = [
   {
     id: 'reception',
-    title: 'Reception & Waiting Area',
+    title: 'Reception',
     description: 'Modern, comfortable seating, 24/7 front desk, and a welcoming environment for all patients and visitors.',
     images: [
       imgReception,
@@ -37,7 +37,7 @@ export const commonGallery = [
   },
   {
     id: 'private_room',
-    title: 'Private Patient Room',
+    title: 'Private Room',
     description: 'Premium, private rooms designed for comfort and privacy, featuring en-suite bathrooms and accommodations for a loved one.',
     images: [
       imgPrivateRoom,
@@ -47,7 +47,7 @@ export const commonGallery = [
   },
   {
     id: 'general_ward',
-    title: 'General Patient Ward',
+    title: 'General Ward',
     description: 'Clean, modern, and spacious general wards with privacy curtains and state-of-the-art monitoring systems.',
     images: [
       imgGeneralWard,
@@ -67,7 +67,7 @@ export const commonGallery = [
   },
   {
     id: 'maternity',
-    title: 'Maternity Delivery Room',
+    title: 'Maternity Room',
     description: 'Warm and calming delivery rooms providing comprehensive care for expectant mothers and newborns.',
     images: [
       imgMaternity,
@@ -109,7 +109,7 @@ export const clinicsData = [
       { day: "Tomorrow", slots: ["9:00 AM", "10:00 AM", "2:00 PM", "4:00 PM"] },
       { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "1:00 PM", "3:00 PM"] },
     ],
-    gallery: [imageone, ...commonGallery]
+
   },
   {
     id: 2,
@@ -131,7 +131,7 @@ export const clinicsData = [
       { day: "Tomorrow", slots: ["8:00 AM", "10:30 AM", "1:00 PM", "3:30 PM"] },
       { day: "Wednesday", slots: ["8:00 AM", "10:00 AM", "12:00 PM", "2:00 PM"] },
     ],
-    gallery: [imagetwo, ...commonGallery]
+
   },
   {
     id: 3,

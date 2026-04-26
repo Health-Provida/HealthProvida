@@ -12,7 +12,8 @@ export default function ClinicPage() {
 
   // Flatten commonGallery objects to just array of images for the hero section
   const flattenedCommonImages = commonGallery.flatMap(ward => ward.images);
-  const gallery = clinic?.gallery || [clinic?.image_src, ...flattenedCommonImages];
+  // Ignore clinic.gallery if it exists, because it might contain the old object structure.
+  const gallery = [clinic?.image_src, ...flattenedCommonImages];
 
   // Scroll to top when page loads
   useEffect(() => {
@@ -92,7 +93,8 @@ export default function ClinicPage() {
           </div>
 
           {/* Airbnb-style Photo Grid */}
-          <div className="relative rounded-2xl overflow-hidden h-[300px] md:h-[450px] lg:h-[500px] group">
+          {/* <div className="relative rounded-2xl overflow-hidden h-[300px] md:h-[450px] lg:h-[500px] group"> */}
+          <div className="relative rounded-2xl overflow-hidden h-[350px] md:h-[350px] lg:h-[350px] group">
             <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-full">
               {/* Large left image */}
               <div
