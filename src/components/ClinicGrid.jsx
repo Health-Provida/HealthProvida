@@ -16,6 +16,22 @@ import imageseven from '../components/ui/imageseven.png'
 import imageeight from '../components/ui/imageeight.png'
 import imagenine from '../components/ui/imagenine.png'
 
+import imgGeneralWard from '../assets/gallery/general_patient_ward_1777236735231.png';
+import imgIcuWard from '../assets/gallery/hospital_icu_ward_1777237063443.png';
+import imgMaternity from '../assets/gallery/maternity_delivery_room_1777237046917.png';
+import imgReception from '../assets/gallery/modern_hospital_reception_1777236657236.png';
+import imgOperatingTheater from '../assets/gallery/modern_operating_theater_1777236986447.png';
+import imgPrivateRoom from '../assets/gallery/private_patient_room_1777236673043.png';
+
+export const commonGallery = [
+  imgReception,
+  imgPrivateRoom,
+  imgGeneralWard,
+  imgOperatingTheater,
+  imgMaternity,
+  imgIcuWard
+];
+
 // Clinic data (copied from your original file)
 export const clinicsData = [
   {
@@ -37,7 +53,8 @@ export const clinicsData = [
       { day: "Today", slots: ["2:00 PM", "4:30 PM"] },
       { day: "Tomorrow", slots: ["9:00 AM", "10:00 AM", "2:00 PM", "4:00 PM"] },
       { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "1:00 PM", "3:00 PM"] },
-    ]
+    ],
+    gallery: [imageone, ...commonGallery]
   },
   {
     id: 2,
@@ -58,7 +75,8 @@ export const clinicsData = [
       { day: "Today", slots: ["3:00 PM", "5:00 PM"] },
       { day: "Tomorrow", slots: ["8:00 AM", "10:30 AM", "1:00 PM", "3:30 PM"] },
       { day: "Wednesday", slots: ["8:00 AM", "10:00 AM", "12:00 PM", "2:00 PM"] },
-    ]
+    ],
+    gallery: [imagetwo, ...commonGallery]
   },
   {
     id: 3,

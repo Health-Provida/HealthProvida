@@ -9,6 +9,7 @@ import ServicesPage from '@/pages/ServicesPage';
 import JoinProviderPage from '@/pages/JoinProviderPage';
 import ContactPage from '@/pages/ContactPage';
 import ClinicPage from '@/pages/ClinicPage';
+import ClinicPhotosPage from '@/pages/ClinicPhotosPage';
 import ScrollToTop from '@/components/ScrollToTop';
 
 
@@ -25,6 +26,7 @@ function App() {
           <Route path="/join-provider" element={<JoinProviderPage />} />
           <Route path="/contact" element={<ContactPage/>} />
           <Route path="/clinic/:id" element={<ClinicPage />} />
+          <Route path="/clinic/:id/photos" element={<ClinicPhotosPage />} />
         </Routes>
       </main>
       <Footer />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope } from 'lucide-react';
-import { clinicsData } from '../components/ClinicGrid';
+import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid } from 'lucide-react';
+import { clinicsData, commonGallery } from '../components/ClinicGrid';
 
 export default function ClinicPage() {
   const { id } = useParams();
@@ -9,6 +9,7 @@ export default function ClinicPage() {
   const [selectedSlot, setSelectedSlot] = useState(null);
   
   const clinic = clinicsData.find(c => c.id === parseInt(id));
+  const gallery = clinic?.gallery || [clinic?.image_src, ...commonGallery];
 
   // Scroll to top when page loads
   useEffect(() => {
@@ -46,57 +47,102 @@ export default function ClinicPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <button 
             onClick={() => navigate(-1)}
-            className="flex items-center text-gray-500 hover:text-blue-600 transition mb-6 font-medium"
+            className="flex items-center text-gray-500 hover:text-blue-600 transition mb-4 font-medium"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Search
           </button>
           
-          <div className="flex flex-col md:flex-row gap-8 items-start">
-            <img 
-              src={clinic.image_src}
-              alt={clinic.practitioner_name}
-              className="w-full md:w-1/3 lg:w-1/4 h-64 md:h-auto object-cover rounded-xl shadow-md"
-            />
-            
-            <div className="flex-1">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{clinic.practitioner_name}</h1>
-                  <p className="text-xl text-blue-600 font-medium mb-4">{clinic.practice_type}</p>
-                </div>
-                <button 
-                  onClick={() => alert('Added to favorites!')}
-                  className="p-3 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition"
-                  title="Add to Favorites"
-                >
-                  <Heart className="w-6 h-6" />
-                </button>
-              </div>
+          {/* Clinic Header Info */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{clinic.practitioner_name}</h1>
+              <p className="text-xl text-blue-600 font-medium mb-3">{clinic.practice_type}</p>
               
-              <div className="flex flex-wrap items-center gap-4 md:gap-6 mb-6">
-                <div className="flex items-center bg-yellow-50 px-3 py-1.5 rounded-full">
-                  <Star className="w-5 h-5 text-yellow-500 fill-current mr-1.5" />
-                  <span className="font-bold text-yellow-700">{clinic.rating}</span>
-                  <span className="ml-1 text-yellow-600 text-sm">({clinic.number_of_reviews} reviews)</span>
+              <div className="flex flex-wrap items-center gap-4 text-sm">
+                <div className="flex items-center">
+                  <Star className="w-5 h-5 text-yellow-500 fill-current mr-1" />
+                  <span className="font-bold text-gray-900">{clinic.rating}</span>
+                  <span className="ml-1 text-gray-600 underline cursor-pointer hover:text-gray-900">({clinic.number_of_reviews} reviews)</span>
                 </div>
-                <div className="flex items-center text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
-                  <MapPin className="w-5 h-5 mr-1.5" />
-                  <span className="text-sm font-medium">{clinic.distance_from_location} away</span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 mt-0.5 text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-700">{clinic.address}</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Phone className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                  <a href={`tel:${clinic.phone}`} className="text-blue-600 hover:text-blue-800 font-medium">{clinic.phone}</a>
+                <span className="text-gray-300">•</span>
+                <div className="flex items-center text-gray-600">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  <span className="font-medium underline cursor-pointer hover:text-gray-900">{clinic.address}</span>
                 </div>
               </div>
             </div>
+            
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => alert('Added to favorites!')}
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition font-medium"
+              >
+                <Heart className="w-5 h-5" />
+                <span>Save</span>
+              </button>
+              <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+                <span>Share</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Airbnb-style Photo Grid */}
+          <div className="relative rounded-2xl overflow-hidden h-[300px] md:h-[450px] lg:h-[500px] group">
+            <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-full">
+              {/* Large left image */}
+              <div 
+                className="md:col-span-2 md:row-span-2 h-full relative cursor-pointer overflow-hidden" 
+                onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+              >
+                <img 
+                  src={gallery[0]} 
+                  alt={`${clinic.practitioner_name} main`} 
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
+              </div>
+              
+              {/* 4 small right images (hidden on small screens) */}
+              <div 
+                className="hidden md:block md:col-span-1 md:row-span-1 h-full relative cursor-pointer overflow-hidden" 
+                onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+              >
+                <img src={gallery[1]} alt="Ward 1" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
+              </div>
+              <div 
+                className="hidden md:block md:col-span-1 md:row-span-1 h-full relative cursor-pointer overflow-hidden" 
+                onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+              >
+                <img src={gallery[2]} alt="Ward 2" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
+              </div>
+              <div 
+                className="hidden md:block md:col-span-1 md:row-span-1 h-full relative cursor-pointer overflow-hidden" 
+                onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+              >
+                <img src={gallery[3]} alt="Ward 3" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
+              </div>
+              <div 
+                className="hidden md:block md:col-span-1 md:row-span-1 h-full relative cursor-pointer overflow-hidden" 
+                onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+              >
+                <img src={gallery[4]} alt="Ward 4" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
+              </div>
+            </div>
+            
+            {/* Show all photos button */}
+            <button 
+              onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+              className="absolute bottom-4 right-4 bg-white text-gray-900 font-semibold py-1.5 px-4 rounded-lg border border-gray-900 hover:bg-gray-100 flex items-center gap-2 transition shadow-sm z-10"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              Show all photos
+            </button>
           </div>
         </div>
       </div>
