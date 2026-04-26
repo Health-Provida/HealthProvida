@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Star, MapPin, Phone, Clock, Heart, X, Calendar, Shield, Stethoscope, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // This component wraps around your existing ClinicGrid
 // You'll need to export clinicsData from your ClinicGrid.jsx file
@@ -16,7 +17,7 @@ import imageeight from '../components/ui/imageeight.png'
 import imagenine from '../components/ui/imagenine.png'
 
 // Clinic data (copied from your original file)
-const clinicsData = [
+export const clinicsData = [
   {
     id: 1,
     image_src: imageone,
@@ -477,8 +478,7 @@ function ClinicCard({ clinic, onClick }) {
 }
 
 export default function ClinicCardsApp() {
-  const [selectedClinic, setSelectedClinic] = useState(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('distance');
   const [filteredClinics, setFilteredClinics] = useState(clinicsData);
@@ -531,14 +531,8 @@ export default function ClinicCardsApp() {
     }
   };
 
-  const openDialog = (clinic) => {
-    setSelectedClinic(clinic);
-    setIsDialogOpen(true);
-  };
-
-  const closeDialog = () => {
-    setIsDialogOpen(false);
-    setSelectedClinic(null);
+  const navigateToClinic = (clinicId) => {
+    navigate(`/clinic/${clinicId}`);
   };
 
   return (
@@ -607,7 +601,7 @@ export default function ClinicCardsApp() {
               <ClinicCard 
                 key={clinic.id} 
                 clinic={clinic} 
-                onClick={() => openDialog(clinic)}
+                onClick={() => navigateToClinic(clinic.id)}
               />
             ))
           ) : (
@@ -618,13 +612,6 @@ export default function ClinicCardsApp() {
           )}
         </div>
 
-        {selectedClinic && (
-          <ClinicDialog 
-            clinic={selectedClinic}
-            isOpen={isDialogOpen}
-            onClose={closeDialog}
-          />
-        )}
       </div>
     </div>
   );
