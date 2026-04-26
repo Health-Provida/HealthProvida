@@ -23,13 +23,68 @@ import imgReception from '../assets/gallery/modern_hospital_reception_1777236657
 import imgOperatingTheater from '../assets/gallery/modern_operating_theater_1777236986447.png';
 import imgPrivateRoom from '../assets/gallery/private_patient_room_1777236673043.png';
 
+// To avoid hitting rate limits, using realistic unsplash placeholder images to supplement the generated ones.
 export const commonGallery = [
-  imgReception,
-  imgPrivateRoom,
-  imgGeneralWard,
-  imgOperatingTheater,
-  imgMaternity,
-  imgIcuWard
+  {
+    id: 'reception',
+    title: 'Reception & Waiting Area',
+    description: 'Modern, comfortable seating, 24/7 front desk, and a welcoming environment for all patients and visitors.',
+    images: [
+      imgReception,
+      'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=800'
+    ]
+  },
+  {
+    id: 'private_room',
+    title: 'Private Patient Room',
+    description: 'Premium, private rooms designed for comfort and privacy, featuring en-suite bathrooms and accommodations for a loved one.',
+    images: [
+      imgPrivateRoom,
+      'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1505692952047-1a78307da8f2?auto=format&fit=crop&q=80&w=800'
+    ]
+  },
+  {
+    id: 'general_ward',
+    title: 'General Patient Ward',
+    description: 'Clean, modern, and spacious general wards with privacy curtains and state-of-the-art monitoring systems.',
+    images: [
+      imgGeneralWard,
+      'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1512678080530-7760d81faba6?auto=format&fit=crop&q=80&w=800'
+    ]
+  },
+  {
+    id: 'operating_theater',
+    title: 'Operating Theater',
+    description: 'Highly advanced surgical suites equipped with the latest technology for complex procedures in a sterile environment.',
+    images: [
+      imgOperatingTheater,
+      'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=800'
+    ]
+  },
+  {
+    id: 'maternity',
+    title: 'Maternity Delivery Room',
+    description: 'Warm and calming delivery rooms providing comprehensive care for expectant mothers and newborns.',
+    images: [
+      imgMaternity,
+      'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&q=80&w=800'
+    ]
+  },
+  {
+    id: 'icu',
+    title: 'Intensive Care Unit (ICU)',
+    description: '24/7 dedicated critical care unit with advanced life support systems and continuous specialized nursing.',
+    images: [
+      imgIcuWard,
+      'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800'
+    ]
+  }
 ];
 
 // Clinic data (copied from your original file)

@@ -16,20 +16,26 @@ import ScrollToTop from '@/components/ScrollToTop';
 function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-teal-50 flex flex-col">
-      <Header />
-      <ScrollToTop /> {/* Place it here */}
-      <main className="flex-grow">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/join-provider" element={<JoinProviderPage />} />
-          <Route path="/contact" element={<ContactPage/>} />
-          <Route path="/clinic/:id" element={<ClinicPage />} />
-          <Route path="/clinic/:id/photos" element={<ClinicPhotosPage />} />
-        </Routes>
-      </main>
-      <Footer />
+      <ScrollToTop />
+      <Routes>
+        <Route path="/clinic/:id/photos" element={<ClinicPhotosPage />} />
+        <Route path="*" element={
+          <>
+            <Header />
+            <main className="flex-grow">
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/services" element={<ServicesPage />} />
+                <Route path="/join-provider" element={<JoinProviderPage />} />
+                <Route path="/contact" element={<ContactPage/>} />
+                <Route path="/clinic/:id" element={<ClinicPage />} />
+              </Routes>
+            </main>
+            <Footer />
+          </>
+        } />
+      </Routes>
       <Toaster />
     </div>
   );
