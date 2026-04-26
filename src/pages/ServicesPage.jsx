@@ -8,6 +8,7 @@ import insurer from '../components/ui/insurer.jpg';
 import employer from '../components/ui/employer.jpg';
 import provider from "../components/ui/provider.jpg"
 import patient from "../components/ui/patient.jpg"
+import { useNavigate } from 'react-router-dom';
 
 const ServiceCard = ({ icon, title, description, delay }) => (
   <motion.div
@@ -68,6 +69,27 @@ const AudienceSection = ({ icon, title, description, features, imageSrc, imageAl
 );
 
 const ServicesPage = () => {
+    const navigate = useNavigate();
+    // const location = useLocation();
+    // const currentPagePath = location.pathname;
+  
+    // // Handle scrolling to search after navigation
+    // useEffect(() => {
+    //   if (shouldScroll && currentPagePath === '/' && searchRef.current) {
+    //     // Small delay to ensure page is rendered
+    //     setTimeout(() => {
+    //       searchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    //       setTimeout(() => searchRef.current?.focus(), 500);
+    //       setShouldScroll(false);
+    //     }, 100);
+    //   }
+    // }, [currentPagePath, shouldScroll]);
+  
+     const handleSearchClick = () => {
+      // Navigate to home page with state to trigger scroll
+      navigate('/', { state: { scrollToSearch: true } });
+    };
+  
   return (
     <>
       <Helmet>
@@ -229,11 +251,11 @@ const ServicesPage = () => {
               <p className="max-w-2xl mx-auto text-gray-600 mb-8">
                 Join HealthProvida today and be part of the revolution in healthcare access and management across Sub-Saharan Africa.
               </p>
-              <Link to="/">
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+              {/* <Link to="/"> */}
+                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700" onClick={handleSearchClick}>
                   Get Started Now
                 </Button>
-              </Link>
+              {/* </Link> */}
             </motion.div>
           </div>
         </section>

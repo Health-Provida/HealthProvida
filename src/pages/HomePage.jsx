@@ -13,7 +13,7 @@ const HomePage = () => {
         <meta name="description" content="Discover and book appointments at the best medical clinics in your area. Compare ratings, services, and availability with HealthProvida." />
       </Helmet>
       <Hero />
-      <SearchSection />
+      {/* <SearchSection /> */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">

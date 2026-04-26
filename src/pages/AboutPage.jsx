@@ -4,6 +4,9 @@ import { motion } from 'framer-motion';
 import { Zap, Users, Target, ShieldCheck, HeartPulse, Briefcase, Hotel as Hospital, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import about from "../components/ui/about.jpg"
+
 
 const FeatureCard = ({ icon, title, description, delay }) => (
   <motion.div
@@ -38,6 +41,28 @@ const AudienceCard = ({ icon, title, description, delay }) => (
 );
 
 const AboutPage = () => {
+  const navigate = useNavigate();
+  // const location = useLocation();
+  // const currentPagePath = location.pathname;
+
+  // // Handle scrolling to search after navigation
+  // useEffect(() => {
+  //   if (shouldScroll && currentPagePath === '/' && searchRef.current) {
+  //     // Small delay to ensure page is rendered
+  //     setTimeout(() => {
+  //       searchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  //       setTimeout(() => searchRef.current?.focus(), 500);
+  //       setShouldScroll(false);
+  //     }, 100);
+  //   }
+  // }, [currentPagePath, shouldScroll]);
+
+   const handleSearchClick = () => {
+    // Navigate to home page with state to trigger scroll
+    navigate('/', { state: { scrollToSearch: true } });
+  };
+
+
   return (
     <>
       <Helmet>
@@ -94,7 +119,7 @@ const AboutPage = () => {
                 transition={{ duration: 0.7 }}
                 className="relative h-80"
               >
-                <img class="absolute w-full h-full object-cover rounded-xl shadow-2xl" alt="Doctor consulting with a patient in a modern clinic" src="https://images.unsplash.com/photo-1584516150909-c43483ee7932" />
+                <img class="absolute w-full h-full object-cover rounded-xl shadow-2xl" alt="Doctor consulting with a patient in a modern clinic" src={about} />
               </motion.div>
             </div>
           </div>
@@ -198,11 +223,11 @@ const AboutPage = () => {
               <p className="max-w-2xl mx-auto text-gray-600 mb-8">
                 Whether you're a patient seeking care or a provider looking to optimize your practice, HealthProvida is your partner in building a healthier future for Sub-Saharan Africa.
               </p>
-              <Link to="/">
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+              {/* <Link to="/"> */}
+                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700" onClick={handleSearchClick}>
                   Find a Clinic Near You
                 </Button>
-              </Link>
+              {/* </Link> */}
             </motion.div>
           </div>
         </section>
