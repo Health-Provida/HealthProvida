@@ -8,6 +8,8 @@ import { toast } from '@/components/ui/use-toast';
 import searchRef from '@/components/SearchSection';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import logo from '../components/ui/logo.png'
+
 // import { useLocation } from 'react-router-dom';
 
 const Header = () => {
@@ -27,13 +29,13 @@ const Header = () => {
   //   }
   // }, [currentPagePath, shouldScroll]);
 
-   const handleSearchClick = () => {
+  const handleSearchClick = () => {
     // Navigate to home page with state to trigger scroll
     navigate('/', { state: { scrollToSearch: true } });
   };
 
   return (
-    <motion.header 
+    <motion.header
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -42,38 +44,39 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/">
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.05 }}
               className="flex items-center space-x-2"
             >
-              <img src={"/src/components/ui/logo.png"}  style ={{width: "10rem"}} alt='logo' />
+              <img src={logo}
+                style={{ width: "10rem" }} alt='logo' />
             </motion.div>
           </Link>
           <nav className="hidden md:flex items-center space-x-8">
             <NavLink
               to="/"
               className={({ isActive, isPending }) => {
-                let baseClass="nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                let baseClass = "nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
                 if (isActive) return `${baseClass} active`;
                 return baseClass;
               }}
             >
               Home
             </NavLink>
-            <NavLink 
+            <NavLink
               to="/services"
               className={({ isActive, isPending }) => {
-                let baseClass="nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                let baseClass = "nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
                 if (isActive) return `${baseClass} active`;
                 return baseClass;
               }}
             >
               Services
             </NavLink>
-            <NavLink 
+            <NavLink
               to="/about"
               className={({ isActive, isPending }) => {
-                let baseClass="nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                let baseClass = "nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
                 if (isActive) return `${baseClass} active`;
                 return baseClass;
               }}
@@ -92,18 +95,18 @@ const Header = () => {
               <User className="w-4 h-4 mr-2" />
               Sign In
             </Button> */}
-            <NavLink 
+            <NavLink
               // to="/#"
               to="/join-provider"
               className={({ isActive, isPending }) => {
-                let baseClass="nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                let baseClass = "nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
                 if (isActive) return `${baseClass} active`;
                 return baseClass;
               }}
             >
               Join as a Provider
             </NavLink>
-            <Button 
+            <Button
               size="sm"
               // onClick={handleMenuClick}
               onClick={handleSearchClick}
