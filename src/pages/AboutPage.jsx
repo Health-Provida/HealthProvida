@@ -16,7 +16,8 @@ const FeatureCard = ({ icon, title, description, delay }) => (
     transition={{ duration: 0.5, delay }}
     className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
   >
-    <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-100 to-green-100 rounded-lg mb-4">
+    {/* <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-100 to-green-100 rounded-lg mb-4"> */}
+    <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-100 to-green-100 rounded-lg mb-4 mx-auto">
       {icon}
     </div>
     <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>

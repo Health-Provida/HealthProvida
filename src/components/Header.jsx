@@ -13,6 +13,7 @@ import logo from '../components/ui/logo.png'
 // import { useLocation } from 'react-router-dom';
 
 const Header = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   // const location = useLocation();
   // const currentPagePath = location.pathname;
@@ -85,7 +86,7 @@ const Header = () => {
             </NavLink>
           </nav>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {/* <Button 
               variant="ghost" 
               size="sm"
@@ -99,7 +100,7 @@ const Header = () => {
               // to="/#"
               to="/join-provider"
               className={({ isActive, isPending }) => {
-                let baseClass = "nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                let baseClass = "hidden sm:block nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
                 if (isActive) return `${baseClass} active`;
                 return baseClass;
               }}
@@ -110,20 +111,59 @@ const Header = () => {
               size="sm"
               // onClick={handleMenuClick}
               onClick={handleSearchClick}
-              className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+              className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-xs sm:text-sm px-2 sm:px-4"
             >
               Find a Provider
             </Button>
-            {/* <Button 
+            <Button 
               variant="ghost" 
               size="icon"
-              // onClick={handleMenuClick}  
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}  
               className="md:hidden"
             >
               <Menu className="w-5 h-5" />
-            </Button> */}
+            </Button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden mt-4 py-4 border-t border-gray-100 flex flex-col space-y-4"
+          >
+            <NavLink
+              to="/"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) => `text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
+            >
+              Home
+            </NavLink>
+            <NavLink
+              to="/services"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) => `text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
+            >
+              Services
+            </NavLink>
+            <NavLink
+              to="/about"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) => `text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
+            >
+              About
+            </NavLink>
+            <NavLink
+              to="/join-provider"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) => `sm:hidden text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
+            >
+              Join as a Provider
+            </NavLink>
+          </motion.div>
+        )}
       </div>
     </motion.header>
   );

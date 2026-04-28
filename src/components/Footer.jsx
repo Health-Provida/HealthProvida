@@ -2,20 +2,22 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Phone, Mail, MapPin } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import logo from '../components/ui/logo.png'
 
 const Footer = () => {
 
   return (
     <footer className="bg-gray-900 text-white py-12">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-4">
             <Link to="/" className="flex items-center space-x-2">
               {/* <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
                 <Heart className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold">HealthProvida</span> */}
-              <img src={"/src/components/ui/logo.png"}  style ={{width: "10rem"}} alt='logo' />
+              <span className="text-xl font-bold">HealthProvida</span> */} 
+              <img src={logo}
+              style ={{width: "10rem"}} alt='logo' />
             </Link>
             <p className="text-gray-400 text-sm">
               Find trusted providers near you, check their availability, and book appointments in just a few taps—no stress, no delays

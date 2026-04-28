@@ -35,15 +35,15 @@ const SearchSection = () => {
 
 
   return (
-    <section className="py-8 -mt-10 relative z-20">
+    <section className="py-4 sm:py-8 -mt-6 sm:-mt-10 relative z-20">
       <div className="container mx-auto px-4">
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-6xl mx-auto"
+          className="bg-white rounded-2xl shadow-xl sm:shadow-2xl p-4 sm:p-6 md:p-8 max-w-6xl mx-auto"
         >
-          <div className="grid md:grid-cols-2 gap-4 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
             <div className="relative space-y-2">
               {/* <label className="text-sm font-medium text-gray-700 flex items-center">
                 <MapPin className="w-4 h-4 mr-1 text-blue-600" />

@@ -460,10 +460,10 @@ function ClinicCard({ clinic, onClick }) {
   return (
     <div 
       onClick={onClick}
-      className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-6 cursor-pointer"
+      className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-4 sm:p-6 cursor-pointer"
     >
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="md:w-64 h-48 md:h-40 rounded-lg overflow-hidden bg-gradient-to-br from-blue-100 to-green-100">
+      <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
+        <div className="w-full md:w-64 h-48 md:h-40 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-100 to-green-100">
           <img 
             className="w-full h-full object-cover" 
             alt={`${clinic.practitioner_name} medical facility`}
@@ -471,74 +471,77 @@ function ClinicCard({ clinic, onClick }) {
           />
         </div>
         
-        <div className="flex-1 space-y-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-1">{clinic.practitioner_name}</h3>
-              <p className="text-blue-600 font-medium">{clinic.practice_type}</p>
+        <div className="flex-1 space-y-3 sm:space-y-4 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 truncate">{clinic.practitioner_name}</h3>
+              <p className="text-sm sm:text-base text-blue-600 font-medium truncate">{clinic.practice_type}</p>
             </div>
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 alert('Added to favorites!');
               }}
-              className="text-gray-400 hover:text-red-500 transition p-2"
+              className="text-gray-400 hover:text-red-500 transition p-2 flex-shrink-0 -mt-2 -mr-2 sm:mt-0 sm:mr-0"
             >
               <Heart className="w-5 h-5" />
             </button>
           </div>
           
-          <div className="flex items-center space-x-4 text-sm text-gray-600">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
             <div className="flex items-center">
-              <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
+              <Star className="w-4 h-4 text-yellow-400 fill-current mr-1 flex-shrink-0" />
               <span className="font-medium">{clinic.rating}</span>
               <span className="ml-1">({clinic.number_of_reviews} reviews)</span>
             </div>
             <div className="flex items-center">
-              <MapPin className="w-4 h-4 text-gray-400 mr-1" />
-              <span>{clinic.distance_from_location}</span>
+              <MapPin className="w-4 h-4 text-gray-400 mr-1 flex-shrink-0" />
+              <span className="truncate">{clinic.distance_from_location}</span>
             </div>
           </div>
           
-          <div className="space-y-2 text-sm text-gray-600">
-            <div className="flex items-center">
-              <MapPin className="w-4 h-4 text-gray-400 mr-2" />
-              <span>{clinic.address}</span>
+          <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-gray-600">
+            <div className="flex items-start">
+              <MapPin className="w-4 h-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
+              <span className="line-clamp-2 break-words">{clinic.address}</span>
             </div>
             <div className="flex items-center">
-              <Phone className="w-4 h-4 text-gray-400 mr-2" />
-              <span>{clinic.phone}</span>
+              <Phone className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+              <span className="truncate">{clinic.phone}</span>
             </div>
-            <div className="flex items-center">
-              <Clock className="w-4 h-4 text-gray-400 mr-2" />
-              <span>Next available: <span className="text-green-600 font-medium">{clinic.nextAvailable}</span></span>
+            <div className="flex items-start sm:items-center flex-col sm:flex-row">
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                <span>Next available: </span>
+              </div>
+              <span className="text-green-600 font-medium sm:ml-1 mt-0.5 sm:mt-0">{clinic.nextAvailable}</span>
             </div>
           </div>
           
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {clinic.tags.slice(0, 3).map((tag, index) => (
               <span 
                 key={index}
-                className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium"
+                className="px-2 sm:px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap"
               >
                 {tag}
               </span>
             ))}
           </div>
           
-          <div className="flex space-x-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 onClick();
               }}
-              className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-2 px-4 rounded-lg font-medium transition"
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-2 px-4 rounded-lg font-medium transition flex justify-center items-center"
             >
               Book Appointment
             </button>
             <button 
               onClick={(e) => e.stopPropagation()}
-              className="border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 transition flex items-center gap-2"
+              className="w-full sm:w-auto border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2"
             >
               <Phone className="w-4 h-4" />
               Call Now
@@ -609,11 +612,11 @@ export default function ClinicCardsApp() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 no-padding-on-small">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2 small-font-on-small p-4">Find Healthcare Providers</h1>
-          <p className="text-gray-600 p-4">Verified providers across Sub-Saharan Africa ready to serve you</p>
+        <div className="mb-6 sm:mb-8 px-2 sm:px-0">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">Find Healthcare Providers</h1>
+          <p className="text-sm sm:text-base text-gray-600">Verified providers across Sub-Saharan Africa ready to serve you</p>
         </div>
 
         {/* Search Section */}
