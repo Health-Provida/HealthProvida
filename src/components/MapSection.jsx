@@ -2,9 +2,14 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Navigation, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const MapSection = () => {
+  const navigate = useNavigate();
+
+  const handleMapClick = () => {
+    navigate('/map');
+  };
 
   return (
     <motion.div 
@@ -34,7 +39,10 @@ const MapSection = () => {
           </div>
         </div>
         
-        <div className="h-96 bg-gradient-to-br from-blue-100 via-green-100 to-teal-100 relative overflow-hidden">
+        <div
+          className="h-96 bg-gradient-to-br from-blue-100 via-green-100 to-teal-100 relative overflow-hidden cursor-pointer"
+          onClick={handleMapClick}
+        >
           <img 
             className="w-full h-full object-cover" 
             alt="Interactive map showing clinic locations"
@@ -59,9 +67,10 @@ const MapSection = () => {
         
         <div className="p-4 bg-gray-50">
           <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>6 clinics in this area</span>
+            <span>9 clinics in this area</span>
             <button 
               className="text-blue-600 hover:text-blue-700 font-medium"
+              onClick={handleMapClick}
             >
               View all on map
             </button>
