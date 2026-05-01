@@ -22,6 +22,7 @@ import imgMaternity from '../assets/gallery/maternity_delivery_room_177723704691
 import imgReception from '../assets/gallery/modern_hospital_reception_1777236657236.png';
 import imgOperatingTheater from '../assets/gallery/modern_operating_theater_1777236986447.png';
 import imgPrivateRoom from '../assets/gallery/private_patient_room_1777236673043.png';
+import imgNationalCancerInstitute from '../assets/gallery/national-cancer-institute-aelk4Tn0vlI-unsplash.jpg';
 
 // To avoid hitting rate limits, using realistic unsplash placeholder images to supplement the generated ones.
 export const commonGallery = [
@@ -32,57 +33,50 @@ export const commonGallery = [
     images: [
       imgReception,
       'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=800'
+      'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1519494080410-f9aa76cb4283?auto=format&fit=crop&q=80&w=800'
     ]
   },
   {
-    id: 'private_room',
-    title: 'Private Room',
-    description: 'Premium, private rooms designed for comfort and privacy, featuring en-suite bathrooms and accommodations for a loved one.',
+    id: 'consulting_room',
+    title: 'Consulting Room',
+    description: 'Private and comfortable consulting rooms designed to facilitate open communication and comprehensive medical examinations.',
     images: [
-      imgPrivateRoom,
-      'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1505692952047-1a78307da8f2?auto=format&fit=crop&q=80&w=800'
-    ]
-  },
-  {
-    id: 'general_ward',
-    title: 'General Ward',
-    description: 'Clean, modern, and spacious general wards with privacy curtains and state-of-the-art monitoring systems.',
-    images: [
-      imgGeneralWard,
-      'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1512678080530-7760d81faba6?auto=format&fit=crop&q=80&w=800'
-    ]
-  },
-  {
-    id: 'operating_theater',
-    title: 'Operating Theater',
-    description: 'Highly advanced surgical suites equipped with the latest technology for complex procedures in a sterile environment.',
-    images: [
-      imgOperatingTheater,
-      'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1550831107-1553da8c8464?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=800'
     ]
   },
   {
-    id: 'maternity',
-    title: 'Maternity Room',
-    description: 'Warm and calming delivery rooms providing comprehensive care for expectant mothers and newborns.',
+    id: 'private_ward',
+    title: 'Private Ward',
+    description: 'Premium, private rooms designed for comfort and privacy, featuring en-suite bathrooms and accommodations for a loved one.',
     images: [
-      imgMaternity,
-      'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&q=80&w=800'
+      imgPrivateRoom,
+      'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1505692952047-1a78307da8f2?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1512678080530-7760d81faba6?auto=format&fit=crop&q=80&w=800'
     ]
   },
   {
-    id: 'icu',
-    title: 'Intensive Care Unit (ICU)',
-    description: '24/7 dedicated critical care unit with advanced life support systems and continuous specialized nursing.',
+    id: 'laboratory',
+    title: 'Laboratory',
+    description: 'State-of-the-art diagnostic laboratory equipped with advanced technology for accurate and timely test results.',
+    images: [
+      'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=800',
+      imgNationalCancerInstitute,
+      'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&q=80&w=800'
+    ]
+  },
+  {
+    id: 'special_units',
+    title: 'Special Units',
+    description: 'Dedicated intensive care and maternity units with advanced life support systems and specialized nursing.',
     images: [
       imgIcuWard,
       'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800'
+      imgMaternity,
+      'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&q=80&w=800'
     ]
   }
 ];
@@ -197,7 +191,7 @@ export const clinicsData = [
     ]
   },
   {
-   id: 6,
+    id: 6,
     image_src: imagesix,
     practitioner_name: "Marie Stopes Medical Centre, Abuja",
     practice_type: "Reproductive Health & Family Planning Clinic",
@@ -297,17 +291,17 @@ function ClinicDialog({ clinic, isOpen, onClose }) {
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black bg-opacity-50"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-white border-b border-gray-200 p-4 sm:p-6 flex items-start justify-between gap-3 flex-shrink-0">
           <div className="flex gap-3 sm:gap-4 flex-1 min-w-0">
-            <img 
+            <img
               src={clinic.image_src}
               alt={clinic.practitioner_name}
               className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover flex-shrink-0"
@@ -328,7 +322,7 @@ function ClinicDialog({ clinic, isOpen, onClose }) {
               </div>
             </div>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition flex-shrink-0 p-1"
           >
@@ -361,7 +355,7 @@ function ClinicDialog({ clinic, isOpen, onClose }) {
             </h3>
             <div className="flex flex-wrap gap-2">
               {clinic.specialties.map((specialty, index) => (
-                <span 
+                <span
                   key={index}
                   className="px-2 sm:px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs sm:text-sm font-medium"
                 >
@@ -378,7 +372,7 @@ function ClinicDialog({ clinic, isOpen, onClose }) {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {clinic.supportedHMOs.map((hmo, index) => (
-                <div 
+                <div
                   key={index}
                   className="flex items-center gap-2 p-2 bg-green-50 rounded-lg text-xs sm:text-sm text-gray-700"
                 >
@@ -396,7 +390,7 @@ function ClinicDialog({ clinic, isOpen, onClose }) {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {clinic.equipment.map((item, index) => (
-                <div 
+                <div
                   key={index}
                   className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg text-xs sm:text-sm text-gray-700"
                 >
@@ -421,11 +415,10 @@ function ClinicDialog({ clinic, isOpen, onClose }) {
                       <button
                         key={timeIndex}
                         onClick={() => setSelectedSlot({ day: daySlot.day, time })}
-                        className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border-2 transition ${
-                          selectedSlot?.day === daySlot.day && selectedSlot?.time === time
-                            ? 'border-blue-600 bg-blue-50 text-blue-700 font-medium'
-                            : 'border-gray-200 hover:border-blue-300 text-gray-700'
-                        }`}
+                        className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border-2 transition ${selectedSlot?.day === daySlot.day && selectedSlot?.time === time
+                          ? 'border-blue-600 bg-blue-50 text-blue-700 font-medium'
+                          : 'border-gray-200 hover:border-blue-300 text-gray-700'
+                          }`}
                       >
                         {time}
                       </button>
@@ -458,26 +451,26 @@ function ClinicDialog({ clinic, isOpen, onClose }) {
 
 function ClinicCard({ clinic, onClick }) {
   return (
-    <div 
+    <div
       onClick={onClick}
       className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-4 sm:p-6 cursor-pointer"
     >
       <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
         <div className="w-full md:w-64 h-48 md:h-40 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-100 to-green-100">
-          <img 
-            className="w-full h-full object-cover" 
+          <img
+            className="w-full h-full object-cover"
             alt={`${clinic.practitioner_name} medical facility`}
             src={clinic.image_src}
           />
         </div>
-        
+
         <div className="flex-1 space-y-3 sm:space-y-4 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 truncate">{clinic.practitioner_name}</h3>
               <p className="text-sm sm:text-base text-blue-600 font-medium truncate">{clinic.practice_type}</p>
             </div>
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 alert('Added to favorites!');
@@ -487,7 +480,7 @@ function ClinicCard({ clinic, onClick }) {
               <Heart className="w-5 h-5" />
             </button>
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
             <div className="flex items-center">
               <Star className="w-4 h-4 text-yellow-400 fill-current mr-1 flex-shrink-0" />
@@ -499,7 +492,7 @@ function ClinicCard({ clinic, onClick }) {
               <span className="truncate">{clinic.distance_from_location}</span>
             </div>
           </div>
-          
+
           <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-gray-600">
             <div className="flex items-start">
               <MapPin className="w-4 h-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
@@ -517,10 +510,10 @@ function ClinicCard({ clinic, onClick }) {
               <span className="text-green-600 font-medium sm:ml-1 mt-0.5 sm:mt-0">{clinic.nextAvailable}</span>
             </div>
           </div>
-          
+
           <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {clinic.tags.slice(0, 3).map((tag, index) => (
-              <span 
+              <span
                 key={index}
                 className="px-2 sm:px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap"
               >
@@ -528,9 +521,9 @@ function ClinicCard({ clinic, onClick }) {
               </span>
             ))}
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onClick();
@@ -539,7 +532,7 @@ function ClinicCard({ clinic, onClick }) {
             >
               Book Appointment
             </button>
-            <button 
+            <button
               onClick={(e) => e.stopPropagation()}
               className="w-full sm:w-auto border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2"
             >
@@ -566,14 +559,14 @@ export default function ClinicCardsApp() {
       const query = searchQuery.toLowerCase();
       results = results.filter(clinic => {
         const nameMatch = clinic.practitioner_name?.toLowerCase().includes(query);
-        const specialtyMatch = clinic.specialties?.some(specialty => 
+        const specialtyMatch = clinic.specialties?.some(specialty =>
           specialty.toLowerCase().includes(query)
         );
-        const tagsMatch = clinic.tags?.some(tag => 
+        const tagsMatch = clinic.tags?.some(tag =>
           tag.toLowerCase().includes(query)
         );
         const practiceTypeMatch = clinic.practice_type?.toLowerCase().includes(query);
-        
+
         return nameMatch || specialtyMatch || tagsMatch || practiceTypeMatch;
       });
     }
@@ -584,15 +577,15 @@ export default function ClinicCardsApp() {
           const distanceA = parseFloat(a.distance_from_location) || 0;
           const distanceB = parseFloat(b.distance_from_location) || 0;
           return distanceA - distanceB;
-        
+
         case 'review':
           return (b.rating || 0) - (a.rating || 0);
-        
+
         case 'tags':
           const tagA = a.tags?.[0] || '';
           const tagB = b.tags?.[0] || '';
           return tagA.localeCompare(tagB);
-        
+
         default:
           return 0;
       }
@@ -674,9 +667,9 @@ export default function ClinicCardsApp() {
         <div className="space-y-6">
           {filteredClinics.length > 0 ? (
             filteredClinics.map((clinic) => (
-              <ClinicCard 
-                key={clinic.id} 
-                clinic={clinic} 
+              <ClinicCard
+                key={clinic.id}
+                clinic={clinic}
                 onClick={() => navigateToClinic(clinic.id)}
               />
             ))
