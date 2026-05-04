@@ -683,7 +683,7 @@
 // export default JoinProviderPage;
 
 import React, { useState } from 'react';
-import { Briefcase, Mail, MapPin, Phone, User, CheckCircle, ArrowRight, ArrowLeft, Stethoscope, Shield, Tag } from 'lucide-react';
+import { Briefcase, Mail, MapPin, Phone, User, CheckCircle, ArrowRight, ArrowLeft, Stethoscope, Shield, Tag, Clock, Upload, Plus, Trash2, Image } from 'lucide-react';
 
 // Pre-registered HMOs
 const availableHMOs = [
@@ -731,6 +731,9 @@ const commonSpecialties = [
   "Neurology"
 ];
 
+// Days of the week for operating hours
+const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
 export default function MultiStepProviderForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -745,7 +748,17 @@ export default function MultiStepProviderForm() {
     tags: [],
     specialties: [],
     // Step 3
-    supportedHMOs: []
+    supportedHMOs: [],
+    // Step 4
+    facilityImage: null,
+    facilityImagePreview: '',
+    operatingHours: daysOfWeek.map(day => ({
+      day,
+      isOpen: day !== 'Sunday',
+      openTime: '08:00',
+      closeTime: '17:00'
+    })),
+    appointmentSlotDuration: '30'
   });
 
   const handleInputChange = (e) => {
@@ -781,6 +794,29 @@ export default function MultiStepProviderForm() {
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({
+          ...prev,
+          facilityImage: file,
+          facilityImagePreview: reader.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const updateOperatingHours = (index, field, value) => {
+    setFormData(prev => {
+      const updated = [...prev.operatingHours];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, operatingHours: updated };
+    });
+  };
+
   const validateStep1 = () => {
     return formData.practitionerName && 
            formData.practitionerType && 
@@ -803,7 +839,7 @@ export default function MultiStepProviderForm() {
       alert('Please select at least one equipment or specialty');
       return;
     }
-    setCurrentStep(prev => prev + 1);
+    setCurrentStep(prev => Math.min(prev + 1, 4));
   };
 
   const handlePrevious = () => {
@@ -830,7 +866,7 @@ export default function MultiStepProviderForm() {
         <div className="mb-8">
           <div className="relative">
             <div className="flex items-center justify-between">
-              {[1, 2, 3].map((step, index) => (
+              {[1, 2, 3, 4].map((step, index) => (
                 <React.Fragment key={step}>
                   <div className="flex flex-col items-center z-10">
                     <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold ${
@@ -844,10 +880,11 @@ export default function MultiStepProviderForm() {
                       {step === 1 && 'Basic Info'}
                       {step === 2 && 'Services'}
                       {step === 3 && 'Insurance'}
+                      {step === 4 && 'Hours & Photos'}
                     </span>
                   </div>
-                  {index < 2 && (
-                    <div className="flex-1 h-1 bg-gray-200 mx-4 relative" style={{ top: '-14px' }}>
+                  {index < 3 && (
+                    <div className="flex-1 h-1 bg-gray-200 mx-2 md:mx-4 relative" style={{ top: '-14px' }}>
                       <div 
                         className={`h-full transition-all duration-300 ${
                           currentStep > index + 1 ? 'bg-blue-600 w-full' : 'bg-gray-200 w-0'
@@ -902,12 +939,18 @@ export default function MultiStepProviderForm() {
                       required
                     >
                       <option value="">Select type</option>
-                      <option value="Hospital">Hospital</option>
-                      <option value="Clinic">Clinic</option>
+                      <option value="Multi-specialty Clinic / General Practice">Multi-specialty Clinic / General Practice</option>
+                      <option value="General Hospital / Specialist Care">General Hospital / Specialist Care</option>
+                      <option value="Tertiary Care Hospital / National Referral Center">Tertiary Care Hospital / National Referral Center</option>
+                      <option value="Private Multi-specialty Clinic">Private Multi-specialty Clinic</option>
+                      <option value="Fertility & Reproductive Health Clinic">Fertility & Reproductive Health Clinic</option>
+                      <option value="Reproductive Health & Family Planning Clinic">Reproductive Health & Family Planning Clinic</option>
+                      <option value="General Private Hospital">General Private Hospital</option>
+                      <option value="Private General Hospital">Private General Hospital</option>
+                      <option value="Specialist Surgical Hospital">Specialist Surgical Hospital</option>
                       <option value="Diagnostic Center">Diagnostic Center</option>
                       <option value="Pharmacy">Pharmacy</option>
                       <option value="Dental Clinic">Dental Clinic</option>
-                      <option value="Specialist Center">Specialist Center</option>
                     </select>
                   </div>
 
@@ -1188,6 +1231,150 @@ export default function MultiStepProviderForm() {
               </div>
             )}
 
+            {/* Step 4: Operating Hours & Facility Image */}
+            {currentStep === 4 && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <Clock className="w-6 h-6 text-blue-600" />
+                    Operating Hours & Facility Photos
+                  </h2>
+                  <p className="text-gray-600 text-sm">Set your availability and upload a facility image</p>
+                </div>
+
+                {/* Facility Image Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <Image className="inline w-4 h-4 mr-1 mb-0.5" />
+                    Facility Image
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition">
+                    {formData.facilityImagePreview ? (
+                      <div className="space-y-4">
+                        <img
+                          src={formData.facilityImagePreview}
+                          alt="Facility preview"
+                          className="mx-auto max-h-48 rounded-lg object-cover shadow-md"
+                        />
+                        <div className="flex items-center justify-center gap-3">
+                          <label className="cursor-pointer px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition flex items-center gap-2">
+                            <Upload size={16} />
+                            Change Image
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageChange}
+                              className="hidden"
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, facilityImage: null, facilityImagePreview: '' }))}
+                            className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
+                          >
+                            <Trash2 size={16} />
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer block">
+                        <Upload className="mx-auto w-12 h-12 text-gray-400 mb-3" />
+                        <p className="text-gray-600 font-medium">Click to upload a facility image</p>
+                        <p className="text-gray-400 text-sm mt-1">PNG, JPG, or WebP up to 5MB</p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                {/* Appointment Slot Duration */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Appointment Slot Duration
+                  </label>
+                  <select
+                    name="appointmentSlotDuration"
+                    value={formData.appointmentSlotDuration}
+                    onChange={handleInputChange}
+                    className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="45">45 minutes</option>
+                    <option value="60">1 hour</option>
+                    <option value="90">1.5 hours</option>
+                  </select>
+                </div>
+
+                {/* Operating Hours */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <Clock className="inline w-4 h-4 mr-1 mb-0.5" />
+                    Operating Hours
+                  </label>
+                  <div className="space-y-3">
+                    {formData.operatingHours.map((dayData, index) => (
+                      <div
+                        key={dayData.day}
+                        className={`flex flex-col md:flex-row items-start md:items-center gap-3 p-3 rounded-lg border-2 transition ${
+                          dayData.isOpen
+                            ? 'border-blue-200 bg-blue-50'
+                            : 'border-gray-200 bg-gray-50 opacity-60'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-[140px]">
+                          <button
+                            type="button"
+                            onClick={() => updateOperatingHours(index, 'isOpen', !dayData.isOpen)}
+                            className={`w-10 h-6 rounded-full transition-colors duration-200 relative ${
+                              dayData.isOpen ? 'bg-blue-600' : 'bg-gray-300'
+                            }`}
+                          >
+                            <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform duration-200 ${
+                              dayData.isOpen ? 'translate-x-5' : 'translate-x-1'
+                            }`} />
+                          </button>
+                          <span className={`font-medium text-sm ${
+                            dayData.isOpen ? 'text-gray-900' : 'text-gray-500'
+                          }`}>
+                            {dayData.day}
+                          </span>
+                        </div>
+
+                        {dayData.isOpen && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <input
+                              type="time"
+                              value={dayData.openTime}
+                              onChange={(e) => updateOperatingHours(index, 'openTime', e.target.value)}
+                              className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <span className="text-gray-500 font-medium">to</span>
+                            <input
+                              type="time"
+                              value={dayData.closeTime}
+                              onChange={(e) => updateOperatingHours(index, 'closeTime', e.target.value)}
+                              className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        )}
+
+                        {!dayData.isOpen && (
+                          <span className="text-sm text-gray-400 italic">Closed</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Navigation Buttons */}
             <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
               {currentStep > 1 && (
@@ -1199,7 +1386,7 @@ export default function MultiStepProviderForm() {
                   Previous
                 </button>
               )}
-              {currentStep < 3 ? (
+              {currentStep < 4 ? (
                 <button
                   onClick={handleNext}
                   className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 px-6 rounded-lg font-medium transition flex items-center justify-center gap-2"
