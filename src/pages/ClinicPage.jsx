@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid } from 'lucide-react';
 import { clinicsData, commonGallery } from '../components/ClinicGrid';
+import { useFavorites } from '@/context/FavoritesContext';
 
 export default function ClinicPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   const clinic = clinicsData.find(c => c.id === parseInt(id));
+  const favorited = clinic ? isFavorite(clinic.id) : false;
 
   // Flatten commonGallery objects to just array of images for the hero section
   const flattenedCommonImages = commonGallery.flatMap(ward => ward.images);
@@ -79,11 +82,13 @@ export default function ClinicPage() {
 
             <div className="flex items-center gap-3">
               <button
-                onClick={() => alert('Added to favorites!')}
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition font-medium"
+                onClick={() => toggleFavorite(clinic.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition font-medium ${
+                  favorited ? 'text-red-500 bg-red-50 hover:bg-red-100' : 'text-gray-700 hover:bg-gray-100'
+                }`}
               >
-                <Heart className="w-5 h-5" />
-                <span>Save</span>
+                <Heart className={`w-5 h-5 ${favorited ? 'fill-red-500' : ''}`} />
+                <span>{favorited ? 'Saved' : 'Save'}</span>
               </button>
               <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition font-medium">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" x2="12" y1="2" y2="15" /></svg>

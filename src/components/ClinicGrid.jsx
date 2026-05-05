@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Star, MapPin, Phone, Clock, Heart, X, Calendar, Shield, Stethoscope, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useFavorites } from '@/context/FavoritesContext';
 
 // This component wraps around your existing ClinicGrid
 // You'll need to export clinicsData from your ClinicGrid.jsx file
@@ -450,6 +451,9 @@ function ClinicDialog({ clinic, isOpen, onClose }) {
 }
 
 function ClinicCard({ clinic, onClick }) {
+  const { toggleFavorite, isFavorite } = useFavorites();
+  const favorited = isFavorite(clinic.id);
+
   return (
     <div
       onClick={onClick}
@@ -473,11 +477,14 @@ function ClinicCard({ clinic, onClick }) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                alert('Added to favorites!');
+                toggleFavorite(clinic.id);
               }}
-              className="text-gray-400 hover:text-red-500 transition p-2 flex-shrink-0 -mt-2 -mr-2 sm:mt-0 sm:mr-0"
+              className={`p-2 flex-shrink-0 -mt-2 -mr-2 sm:mt-0 sm:mr-0 transition-all duration-200 hover:scale-110 ${
+                favorited ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
+              }`}
+              title={favorited ? 'Remove from favorites' : 'Add to favorites'}
             >
-              <Heart className="w-5 h-5" />
+              <Heart className={`w-5 h-5 ${favorited ? 'fill-red-500' : ''}`} />
             </button>
           </div>
 

@@ -1,171 +1,159 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { NavLink } from 'react-router-dom';
-import { Heart, Menu, User } from 'lucide-react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
-import searchRef from '@/components/SearchSection';
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import ProfileSidebar from '@/components/ProfileSidebar';
 import logo from '../components/ui/logo.png'
-
-// import { useLocation } from 'react-router-dom';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
-  // const location = useLocation();
-  // const currentPagePath = location.pathname;
-
-  // // Handle scrolling to search after navigation
-  // useEffect(() => {
-  //   if (shouldScroll && currentPagePath === '/' && searchRef.current) {
-  //     // Small delay to ensure page is rendered
-  //     setTimeout(() => {
-  //       searchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  //       setTimeout(() => searchRef.current?.focus(), 500);
-  //       setShouldScroll(false);
-  //     }, 100);
-  //   }
-  // }, [currentPagePath, shouldScroll]);
 
   const handleSearchClick = () => {
-    // Navigate to home page with state to trigger scroll
     navigate('/', { state: { scrollToSearch: true } });
   };
 
   return (
-    <motion.header
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      className="bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50"
-    >
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <Link to="/">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center space-x-2"
-            >
-              <img src={logo}
-                style={{ width: "10rem" }} alt='logo' />
-            </motion.div>
-          </Link>
-          <nav className="hidden md:flex items-center space-x-8">
-            <NavLink
-              to="/"
-              className={({ isActive, isPending }) => {
-                let baseClass = "nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
-                if (isActive) return `${baseClass} active`;
-                return baseClass;
-              }}
-            >
-              Home
-            </NavLink>
-            <NavLink
-              to="/services"
-              className={({ isActive, isPending }) => {
-                let baseClass = "nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
-                if (isActive) return `${baseClass} active`;
-                return baseClass;
-              }}
-            >
-              Services
-            </NavLink>
-            <NavLink
-              to="/about"
-              className={({ isActive, isPending }) => {
-                let baseClass = "nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
-                if (isActive) return `${baseClass} active`;
-                return baseClass;
-              }}
-            >
-              About
-            </NavLink>
-          </nav>
+    <>
+      <motion.header
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        className="bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50"
+      >
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link to="/">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center space-x-2"
+              >
+                <img src={logo}
+                  style={{ width: "10rem" }} alt='logo' />
+              </motion.div>
+            </Link>
+            <nav className="hidden md:flex items-center space-x-8">
+              <NavLink
+                to="/"
+                className={({ isActive }) => {
+                  let baseClass = "nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                  if (isActive) return `${baseClass} active`;
+                  return baseClass;
+                }}
+              >
+                Home
+              </NavLink>
+              <NavLink
+                to="/services"
+                className={({ isActive }) => {
+                  let baseClass = "nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                  if (isActive) return `${baseClass} active`;
+                  return baseClass;
+                }}
+              >
+                Services
+              </NavLink>
+              <NavLink
+                to="/about"
+                className={({ isActive }) => {
+                  let baseClass = "nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                  if (isActive) return `${baseClass} active`;
+                  return baseClass;
+                }}
+              >
+                About
+              </NavLink>
+            </nav>
 
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={handleMenuClick}
-              className="hidden md:flex"
-            >
-              <User className="w-4 h-4 mr-2" />
-              Sign In
-            </Button> */}
-            <NavLink
-              // to="/#"
-              to="/join-provider"
-              className={({ isActive, isPending }) => {
-                let baseClass = "hidden sm:block nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
-                if (isActive) return `${baseClass} active`;
-                return baseClass;
-              }}
-            >
-              Join as a Provider
-            </NavLink>
-            <Button
-              size="sm"
-              // onClick={handleMenuClick}
-              onClick={handleSearchClick}
-              className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-xs sm:text-sm px-2 sm:px-4"
-            >
-              Find a Provider
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}  
-              className="md:hidden"
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <NavLink
+                to="/join-provider"
+                className={({ isActive }) => {
+                  let baseClass = "hidden sm:block nav-link text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                  if (isActive) return `${baseClass} active`;
+                  return baseClass;
+                }}
+              >
+                Join as a Provider
+              </NavLink>
+              <Button
+                size="sm"
+                onClick={handleSearchClick}
+                className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-xs sm:text-sm px-2 sm:px-4"
+              >
+                Find a Provider
+              </Button>
+
+              {/* User Avatar Button */}
+              <button
+                id="user-avatar-button"
+                onClick={() => setIsSidebarOpen(true)}
+                className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white text-sm font-bold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 flex-shrink-0"
+                title="Open profile menu"
+              >
+                D
+              </button>
+
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}  
+                className="md:hidden"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden mt-4 py-4 border-t border-gray-100 flex flex-col space-y-4"
-          >
-            <NavLink
-              to="/"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={({ isActive }) => `text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden mt-4 py-4 border-t border-gray-100 flex flex-col space-y-4"
             >
-              Home
-            </NavLink>
-            <NavLink
-              to="/services"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={({ isActive }) => `text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
-            >
-              Services
-            </NavLink>
-            <NavLink
-              to="/about"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={({ isActive }) => `text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
-            >
-              About
-            </NavLink>
-            <NavLink
-              to="/join-provider"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={({ isActive }) => `sm:hidden text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
-            >
-              Join as a Provider
-            </NavLink>
-          </motion.div>
-        )}
-      </div>
-    </motion.header>
+              <NavLink
+                to="/"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={({ isActive }) => `text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
+              >
+                Home
+              </NavLink>
+              <NavLink
+                to="/services"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={({ isActive }) => `text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
+              >
+                Services
+              </NavLink>
+              <NavLink
+                to="/about"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={({ isActive }) => `text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
+              >
+                About
+              </NavLink>
+              <NavLink
+                to="/join-provider"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={({ isActive }) => `sm:hidden text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
+              >
+                Join as a Provider
+              </NavLink>
+            </motion.div>
+          )}
+        </div>
+      </motion.header>
+
+      {/* Profile Sidebar */}
+      <ProfileSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
+    </>
   );
 };
 
