@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Share, Heart, LayoutGrid } from 'lucide-react';
+import { ArrowLeft, Share, Heart } from 'lucide-react';
 import { clinicsData, commonGallery } from '../components/ClinicGrid';
 
 export default function ClinicPhotosPage() {
@@ -12,6 +12,9 @@ export default function ClinicPhotosPage() {
 
   // Create refs for each section to handle scrolling
   const sectionRefs = useRef({});
+  // Ref for the active category thumbnail to scroll it into view
+  const categoryNavRef = useRef(null);
+  const categoryBtnRefs = useRef({});
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -37,6 +40,18 @@ export default function ClinicPhotosPage() {
     return () => observer.disconnect();
   }, []);
 
+  // Auto-scroll category nav to keep active thumbnail visible
+  useEffect(() => {
+    const activeBtn = categoryBtnRefs.current[activeSection];
+    const nav = categoryNavRef.current;
+    if (activeBtn && nav) {
+      const navRect = nav.getBoundingClientRect();
+      const btnRect = activeBtn.getBoundingClientRect();
+      const scrollLeft = activeBtn.offsetLeft - navRect.width / 2 + btnRect.width / 2;
+      nav.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+    }
+  }, [activeSection]);
+
   if (!clinic) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white p-8">
@@ -55,7 +70,7 @@ export default function ClinicPhotosPage() {
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      const headerOffset = 140; // Height of both sticky headers
+      const headerOffset = window.innerWidth < 640 ? 110 : 140;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -68,13 +83,11 @@ export default function ClinicPhotosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-white sm:bg-gray-50 pb-20">
       {/* Top Main Header */}
       <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-        {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"> */}
-        {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center"> */}
-        <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center">
-          <div className="flex items-center flex-1 gap-4">
+        <div className="px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center">
+          <div className="flex items-center flex-1 gap-3 sm:gap-4">
             <button
               onClick={() => navigate(-1)}
               className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700"
@@ -82,45 +95,50 @@ export default function ClinicPhotosPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-lg flex-1 grow text-center font-bold text-gray-900 truncate">
-              {/* Photo Tour: {clinic.practitioner_name} */}
-              Photo Tour
+            <h1 className="text-base sm:text-lg flex-1 grow text-center font-semibold sm:font-bold text-gray-900 truncate">
+              Photo tour
             </h1>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 hidden sm:block" title="Share">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700" title="Share">
               <Share className="w-5 h-5" />
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 hidden sm:block" title="Save">
+            <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700" title="Save">
               <Heart className="w-5 h-5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Sticky Category Navigation */}
-      {/* <div className="sticky top-16 z-40 bg-white border-b border-gray-200 shadow-sm overflow-x-auto hide-scrollbar"> */}
-      <div className="top-16 z-40 bg-white border-b border-gray-200 shadow-sm overflow-x-auto hide-scrollbar">
-        {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-6 py-4"> */}
-        <div className="px-4 sm:px-6 lg:px-8 flex items-center gap-6 py-4 justify-center">
+      {/* Category Navigation — horizontal scroll on mobile, centered on desktop */}
+      <div className="bg-white border-b border-gray-200 overflow-x-auto hide-scrollbar" ref={categoryNavRef}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        <div className="px-3 sm:px-6 lg:px-8 flex items-start gap-3 sm:gap-6 py-3 sm:py-4 sm:justify-center w-max sm:w-auto sm:mx-auto">
           {commonGallery.map((ward) => (
             <button
               key={ward.id}
+              ref={el => categoryBtnRefs.current[ward.id] = el}
               onClick={() => scrollToSection(ward.id)}
-              className={`flex flex-col items-center gap-2 min-w-[100px] transition group ${activeSection === ward.id ? 'opacity-100' : 'opacity-60 hover:opacity-100'
-                }`}
+              className={`flex flex-col items-center gap-1.5 sm:gap-2 min-w-0 transition group flex-shrink-0 ${
+                activeSection === ward.id ? 'opacity-100' : 'opacity-60 hover:opacity-100'
+              }`}
             >
-              <div className={`w-32 h-32 rounded-xl overflow-hidden border-2 transition-all ${activeSection === ward.id ? 'border-gray-900 shadow-md scale-105' : 'border-transparent group-hover:border-gray-300'
-                }`}>
+              <div className={`w-16 h-16 sm:w-32 sm:h-32 rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all ${
+                activeSection === ward.id
+                  ? 'border-gray-900 shadow-md sm:scale-105'
+                  : 'border-transparent group-hover:border-gray-300'
+              }`}>
                 <img
                   src={ward.images[0]}
                   alt={ward.title}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <span className={`text-xs font-semibold whitespace-nowrap transition-colors ${activeSection === ward.id ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'
-                }`}>
+              <span className={`text-[11px] sm:text-xs font-medium sm:font-semibold text-center leading-tight max-w-[72px] sm:max-w-none transition-colors ${
+                activeSection === ward.id ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'
+              }`}>
                 {ward.title}
               </span>
             </button>
@@ -129,34 +147,35 @@ export default function ClinicPhotosPage() {
       </div>
 
       {/* Content Area */}
-      {/* <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-16"> */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-16">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-10 sm:space-y-16">
         {commonGallery.map((ward) => (
           <div
             key={ward.id}
             id={ward.id}
             ref={el => sectionRefs.current[ward.id] = el}
-            className="scroll-mt-40"
+            className="scroll-mt-32 sm:scroll-mt-40"
           >
-            <div className="flex flex-col md:flex-row gap-8">
-              {/* Left Side: Title & Description (Sticky on Desktop) */}
+            {/* Mobile: stacked layout. Desktop: side-by-side */}
+            <div className="flex flex-col md:flex-row gap-4 sm:gap-8">
+              {/* Title & Description */}
               <div className="md:w-1/3 flex-shrink-0">
-                <div className="sticky top-24">
-                  <h2 className="text-4xl font-bold text-gray-900 mb-3">{ward.title}</h2>
-                  <p className="text-gray-600 leading-relaxed">
+                <div className="md:sticky md:top-24">
+                  <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-3">{ward.title}</h2>
+                  <p className="text-gray-600 leading-relaxed text-sm hidden sm:block">
                     {ward.description}
                   </p>
                 </div>
               </div>
 
-              {/* Right Side: Photo Grid */}
+              {/* Photo Grid */}
               <div className="md:w-2/3 flex-1">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-4">
                   {ward.images.map((imgSrc, index) => (
                     <div
                       key={index}
-                      className={`rounded-2xl overflow-hidden cursor-pointer group ${index === 0 ? 'sm:col-span-2 aspect-[16/9]' : 'aspect-square'
-                        }`}
+                      className={`rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer group ${
+                        index === 0 ? 'col-span-2 aspect-[16/10] sm:aspect-[16/9]' : 'aspect-square'
+                      }`}
                     >
                       <img
                         src={imgSrc}
@@ -168,9 +187,6 @@ export default function ClinicPhotosPage() {
                 </div>
               </div>
             </div>
-
-            {/* Divider between sections except the last one */}
-            {/* <div className="mt-16 border-t border-gray-200"></div> */}
           </div>
         ))}
       </div>

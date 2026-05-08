@@ -104,7 +104,11 @@ export const clinicsData = [
       { day: "Tomorrow", slots: ["9:00 AM", "10:00 AM", "2:00 PM", "4:00 PM"] },
       { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "1:00 PM", "3:00 PM"] },
     ],
-
+    reviewHighlights: [
+      { author: "Amina O.", rating: 5, date: "April 2026", text: "The staff at Wellington Clinics are incredibly warm and professional. Dr. Eze took time to explain everything about my condition and treatment options. The facility is spotless." },
+      { author: "Chidi N.", rating: 5, date: "March 2026", text: "Best walk-in clinic experience I've had in Abuja. Minimal wait time and the diagnostic services are top-notch. Highly recommend for family medicine." },
+      { author: "Fatima B.", rating: 4, date: "March 2026", text: "Very clean and organized. The pediatrics department is fantastic — my children feel comfortable here. Only wish the parking was bigger." },
+    ],
   },
   {
     id: 2,
@@ -126,7 +130,11 @@ export const clinicsData = [
       { day: "Tomorrow", slots: ["8:00 AM", "10:30 AM", "1:00 PM", "3:30 PM"] },
       { day: "Wednesday", slots: ["8:00 AM", "10:00 AM", "12:00 PM", "2:00 PM"] },
     ],
-
+    reviewHighlights: [
+      { author: "Emeka A.", rating: 5, date: "April 2026", text: "Alliance Hospital saved my father's life during a cardiac emergency. The cardiology team is world-class and the ICU facilities are state-of-the-art." },
+      { author: "Grace I.", rating: 5, date: "March 2026", text: "Had my knee surgery here and the orthopedics department exceeded all expectations. Recovery room was comfortable and the nurses were attentive 24/7." },
+      { author: "Yusuf M.", rating: 4, date: "February 2026", text: "Excellent emergency services. The CT scan and MRI results came back quickly. Staff communication could be slightly better during peak hours." },
+    ],
   },
   {
     id: 3,
@@ -147,7 +155,12 @@ export const clinicsData = [
       { day: "Today", slots: ["4:00 PM"] },
       { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
       { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
+    ],
+    reviewHighlights: [
+      { author: "Dr. Okonkwo R.", rating: 5, date: "April 2026", text: "As a referring physician, I trust National Hospital for complex cases. Their tertiary care is unmatched in the FCT with excellent surgical outcomes." },
+      { author: "Blessing U.", rating: 5, date: "March 2026", text: "The oncology department provided compassionate and thorough care for my mother. Every step of her treatment was explained clearly to our family." },
+      { author: "Suleiman D.", rating: 4, date: "February 2026", text: "Great research hospital with knowledgeable specialists. Wait times can be long due to high patient volume, but the quality of care makes it worthwhile." },
+    ],
   },
   {
     id: 4,
@@ -168,7 +181,12 @@ export const clinicsData = [
       { day: "Today", slots: ["4:00 PM"] },
       { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
       { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
+    ],
+    reviewHighlights: [
+      { author: "Ngozi K.", rating: 5, date: "April 2026", text: "Premium healthcare at its finest. The executive check-up package was thorough — they caught an issue early that another clinic missed entirely." },
+      { author: "Tunde S.", rating: 5, date: "March 2026", text: "Abuja Clinics' Maitama branch is immaculate. The diagnostic imaging is fast and the doctors are very experienced. My family's go-to clinic." },
+      { author: "Halima J.", rating: 4, date: "February 2026", text: "The women's health department is excellent. Felt very safe and cared for. Slightly pricey but absolutely worth it for the quality." },
+    ],
   },
   {
     id: 5,
@@ -189,7 +207,12 @@ export const clinicsData = [
       { day: "Today", slots: ["4:00 PM"] },
       { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
       { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
+    ],
+    reviewHighlights: [
+      { author: "Chioma E.", rating: 5, date: "April 2026", text: "After years of struggling, Dr. Adeyemi at Aquila gave us hope. The IVF process was explained step by step and we finally have our miracle baby." },
+      { author: "Ibrahim T.", rating: 5, date: "March 2026", text: "The male fertility counseling was handled with great sensitivity and professionalism. The lab facilities are modern and the results were accurate." },
+      { author: "Aisha W.", rating: 4, date: "February 2026", text: "Excellent reproductive health clinic. The gynecological services are comprehensive. Appointments are sometimes hard to get due to high demand." },
+    ],
   },
   {
     id: 6,
@@ -210,7 +233,12 @@ export const clinicsData = [
       { day: "Today", slots: ["4:00 PM"] },
       { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
       { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
+    ],
+    reviewHighlights: [
+      { author: "Funke A.", rating: 5, date: "April 2026", text: "Marie Stopes provided exceptional maternal care throughout my pregnancy. The family planning counseling was informative and non-judgmental." },
+      { author: "Maryam L.", rating: 5, date: "March 2026", text: "Very professional and confidential service. The staff made me feel comfortable discussing sensitive health topics. Clean and well-organized facility." },
+      { author: "Joy P.", rating: 4, date: "February 2026", text: "Affordable reproductive health services with caring staff. The Wuse II location is convenient. Would appreciate extended weekend hours." },
+    ],
   },
   {
     id: 7,
@@ -231,7 +259,12 @@ export const clinicsData = [
       { day: "Today", slots: ["4:00 PM"] },
       { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
       { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
+    ],
+    reviewHighlights: [
+      { author: "Obinna C.", rating: 5, date: "April 2026", text: "Garki Hospital's emergency department is outstanding. Was seen within minutes and the treatment was efficient. The pharmacy on-site is very convenient." },
+      { author: "Zainab H.", rating: 5, date: "March 2026", text: "Brought my son to pediatrics and the doctors were wonderful with children. The diagnostics were thorough and we got results the same day." },
+      { author: "Kenneth O.", rating: 4, date: "February 2026", text: "Reliable general hospital with good surgical outcomes. The facility is well-maintained and the location on Tafawa Balewa Way is very accessible." },
+    ],
   },
   {
     id: 8,
@@ -252,7 +285,12 @@ export const clinicsData = [
       { day: "Today", slots: ["4:00 PM"] },
       { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
       { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
+    ],
+    reviewHighlights: [
+      { author: "Adaeze M.", rating: 5, date: "April 2026", text: "Nizamiye Hospital feels like an international-standard facility right here in Abuja. The cardiology team performed my husband's procedure flawlessly." },
+      { author: "Rasheed B.", rating: 5, date: "March 2026", text: "Advanced diagnostics and patient-centric care. The neurosurgery department is staffed with experts. The Life Camp location has ample parking too." },
+      { author: "Patricia N.", rating: 4, date: "February 2026", text: "Top-tier orthopedic surgery. My recovery was smooth thanks to excellent post-operative care. Slightly far from city center but worth the drive." },
+    ],
   },
   {
     id: 9,
@@ -273,7 +311,12 @@ export const clinicsData = [
       { day: "Today", slots: ["4:00 PM"] },
       { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
       { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
+    ],
+    reviewHighlights: [
+      { author: "Victor E.", rating: 5, date: "April 2026", text: "Kelina Hospital's laparoscopic surgery team is exceptional. Minimally invasive, quick recovery, and the surgeons explained every step beforehand." },
+      { author: "Comfort A.", rating: 5, date: "March 2026", text: "The urology department at Gwarimpa branch is very professional. Endoscopy was quick and painless. The post-operative rehab program was very helpful." },
+      { author: "Daniel U.", rating: 4, date: "February 2026", text: "Good specialist surgical hospital. Critical care unit is well-equipped. The only downside is the distance from the city center — 15km away." },
+    ],
   }
 ];
 
@@ -608,7 +651,7 @@ export default function ClinicCardsApp() {
   };
 
   const navigateToClinic = (clinicId) => {
-    navigate(`/clinic/${clinicId}`);
+    window.open(`/clinic/${clinicId}`, '_blank');
   };
 
   return (

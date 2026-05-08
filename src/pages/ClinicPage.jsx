@@ -1,13 +1,139 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid } from 'lucide-react';
+import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, Quote, X, Search } from 'lucide-react';
 import { clinicsData, commonGallery } from '../components/ClinicGrid';
 import { useFavorites } from '@/context/FavoritesContext';
+
+function ReviewsDialog({ clinic, isOpen, onClose }) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  if (!isOpen || !clinic?.reviewHighlights) return null;
+
+  const filteredReviews = searchQuery.trim()
+    ? clinic.reviewHighlights.filter(r =>
+        r.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.author.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : clinic.reviewHighlights;
+
+  // Calculate rating breakdown
+  const ratingCounts = [0, 0, 0, 0, 0];
+  clinic.reviewHighlights.forEach(r => {
+    if (r.rating >= 1 && r.rating <= 5) ratingCounts[r.rating - 1]++;
+  });
+  const totalReviews = clinic.reviewHighlights.length;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in"
+        onClick={(e) => e.stopPropagation()}
+        style={{ animation: 'fadeInUp 0.3s ease-out' }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+          <h2 className="text-xl font-bold text-gray-900">
+            {clinic.number_of_reviews} reviews
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="overflow-y-auto flex-1 p-6">
+          {/* Overall Rating */}
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <Star className="w-7 h-7 text-yellow-400 fill-yellow-400" />
+              <span className="text-5xl font-bold text-gray-900">{clinic.rating}</span>
+            </div>
+            <p className="text-gray-500 text-sm">Overall rating</p>
+          </div>
+
+          {/* Rating Breakdown Bars */}
+          <div className="space-y-2 mb-8 max-w-xs mx-auto">
+            {[5, 4, 3, 2, 1].map((star) => {
+              const count = ratingCounts[star - 1];
+              const pct = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+              return (
+                <div key={star} className="flex items-center gap-3 text-sm">
+                  <span className="w-4 text-right text-gray-600 font-medium">{star}</span>
+                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gray-900 rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Search */}
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search reviews..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Reviews List */}
+          <div className="space-y-6">
+            {filteredReviews.length > 0 ? (
+              filteredReviews.map((review, index) => (
+                <div key={index} className="pb-6 border-b border-gray-100 last:border-0 last:pb-0">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                      {review.author.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">{review.author}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-0.5">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3.5 h-3.5 ${
+                            i < review.rating
+                              ? 'text-gray-900 fill-gray-900'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-gray-500 text-xs">· {review.date}</span>
+                  </div>
+                  <p className="text-gray-700 text-sm leading-relaxed">{review.text}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 py-8">No reviews match your search.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ClinicPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [showAllReviews, setShowAllReviews] = useState(false);
   const { toggleFavorite, isFavorite } = useFavorites();
 
   const clinic = clinicsData.find(c => c.id === parseInt(id));
@@ -219,6 +345,67 @@ export default function ClinicPage() {
                 ))}
               </div>
             </div>
+
+            {/* Review Highlights */}
+            {clinic.reviewHighlights && clinic.reviewHighlights.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <MessageSquare className="w-6 h-6 text-blue-600" />
+                  Review Highlights
+                </h2>
+                <p className="text-sm text-gray-500 mb-6">What patients are saying about {clinic.practitioner_name}</p>
+
+                <div className="space-y-5">
+                  {clinic.reviewHighlights.map((review, index) => (
+                    <div
+                      key={index}
+                      className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl p-5 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-300"
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                          {review.author.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 text-sm">{review.author}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <div className="flex items-center gap-0.5">
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-3.5 h-3.5 ${
+                                    i < review.rating
+                                      ? 'text-yellow-400 fill-yellow-400'
+                                      : 'text-gray-200'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs text-gray-400">·</span>
+                            <p className="text-xs text-gray-500">{review.date}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-gray-700 text-sm leading-relaxed pl-[52px]">
+                        "{review.text}"
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <ThumbsUp className="w-4 h-4 text-green-500" />
+                    <span><span className="font-semibold text-gray-900">{clinic.number_of_reviews}</span> verified reviews</span>
+                  </div>
+                  <button
+                    onClick={() => setShowAllReviews(true)}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                  >
+                    See all reviews →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Booking Sidebar */}
@@ -272,6 +459,13 @@ export default function ClinicPage() {
           </div>
         </div>
       </div>
+
+      {/* Reviews Dialog */}
+      <ReviewsDialog
+        clinic={clinic}
+        isOpen={showAllReviews}
+        onClose={() => setShowAllReviews(false)}
+      />
     </div>
   );
 }
