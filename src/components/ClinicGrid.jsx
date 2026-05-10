@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Star, MapPin, Phone, Clock, Heart, X, Calendar, Shield, Stethoscope, Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useFavorites } from '@/context/FavoritesContext';
 
 // This component wraps around your existing ClinicGrid
@@ -598,9 +598,23 @@ function ClinicCard({ clinic, onClick }) {
 
 export default function ClinicCardsApp() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('distance');
   const [filteredClinics, setFilteredClinics] = useState(clinicsData);
+  const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    if (location.state?.scrollToSearch && searchInputRef.current) {
+      searchInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 500);
+      
+      // Clear the state so it doesn't happen again if navigating back
+      navigate('.', { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   const handleSearch = () => {
     let results = [...clinicsData];
@@ -667,6 +681,7 @@ export default function ClinicCardsApp() {
           <div className="space-y-4">
             <div className="relative">
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search by clinic name, specialty, or tag..."
                 value={searchQuery}

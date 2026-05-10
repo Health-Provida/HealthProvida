@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, Quote, X, Search } from 'lucide-react';
 import { clinicsData, commonGallery } from '../components/ClinicGrid';
@@ -134,6 +134,7 @@ export default function ClinicPage() {
   const navigate = useNavigate();
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { toggleFavorite, isFavorite } = useFavorites();
 
   const clinic = clinicsData.find(c => c.id === parseInt(id));
@@ -142,7 +143,14 @@ export default function ClinicPage() {
   // Flatten commonGallery objects to just array of images for the hero section
   const flattenedCommonImages = commonGallery.flatMap(ward => ward.images);
   // Ignore clinic.gallery if it exists, because it might contain the old object structure.
-  const gallery = [clinic?.image_src, ...flattenedCommonImages];
+  const gallery = [clinic?.image_src, ...flattenedCommonImages].filter(Boolean);
+
+  const handleScroll = (e) => {
+    const scrollPosition = e.target.scrollLeft;
+    const imageWidth = e.target.clientWidth;
+    const newIndex = Math.round(scrollPosition / imageWidth);
+    setCurrentImageIndex(newIndex);
+  };
 
   // Scroll to top when page loads
   useEffect(() => {
@@ -223,13 +231,12 @@ export default function ClinicPage() {
             </div>
           </div>
 
-          {/* Airbnb-style Photo Grid */}
-          {/* <div className="relative rounded-2xl overflow-hidden h-[300px] md:h-[450px] lg:h-[500px] group"> */}
-          <div className="relative rounded-2xl overflow-hidden h-[350px] md:h-[350px] lg:h-[350px] group">
-            <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-full">
+          {/* Desktop Airbnb-style Photo Grid */}
+          <div className="hidden md:block relative rounded-2xl overflow-hidden h-[350px] group">
+            <div className="grid grid-cols-4 grid-rows-2 gap-2 h-full">
               {/* Large left image */}
               <div
-                className="md:col-span-2 md:row-span-2 h-full relative cursor-pointer overflow-hidden"
+                className="col-span-2 row-span-2 h-full relative cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
               >
                 <img
@@ -240,9 +247,9 @@ export default function ClinicPage() {
                 <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
               </div>
 
-              {/* 4 small right images (hidden on small screens) */}
+              {/* 4 small right images */}
               <div
-                className="hidden md:block md:col-span-1 md:row-span-1 h-full relative cursor-pointer overflow-hidden"
+                className="col-span-1 row-span-1 h-full relative cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
               >
                 <img
@@ -252,21 +259,21 @@ export default function ClinicPage() {
                 <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
               </div>
               <div
-                className="hidden md:block md:col-span-1 md:row-span-1 h-full relative cursor-pointer overflow-hidden"
+                className="col-span-1 row-span-1 h-full relative cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
               >
                 <img src={gallery[2]} alt="Ward 2" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                 <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
               </div>
               <div
-                className="hidden md:block md:col-span-1 md:row-span-1 h-full relative cursor-pointer overflow-hidden"
+                className="col-span-1 row-span-1 h-full relative cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
               >
                 <img src={gallery[3]} alt="Ward 3" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                 <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
               </div>
               <div
-                className="hidden md:block md:col-span-1 md:row-span-1 h-full relative cursor-pointer overflow-hidden"
+                className="col-span-1 row-span-1 h-full relative cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
               >
                 <img src={gallery[4]} alt="Ward 4" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
@@ -282,6 +289,34 @@ export default function ClinicPage() {
               <LayoutGrid className="w-4 h-4" />
               Show all photos
             </button>
+          </div>
+
+          {/* Mobile Swipeable Photo Gallery */}
+          <div className="md:hidden relative h-[300px] -mx-4 sm:mx-0 sm:rounded-2xl overflow-hidden group">
+            <div 
+              className="flex h-full overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              onScroll={handleScroll}
+            >
+              {gallery.map((img, idx) => (
+                <div
+                  key={idx}
+                  className="w-full h-full flex-shrink-0 snap-center relative cursor-pointer"
+                  onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+                >
+                  <img
+                    src={img}
+                    alt={`${clinic.practitioner_name} gallery ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black opacity-0 active:opacity-10 transition-opacity"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Image Counter Badge */}
+            <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm text-white text-sm font-medium px-3 py-1 rounded-md z-10 pointer-events-none">
+              {currentImageIndex + 1} / {gallery.length}
+            </div>
           </div>
         </div>
       </div>
