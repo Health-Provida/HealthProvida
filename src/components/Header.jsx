@@ -81,7 +81,7 @@ const Header = () => {
               <Button
                 size="sm"
                 onClick={handleSearchClick}
-                className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-xs sm:text-sm px-2 sm:px-4"
+                className="hidden sm:inline-flex bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-xs sm:text-sm px-2 sm:px-4"
               >
                 Find a Provider
               </Button>

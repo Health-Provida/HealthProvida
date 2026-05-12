@@ -94,7 +94,7 @@ export const clinicsData = [
     number_of_reviews: 245,
     distance_from_location: "10 km",
     phone: "+234 901 234 5678",
-    tags: ["General Practice", "Family Medicine", "Diagnostic Services", "Preventative Care", "Telehealth Available", "Walk-in Clinic"],
+    tags: ["General Practice", "Family Medicine", "Telemedicine Available", "Diagnostic Services", "Preventative Care", "Telehealth Available", "Walk-in Clinic"],
     nextAvailable: "Tomorrow 10:00 AM",
     specialties: ["Family Medicine", "Pediatrics", "Women's Health", "Vaccinations", "Health Screenings"],
     supportedHMOs: ["Hygeia HMO", "Avon Healthcare", "Reliance HMO", "AXA Mansard"],

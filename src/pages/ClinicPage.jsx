@@ -4,8 +4,21 @@ import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, L
 import { clinicsData, commonGallery } from '../components/ClinicGrid';
 import { useFavorites } from '@/context/FavoritesContext';
 
-function ReviewsDialog({ clinic, isOpen, onClose }) {
+function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (isOpen && initialScrollTarget !== null) {
+      setTimeout(() => {
+        const el = document.getElementById(`dialog-review-${initialScrollTarget}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('bg-blue-50', 'transition-colors', 'duration-1000');
+          setTimeout(() => el.classList.remove('bg-blue-50'), 2000);
+        }
+      }, 100);
+    }
+  }, [isOpen, initialScrollTarget]);
 
   if (!isOpen || !clinic?.reviewHighlights) return null;
 
@@ -91,8 +104,10 @@ function ReviewsDialog({ clinic, isOpen, onClose }) {
           {/* Reviews List */}
           <div className="space-y-6">
             {filteredReviews.length > 0 ? (
-              filteredReviews.map((review, index) => (
-                <div key={index} className="pb-6 border-b border-gray-100 last:border-0 last:pb-0">
+              filteredReviews.map((review, index) => {
+                const originalIndex = clinic.reviewHighlights.indexOf(review);
+                return (
+                <div key={index} id={`dialog-review-${originalIndex}`} className="pb-6 border-b border-gray-100 last:border-0 last:pb-0 rounded-lg p-2 -mx-2">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                       {review.author.charAt(0)}
@@ -118,7 +133,8 @@ function ReviewsDialog({ clinic, isOpen, onClose }) {
                   </div>
                   <p className="text-gray-700 text-sm leading-relaxed">{review.text}</p>
                 </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-center text-gray-500 py-8">No reviews match your search.</p>
             )}
@@ -134,7 +150,13 @@ export default function ClinicPage() {
   const navigate = useNavigate();
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [targetReviewIndex, setTargetReviewIndex] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const handleShowMore = (index) => {
+    setTargetReviewIndex(index);
+    setShowAllReviews(true);
+  };
   const { toggleFavorite, isFavorite } = useFavorites();
 
   const clinic = clinicsData.find(c => c.id === parseInt(id));
@@ -432,11 +454,11 @@ export default function ClinicPage() {
                 </h2>
                 <p className="text-sm text-gray-500 mb-6">What patients are saying about {clinic.practitioner_name}</p>
 
-                <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] md:flex-col md:gap-0 md:space-y-5 md:overflow-visible">
+                <div className="flex overflow-x-auto gap-4 pb-4 -mx-6 px-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] md:mx-0 md:px-0 md:flex-col md:gap-0 md:space-y-5 md:overflow-visible">
                   {clinic.reviewHighlights.map((review, index) => (
                     <div
                       key={index}
-                      className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl p-5 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-300 min-w-[280px] w-[80vw] md:w-auto md:min-w-0 snap-center shrink-0"
+                      className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl p-5 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-300 w-[85vw] max-w-[320px] md:w-auto md:max-w-none md:min-w-0 snap-start shrink-0"
                     >
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
@@ -463,7 +485,15 @@ export default function ClinicPage() {
                         </div>
                       </div>
                       <p className="text-gray-700 text-sm leading-relaxed pl-[52px]">
-                        "{review.text}"
+                        {review.text.length > 120 ? (
+                          <>
+                            <span>{review.text.substring(0, 120)}...</span>
+                            <br />
+                            <button onClick={() => handleShowMore(index)} className="font-semibold underline text-gray-900 mt-1 hover:text-blue-600 transition-colors">Show more</button>
+                          </>
+                        ) : (
+                          review.text
+                        )}
                       </p>
                     </div>
                   ))}
@@ -541,7 +571,11 @@ export default function ClinicPage() {
       <ReviewsDialog
         clinic={clinic}
         isOpen={showAllReviews}
-        onClose={() => setShowAllReviews(false)}
+        onClose={() => {
+          setShowAllReviews(false);
+          setTargetReviewIndex(null);
+        }}
+        initialScrollTarget={targetReviewIndex}
       />
     </div>
   );
