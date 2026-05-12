@@ -182,9 +182,56 @@ export default function ClinicPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16">
-      {/* Hero Section */}
-      <div className="bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-gray-50 md:pb-16">
+      {/* Mobile Top Navigation - Overlaid on image */}
+      <div className="md:hidden absolute top-0 left-0 right-0 z-20 flex justify-between items-center p-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-gray-700 shadow-sm"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <div className="flex gap-2">
+          <button className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-gray-700 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" x2="12" y1="2" y2="15" /></svg>
+          </button>
+          <button 
+            onClick={() => toggleFavorite(clinic.id)}
+            className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-gray-700 shadow-sm"
+          >
+            <Heart className={`w-5 h-5 ${favorited ? 'fill-red-500 text-red-500' : ''}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Swipeable Photo Gallery (Moved to top) */}
+      <div className="md:hidden relative h-[350px] w-full group">
+        <div 
+          className="flex h-full overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          onScroll={handleScroll}
+        >
+          {gallery.map((img, idx) => (
+            <div
+              key={idx}
+              className="w-full h-full flex-shrink-0 snap-center relative cursor-pointer"
+              onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+            >
+              <img
+                src={img}
+                alt={`${clinic.practitioner_name} gallery ${idx + 1}`}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black opacity-0 active:opacity-10 transition-opacity"></div>
+            </div>
+          ))}
+        </div>
+        <div className="absolute bottom-10 right-4 bg-black/60 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-md z-10 pointer-events-none">
+          {currentImageIndex + 1} / {gallery.length}
+        </div>
+      </div>
+
+      {/* Desktop Hero Section */}
+      <div className="hidden md:block bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <button
             onClick={() => navigate(-1)}
@@ -194,10 +241,10 @@ export default function ClinicPage() {
             Back to Search
           </button>
 
-          {/* Clinic Header Info */}
+          {/* Clinic Header Info (Desktop) */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{clinic.practitioner_name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{clinic.practitioner_name}</h1>
               <p className="text-xl text-blue-600 font-medium mb-3">{clinic.practice_type}</p>
 
               <div className="flex flex-wrap items-center gap-4 text-sm">
@@ -232,7 +279,7 @@ export default function ClinicPage() {
           </div>
 
           {/* Desktop Airbnb-style Photo Grid */}
-          <div className="hidden md:block relative rounded-2xl overflow-hidden h-[350px] group">
+          <div className="relative rounded-2xl overflow-hidden h-[350px] group">
             <div className="grid grid-cols-4 grid-rows-2 gap-2 h-full">
               {/* Large left image */}
               <div
@@ -290,38 +337,33 @@ export default function ClinicPage() {
               Show all photos
             </button>
           </div>
-
-          {/* Mobile Swipeable Photo Gallery */}
-          <div className="md:hidden relative h-[300px] -mx-4 sm:mx-0 sm:rounded-2xl overflow-hidden group">
-            <div 
-              className="flex h-full overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-              onScroll={handleScroll}
-            >
-              {gallery.map((img, idx) => (
-                <div
-                  key={idx}
-                  className="w-full h-full flex-shrink-0 snap-center relative cursor-pointer"
-                  onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
-                >
-                  <img
-                    src={img}
-                    alt={`${clinic.practitioner_name} gallery ${idx + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black opacity-0 active:opacity-10 transition-opacity"></div>
-                </div>
-              ))}
-            </div>
-
-            {/* Image Counter Badge */}
-            <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm text-white text-sm font-medium px-3 py-1 rounded-md z-10 pointer-events-none">
-              {currentImageIndex + 1} / {gallery.length}
-            </div>
-          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto md:px-6 lg:px-8 bg-white md:bg-transparent rounded-t-[2rem] md:rounded-none -mt-6 md:mt-0 relative z-10 md:py-8 pt-6 pb-16 px-4">
+        {/* Mobile Clinic Header Info */}
+        <div className="md:hidden mb-8 text-center sm:text-left">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">{clinic.practitioner_name}</h1>
+          <p className="text-sm text-gray-500 mb-4">{clinic.address}</p>
+          
+          <div className="flex items-center justify-center sm:justify-start gap-4 text-sm divide-x divide-gray-200 border-y border-gray-100 py-3">
+            <div className="flex flex-col items-center px-4">
+              <div className="flex items-center font-bold text-gray-900">
+                <Star className="w-4 h-4 text-yellow-500 fill-current mr-1" />
+                {clinic.rating}
+              </div>
+              <span className="text-xs text-gray-500 mt-1">{clinic.number_of_reviews} reviews</span>
+            </div>
+            <div className="flex flex-col items-center px-4">
+              <div className="flex items-center font-bold text-gray-900">
+                <Shield className="w-4 h-4 text-green-500 mr-1" />
+                Verified
+              </div>
+              <span className="text-xs text-gray-500 mt-1">Provider</span>
+            </div>
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
@@ -390,11 +432,11 @@ export default function ClinicPage() {
                 </h2>
                 <p className="text-sm text-gray-500 mb-6">What patients are saying about {clinic.practitioner_name}</p>
 
-                <div className="space-y-5">
+                <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] md:flex-col md:gap-0 md:space-y-5 md:overflow-visible">
                   {clinic.reviewHighlights.map((review, index) => (
                     <div
                       key={index}
-                      className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl p-5 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-300"
+                      className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl p-5 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-300 min-w-[280px] w-[80vw] md:w-auto md:min-w-0 snap-center shrink-0"
                     >
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
