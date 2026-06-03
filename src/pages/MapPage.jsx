@@ -2,20 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, ArrowLeft, Star, Navigation, ExternalLink, X, Phone, Clock } from 'lucide-react';
-import { clinicsData } from '../components/ClinicGrid';
+import { useClinics } from '@/context/ClinicsContext';
 
-// Mock coordinates for the 9 clinics spread across the map (% based)
-const clinicPins = [
-  { clinicId: 1, x: 28, y: 22 },   // Wellington Clinics – Life Camp
-  { clinicId: 2, x: 55, y: 38 },   // Alliance Hospital – Garki / Area 11
-  { clinicId: 3, x: 50, y: 52 },   // National Hospital – CBD
-  { clinicId: 4, x: 68, y: 25 },   // Abuja Clinics – Maitama
-  { clinicId: 5, x: 42, y: 68 },   // Aquila Clinic – Apo / Garki
-  { clinicId: 6, x: 72, y: 48 },   // Marie Stopes – Wuse II
-  { clinicId: 7, x: 60, y: 62 },   // Garki Hospital – Garki
-  { clinicId: 8, x: 20, y: 45 },   // Nizamiye Hospital – Life Camp
-  { clinicId: 9, x: 15, y: 72 },   // Kelina Hospital – Gwarimpa
-];
+
 
 // Mock road network for the map background
 function MapBackground() {
@@ -231,8 +220,14 @@ function ClinicPopup({ clinic, onClose, onNavigate }) {
 
 export default function MapPage() {
   const navigate = useNavigate();
+  const { clinics, loading } = useClinics();
   const [activeClinicId, setActiveClinicId] = useState(null);
   const mapContainerRef = useRef(null);
+
+  // Derive map pins from clinic data (using DB map_pin_x/y coordinates)
+  const clinicPins = clinics
+    .filter(c => c.map_pin_x != null && c.map_pin_y != null)
+    .map(c => ({ clinicId: c.id, x: c.map_pin_x, y: c.map_pin_y }));
 
   const handlePinClick = (clinicId) => {
     setActiveClinicId((prev) => (prev === clinicId ? null : clinicId));
@@ -263,7 +258,7 @@ export default function MapPage() {
               <div>
                 <h1 className="text-base font-bold text-gray-900 leading-tight">Clinic Map</h1>
                 <p className="text-xs text-gray-500 hidden sm:block">
-                  {clinicsData.length} providers in Abuja
+                  {clinics.length} providers in Abuja
                 </p>
               </div>
             </div>
@@ -290,7 +285,7 @@ export default function MapPage() {
 
         {/* Pins */}
         {clinicPins.map((pin) => {
-          const clinic = clinicsData.find((c) => c.id === pin.clinicId);
+          const clinic = clinics.find((c) => c.id === pin.clinicId);
           if (!clinic) return null;
           const isActive = activeClinicId === pin.clinicId;
 
@@ -327,7 +322,7 @@ export default function MapPage() {
       <div className="bg-white border-t border-gray-200 shadow-up">
         <div className="max-w-[1600px] mx-auto px-4 py-3">
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-            {clinicsData.map((clinic) => (
+            {clinics.map((clinic) => (
               <button
                 key={clinic.id}
                 onClick={() => setActiveClinicId(clinic.id)}

@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { clinicsData } from '@/components/ClinicGrid';
+import { useClinics } from '@/context/ClinicsContext';
 
 const FavoritesContext = createContext(null);
 
 const STORAGE_KEY = 'healthprovida_favorites';
 
 export function FavoritesProvider({ children }) {
+  const { clinics } = useClinics();
+
   const [favorites, setFavorites] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -38,8 +40,8 @@ export function FavoritesProvider({ children }) {
   }, [favorites]);
 
   const getFavoriteClinics = useCallback(() => {
-    return clinicsData.filter(clinic => favorites.includes(clinic.id));
-  }, [favorites]);
+    return clinics.filter(clinic => favorites.includes(clinic.id));
+  }, [favorites, clinics]);
 
   const favoritesCount = favorites.length;
 

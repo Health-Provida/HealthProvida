@@ -3,9 +3,11 @@ import { motion } from 'framer-motion';
 import { MapPin, Navigation, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useClinics } from '@/context/ClinicsContext';
 
 const MapSection = () => {
   const navigate = useNavigate();
+  const { clinics } = useClinics();
 
   const handleMapClick = () => {
     navigate('/map');
@@ -67,7 +69,7 @@ const MapSection = () => {
         
         <div className="p-4 bg-gray-50">
           <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>9 clinics in this area</span>
+            <span>{clinics.length} clinics in this area</span>
             <button 
               className="text-blue-600 hover:text-blue-700 font-medium"
               onClick={handleMapClick}

@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Share, Heart, X, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
-import { clinicsData, commonGallery } from '../components/ClinicGrid';
-
-const allImages = commonGallery.flatMap(ward => 
-  ward.images.map(img => ({ url: img, room: ward.title }))
-);
+import { useClinics } from '@/context/ClinicsContext';
+import { fetchGallery } from '@/utils/supabaseQueries';
 
 export default function ClinicPhotosPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState(commonGallery[0]?.id || '');
+  const { clinics } = useClinics();
+  const [galleryData, setGalleryData] = useState([]);
+  const [galleryLoading, setGalleryLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState('');
   const [viewerOpen, setViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -35,7 +35,29 @@ export default function ClinicPhotosPage() {
     if (distance < -minSwipeDistance) handlePrevImage();
   };
 
-  const clinic = clinicsData.find(c => c.id === parseInt(id));
+  const clinic = clinics.find(c => c.id === parseInt(id));
+
+  // Derive allImages from fetched gallery data
+  const allImages = galleryData.flatMap(ward =>
+    ward.images.map(img => ({ url: img, room: ward.title }))
+  );
+
+  // Fetch gallery data from Supabase
+  useEffect(() => {
+    let cancelled = false;
+    async function loadGallery() {
+      setGalleryLoading(true);
+      const { data } = await fetchGallery();
+      if (cancelled) return;
+      if (data && data.length > 0) {
+        setGalleryData(data);
+        setActiveSection(data[0].id);
+      }
+      setGalleryLoading(false);
+    }
+    loadGallery();
+    return () => { cancelled = true; };
+  }, []);
 
   // Create refs for each section to handle scrolling
   const sectionRefs = useRef({});
@@ -97,7 +119,7 @@ export default function ClinicPhotosPage() {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [galleryData]);
 
   // Auto-scroll category nav to keep active thumbnail visible
   useEffect(() => {
@@ -110,6 +132,30 @@ export default function ClinicPhotosPage() {
       nav.scrollTo({ left: scrollLeft, behavior: 'smooth' });
     }
   }, [activeSection]);
+
+  if (galleryLoading) {
+    return (
+      <div className="min-h-screen bg-white animate-pulse">
+        <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+          <div className="px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-center">
+            <div className="h-5 w-24 bg-gray-200 rounded" />
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-8 space-y-12">
+          {[1,2,3].map(i => (
+            <div key={i} className="space-y-4">
+              <div className="h-8 w-48 bg-gray-200 rounded" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2 aspect-[16/10] bg-gray-200 rounded-xl" />
+                <div className="aspect-square bg-gray-200 rounded-xl" />
+                <div className="aspect-square bg-gray-200 rounded-xl" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!clinic) {
     return (
@@ -175,7 +221,7 @@ export default function ClinicPhotosPage() {
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         <div className="px-3 sm:px-6 lg:px-8 flex items-start gap-3 sm:gap-6 py-3 sm:py-4 sm:justify-center w-max sm:w-auto sm:mx-auto">
-          {commonGallery.map((ward) => (
+          {galleryData.map((ward) => (
             <button
               key={ward.id}
               ref={el => categoryBtnRefs.current[ward.id] = el}
@@ -205,7 +251,7 @@ export default function ClinicPhotosPage() {
 
       {/* Content Area */}
       <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-10 sm:space-y-16">
-        {commonGallery.map((ward) => (
+        {galleryData.map((ward) => (
           <div
             key={ward.id}
             id={ward.id}

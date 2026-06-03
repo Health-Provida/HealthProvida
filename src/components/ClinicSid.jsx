@@ -1,210 +1,6 @@
 import React, { useState } from 'react';
 import { Star, MapPin, Phone, Clock, Heart, X, Calendar, Shield, Stethoscope } from 'lucide-react';
-import imageone from '../components/ui/imageone.png'
-import imagetwo from '../components/ui/imagetwo.png'
-import imagethree from '../components/ui/imagethree.png'
-import imagefour from '../components/ui/imagefour.png'
-import imagefive from '../components/ui/imagefive.png'
-import imagesix from '../components/ui/imagesix.png'
-import imageseven from '../components/ui/imageseven.png'
-import imageeight from '../components/ui/imageeight.png'
-import imagenine from '../components/ui/imagenine.png'
-
-// Sample clinic data
-const clinicsData = [
-  {
-    id: 1,
-    image_src: imageone,
-    practitioner_name: "Wellington Clinics",
-    practice_type: "Multi-specialty Clinic / General Practice",
-    address: "Plot 321 Gidan Fulani Street, Lifecamp, Abuja 900108, Federal Capital Territory, Nigeria.",
-    rating: 4.8,
-    number_of_reviews: 245,
-    distance_from_location: "10 km",
-    phone: "+234 901 234 5678",
-    tags: ["General Practice", "Family Medicine", "Diagnostic Services", "Preventative Care", "Telehealth Available", "Walk-in Clinic"],
-    nextAvailable: "Tomorrow 10:00 AM",
-    specialties: ["Family Medicine", "Pediatrics", "Women's Health", "Vaccinations", "Health Screenings"],
-    supportedHMOs: ["Hygeia HMO", "Avon Healthcare", "Reliance HMO", "AXA Mansard"],
-    equipment: ["X-Ray Machine", "Ultrasound", "ECG Monitor", "Laboratory", "Pharmacy"],
-    timeSlots: [
-      { day: "Today", slots: ["2:00 PM", "4:30 PM"] },
-      { day: "Tomorrow", slots: ["9:00 AM", "10:00 AM", "2:00 PM", "4:00 PM"] },
-      { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "1:00 PM", "3:00 PM"] },
-    ]
-  },
-  {
-    id: 2,
-    image_src: imagetwo,
-    practitioner_name: "Alliance Hospital",
-    practice_type: "General Hospital / Specialist Care",
-    address: "No. 5 Malumfashi Close, Off Emeka Anyaoku Street, Area 11, Garki, F.C.T, Abuja.",
-    rating: 4.8,
-    number_of_reviews: 310,
-    distance_from_location: "5 km",
-    phone: "+234 902 345 6789",
-    tags: ["General Surgery", "Cardiology", "Orthopedics", "Emergency Services", "Intensive Care", "Specialist Consultations"],
-    nextAvailable: "Today 2:30 PM",
-    specialties: ["Cardiology", "Orthopedics", "Surgery", "Emergency Medicine", "Radiology"],
-    supportedHMOs: ["Hygeia HMO", "MetroHealth HMO", "Apex Healthcare", "Total Health Trust"],
-    equipment: ["CT Scan", "MRI Machine", "Digital X-Ray", "ICU Facilities", "Operating Theaters"],
-    timeSlots: [
-      { day: "Today", slots: ["3:00 PM", "5:00 PM"] },
-      { day: "Tomorrow", slots: ["8:00 AM", "10:30 AM", "1:00 PM", "3:30 PM"] },
-      { day: "Wednesday", slots: ["8:00 AM", "10:00 AM", "12:00 PM", "2:00 PM"] },
-    ]
-  },
-  {
-    id: 3,
-    image_src: imagethree,
-
-    practitioner_name: "National Hospital Abuja",
-    practice_type: "Tertiary Care Hospital / National Referral Center",
-                    address: "PMB 425 Ali Muhammad Zarah Street, Central Business Dis, Abuja 900103, Federal Capital Territory, Nigeria.",
-    rating: 4.8,
-    number_of_reviews: 550,
-    distance_from_location: "3 km",
-    phone: "+234 903 456 7890",
-    nextAvailable: "Today 2:30 PM",
-    tags: ["Tertiary Care", "Research Hospital", "Specialized Surgery", "Pediatrics", "Oncology", "Public Health"],
-    specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
-    supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
-    equipment: ["Laser Equipment", "Dermatoscope", "Cryotherapy Unit", "Phototherapy"],
-    timeSlots: [
-      { day: "Today", slots: ["4:00 PM"] },
-      { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
-      { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
-  },
-  {
-    id: 4,
-    image_src: imagefour,
-    practitioner_name: "Abuja Clinics",
-    practice_type: "Private Multi-specialty Clinic",
-                address: "22 Amazon St, Maitama, Abuja 904101, Federal Capital Territory, Nigeria.",
-
-    rating: 4.8,
-    number_of_reviews: 240,
-    distance_from_location: "10 km",
-    phone: "+234 904 567 8901",
-    nextAvailable: "Today 2:30 PM",
-    tags: ["Premium Healthcare", "Executive Check-ups", "Diagnostic Imaging", "Family Health", "Women's Health", "Urgent Care"],
-    specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
-    supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
-    equipment: ["Laser Equipment", "Dermatoscope", "Cryotherapy Unit", "Phototherapy"],
-    timeSlots: [
-      { day: "Today", slots: ["4:00 PM"] },
-      { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
-      { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
-  },
-  {
-    id: 5,
-    image_src: imagefive,
-
-    practitioner_name: "Aquila Clinic and Fertility",
-    practice_type: "Fertility & Reproductive Health Clinic",
-    address: "Zone A, Apo Legislative Quarters, 21 Tatari Ali Cl, Garki, Abuja 900110, Federal Capital Territory, Nigeria.",
-    rating: 4.8,
-    number_of_reviews: 120,
-    distance_from_location: "8 km",
-    phone_number: "+234 905 678 9012",
-    nextAvailable: "Today 2:30 PM",
-    tags: ["IVF", "Reproductive Medicine", "Gynecological Services", "Male Fertility", "Counseling Services", "Women's Health"],
-    specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
-    supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
-    equipment: ["Laser Equipment", "Dermatoscope", "Cryotherapy Unit", "Phototherapy"],
-    timeSlots: [
-      { day: "Today", slots: ["4:00 PM"] },
-      { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
-      { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
-  },
-  {
-   id: 6,
-    image_src: imagesix,
-    practitioner_name: "Marie Stopes Medical Centre, Abuja",
-    practice_type: "Reproductive Health & Family Planning Clinic",
-    address: "Plot 45, Wuse II District, Abuja F.C.T, Nigeria.",
-    rating: 4.8,
-    number_of_reviews: 95,
-    distance_from_location: "6 km",
-    phone: "+234 906 789 0123",
-    nextAvailable: "Today 2:30 PM",
-    tags: ["Family Planning", "Contraception", "Women's Health", "Maternal Health", "Sexual Health", "Counseling Services"],
-    specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
-    supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
-    equipment: ["Laser Equipment", "Dermatoscope", "Cryotherapy Unit", "Phototherapy"],
-    timeSlots: [
-      { day: "Today", slots: ["4:00 PM"] },
-      { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
-      { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
-  },
-  {
-        id: 7,
-    image_src: imageeight,
-    practitioner_name: "Garki Hospital Abuja",
-    practice_type: "General Private Hospital",
-    address: "Tafawa Balewa Way, Garki, Abuja.",
-    rating: 4.8,
-    number_of_reviews: 280,
-    distance_from_location: "4 km",
-    phone: "+234 907 890 1234",
-    nextAvailable: "Today 2:30 PM",
-    tags: ["General Medicine", "Pediatrics", "Surgery", "Diagnostics", "Pharmacy Services", "Emergency Department"],
-    specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
-    supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
-    equipment: ["Laser Equipment", "Dermatoscope", "Cryotherapy Unit", "Phototherapy"],
-    timeSlots: [
-      { day: "Today", slots: ["4:00 PM"] },
-      { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
-      { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
-  },
-  {
-    id: 8,
-    image_src: imageeight,
-    practitioner_name: "Nizamiye Hospital (Life Camp)",
-    practice_type: "Private General Hospital",
-    address: "Plot 101, Life Camp Junction, Abuja F.C.T, Nigeria.",
-    rating: 4.8,
-    number_of_reviews: 150,
-    distance_from_location: "11 km",
-    phone: "+234 908 901 2345",
-    nextAvailable: "Today 2:30 PM",
-    tags: ["International Healthcare", "Advanced Diagnostics", "Cardiology", "Neurosurgery", "Orthopedic Surgery", "Patient-Centric Care"],
-    specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
-    supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
-    equipment: ["Laser Equipment", "Dermatoscope", "Cryotherapy Unit", "Phototherapy"],
-    timeSlots: [
-      { day: "Today", slots: ["4:00 PM"] },
-      { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
-      { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
-  },
-  {
-    id: 9,
-    image_src: imagenine,
-    practitioner_name: "Kelina Hospital (Gwarimpa)",
-    practice_type: "Specialist Surgical Hospital",
-    address: "Road 69, Gwarimpa Estate, Abuja F.C.T, Nigeria.",
-    rating: 4.8,
-    number_of_reviews: 110,
-    distance_from_location: "15 km",
-    phone: "+234 909 012 3456",
-    nextAvailable: "Today 2:30 PM",
-    tags: ["General Surgery", "Urology", "Laparoscopic Surgery", "Endoscopy", "Critical Care", "Post-operative Rehabilitation"],
-    specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
-    supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
-    equipment: ["Laser Equipment", "Dermatoscope", "Cryotherapy Unit", "Phototherapy"],
-    timeSlots: [
-      { day: "Today", slots: ["4:00 PM"] },
-      { day: "Tomorrow", slots: ["9:30 AM", "11:30 AM", "2:30 PM"] },
-      { day: "Wednesday", slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"] },
-    ]
-  }
-];
+import { useClinics } from '@/context/ClinicsContext';
 
 function ClinicDialog({ clinic, isOpen, onClose }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -483,6 +279,7 @@ function ClinicCard({ clinic, onClick }) {
 }
 
 export default function ClinicCardsApp() {
+  const { clinics, loading } = useClinics();
   const [selectedClinic, setSelectedClinic] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -505,13 +302,30 @@ export default function ClinicCardsApp() {
         </div>
 
         <div className="space-y-6">
-          {clinicsData.map((clinic) => (
-            <ClinicCard 
-              key={clinic.id} 
-              clinic={clinic} 
-              onClick={() => openDialog(clinic)}
-            />
-          ))}
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="md:w-64 h-48 md:h-40 rounded-lg bg-gray-200" />
+                  <div className="flex-1 space-y-4">
+                    <div className="h-6 w-48 bg-gray-200 rounded" />
+                    <div className="h-4 w-32 bg-gray-200 rounded" />
+                    <div className="flex gap-2">
+                      {[1,2,3].map(j => <div key={j} className="h-6 w-20 bg-gray-100 rounded-full" />)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            clinics.map((clinic) => (
+              <ClinicCard 
+                key={clinic.id} 
+                clinic={clinic} 
+                onClick={() => openDialog(clinic)}
+              />
+            ))
+          )}
         </div>
 
         {selectedClinic && (

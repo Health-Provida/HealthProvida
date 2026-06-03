@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, Quote, X, Search } from 'lucide-react';
-import { clinicsData, commonGallery } from '../components/ClinicGrid';
+import { fetchClinicById, fetchGallery } from '@/utils/supabaseQueries';
 import { useFavorites } from '@/context/FavoritesContext';
 
 function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
@@ -148,6 +148,10 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
 export default function ClinicPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [clinic, setClinic] = useState(null);
+  const [galleryData, setGalleryData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [targetReviewIndex, setTargetReviewIndex] = useState(null);
@@ -159,13 +163,36 @@ export default function ClinicPage() {
   };
   const { toggleFavorite, isFavorite } = useFavorites();
 
-  const clinic = clinicsData.find(c => c.id === parseInt(id));
+  // Fetch clinic and gallery data from Supabase
+  useEffect(() => {
+    let cancelled = false;
+    async function loadData() {
+      setLoading(true);
+      setError(null);
+      const [clinicResult, galleryResult] = await Promise.all([
+        fetchClinicById(id),
+        fetchGallery(),
+      ]);
+      if (cancelled) return;
+      if (clinicResult.error) {
+        setError(clinicResult.error.message || 'Failed to load clinic');
+      } else {
+        setClinic(clinicResult.data);
+      }
+      if (galleryResult.data) {
+        setGalleryData(galleryResult.data);
+      }
+      setLoading(false);
+    }
+    loadData();
+    return () => { cancelled = true; };
+  }, [id]);
+
   const favorited = clinic ? isFavorite(clinic.id) : false;
 
-  // Flatten commonGallery objects to just array of images for the hero section
-  const flattenedCommonImages = commonGallery.flatMap(ward => ward.images);
-  // Ignore clinic.gallery if it exists, because it might contain the old object structure.
-  const gallery = [clinic?.image_src, ...flattenedCommonImages].filter(Boolean);
+  // Flatten gallery images for the hero section
+  const flattenedGalleryImages = galleryData.flatMap(ward => ward.images);
+  const gallery = [clinic?.image_src, ...flattenedGalleryImages].filter(Boolean);
 
   const handleScroll = (e) => {
     const scrollPosition = e.target.scrollLeft;
@@ -179,13 +206,54 @@ export default function ClinicPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  if (!clinic) {
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 animate-pulse">
+        <div className="hidden md:block bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="h-5 w-32 bg-gray-200 rounded mb-6" />
+            <div className="h-8 w-96 bg-gray-200 rounded mb-3" />
+            <div className="h-5 w-64 bg-gray-200 rounded mb-6" />
+            <div className="rounded-2xl h-[350px] bg-gray-200" />
+          </div>
+        </div>
+        <div className="md:hidden h-[350px] bg-gray-200" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            {[1,2,3].map(i => (
+              <div key={i} className="bg-white rounded-xl p-6 space-y-3">
+                <div className="h-6 w-48 bg-gray-200 rounded" />
+                <div className="flex gap-2 flex-wrap">{[1,2,3,4].map(j => <div key={j} className="h-8 w-24 bg-gray-100 rounded-lg" />)}</div>
+              </div>
+            ))}
+          </div>
+          <div className="bg-white rounded-xl p-6 h-fit space-y-4">
+            <div className="h-6 w-40 bg-gray-200 rounded" />
+            {[1,2,3].map(i => (
+              <div key={i} className="space-y-2">
+                <div className="h-4 w-20 bg-gray-200 rounded" />
+                <div className="grid grid-cols-2 gap-2">{[1,2,3,4].map(j => <div key={j} className="h-10 bg-gray-100 rounded-lg" />)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error or not-found state
+  if (error || !clinic) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center bg-gray-50 p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Clinic Not Found</h1>
-        <p className="text-gray-600 mb-6">The healthcare provider you are looking for does not exist or has been removed.</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">
+          {error ? 'Unable to Load Clinic' : 'Clinic Not Found'}
+        </h1>
+        <p className="text-gray-600 mb-6">
+          {error || 'The healthcare provider you are looking for does not exist or has been removed.'}
+        </p>
         <button
-          onClick={() => navigate('/services')}
+          onClick={() => navigate('/')}
           className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-lg transition flex items-center gap-2"
         >
           <ArrowLeft size={20} />

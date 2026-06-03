@@ -14,10 +14,12 @@ import MapPage from '@/pages/MapPage';
 import FavoritesPage from '@/pages/FavoritesPage';
 import ScrollToTop from '@/components/ScrollToTop';
 import { FavoritesProvider } from '@/context/FavoritesContext';
+import { ClinicsProvider } from '@/context/ClinicsContext';
 
 
 function App() {
   return (
+    <ClinicsProvider>
     <FavoritesProvider>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-teal-50 flex flex-col">
         <ScrollToTop />
@@ -45,6 +47,7 @@ function App() {
         <Toaster />
       </div>
     </FavoritesProvider>
+    </ClinicsProvider>
   );
 }
 

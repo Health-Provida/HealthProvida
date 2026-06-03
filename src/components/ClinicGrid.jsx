@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Star, MapPin, Phone, Clock, Heart, X, Calendar, Shield, Stethoscope, Search } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useFavorites } from '@/context/FavoritesContext';
+import { useClinics } from '@/context/ClinicsContext';
 
 // This component wraps around your existing ClinicGrid
 // You'll need to export clinicsData from your ClinicGrid.jsx file
@@ -599,10 +600,18 @@ function ClinicCard({ clinic, onClick }) {
 export default function ClinicCardsApp() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { clinics, loading, error } = useClinics();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('distance');
-  const [filteredClinics, setFilteredClinics] = useState(clinicsData);
+  const [filteredClinics, setFilteredClinics] = useState([]);
   const searchInputRef = useRef(null);
+
+  // Sync filteredClinics when clinics data arrives from context
+  useEffect(() => {
+    if (clinics.length > 0) {
+      setFilteredClinics(clinics);
+    }
+  }, [clinics]);
 
   useEffect(() => {
     if (location.state?.scrollToSearch && searchInputRef.current) {
@@ -617,7 +626,7 @@ export default function ClinicCardsApp() {
   }, [location, navigate]);
 
   const handleSearch = () => {
-    let results = [...clinicsData];
+    let results = [...clinics];
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -717,20 +726,58 @@ export default function ClinicCardsApp() {
             </div>
 
             <div className="text-sm text-gray-600 pt-2 border-t border-gray-100">
-              {searchQuery && (
-                <span className="mr-4">
-                  <span className="font-medium">Search term:</span> "{searchQuery}"
-                </span>
+              {loading ? (
+                <span className="text-gray-400 animate-pulse">Loading clinics…</span>
+              ) : (
+                <>
+                  {searchQuery && (
+                    <span className="mr-4">
+                      <span className="font-medium">Search term:</span> "{searchQuery}"
+                    </span>
+                  )}
+                  <span className="font-medium">
+                    Showing {filteredClinics.length} of {clinics.length} clinics
+                  </span>
+                </>
               )}
-              <span className="font-medium">
-                Showing {filteredClinics.length} of {clinicsData.length} clinics
-              </span>
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
-          {filteredClinics.length > 0 ? (
+          {loading ? (
+            // Skeleton loading cards
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow-md p-4 sm:p-6 animate-pulse">
+                <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
+                  <div className="w-full md:w-64 h-48 md:h-40 rounded-lg bg-gradient-to-br from-gray-200 to-gray-300 flex-shrink-0" />
+                  <div className="flex-1 space-y-4">
+                    <div className="space-y-2">
+                      <div className="h-6 bg-gray-200 rounded-md w-3/4" />
+                      <div className="h-4 bg-gray-200 rounded-md w-1/2" />
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="h-4 bg-gray-200 rounded-md w-24" />
+                      <div className="h-4 bg-gray-200 rounded-md w-16" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-200 rounded-md w-full" />
+                      <div className="h-4 bg-gray-200 rounded-md w-2/3" />
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="h-6 bg-blue-100 rounded-full w-24" />
+                      <div className="h-6 bg-blue-100 rounded-full w-20" />
+                      <div className="h-6 bg-blue-100 rounded-full w-28" />
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <div className="h-10 bg-gradient-to-r from-blue-200 to-green-200 rounded-lg w-40" />
+                      <div className="h-10 bg-gray-200 rounded-lg w-32" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : filteredClinics.length > 0 ? (
             filteredClinics.map((clinic) => (
               <ClinicCard
                 key={clinic.id}
@@ -738,6 +785,22 @@ export default function ClinicCardsApp() {
                 onClick={() => navigateToClinic(clinic.id)}
               />
             ))
+          ) : error ? (
+            <div className="text-center py-12 bg-white rounded-lg shadow-md">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-50 rounded-full mb-4">
+                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <p className="text-gray-900 text-lg font-semibold mb-2">Unable to load clinics</p>
+              <p className="text-gray-500 mb-4">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-2 px-6 rounded-lg font-medium transition"
+              >
+                Try Again
+              </button>
+            </div>
           ) : (
             <div className="text-center py-12 bg-white rounded-lg shadow-md">
               <p className="text-gray-600 text-lg">No clinics found matching your search criteria.</p>
