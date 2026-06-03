@@ -15,15 +15,15 @@ const Footer = () => {
               {/* <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
                 <Heart className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold">HealthProvida</span> */} 
+              <span className="text-xl font-bold">HealthProvida</span> */}
               <img src={logo}
-              style ={{width: "10rem"}} alt='logo' />
+                style={{ width: "10rem" }} alt='logo' />
             </Link>
             <p className="text-gray-400 text-sm">
               Find trusted providers near you, check their availability, and book appointments in just a few taps—no stress, no delays
             </p>
           </div>
-          
+
           <div>
             <span className="font-semibold text-lg mb-4 block">Quick Links</span>
             <div className="space-y-2">
@@ -36,7 +36,7 @@ const Footer = () => {
             </div>
           </div>
 
-          
+
           <div>
             <span className="font-semibold text-lg mb-4 block">Support</span>
             <div className="space-y-2">
@@ -45,13 +45,13 @@ const Footer = () => {
               <button className="block text-gray-400 hover:text-white transition-colors">Terms of Service</button>
             </div>
           </div>
-          
+
           <div>
             <span className="font-semibold text-lg mb-4 block">Contact Info</span>
             <div className="space-y-3">
               <div className="flex items-center space-x-2 text-gray-400">
                 <Phone className="w-4 h-4" />
-                <span className="text-sm">(555) 123-HEALTH</span>
+                <span className="text-sm">+2348111557302</span>
               </div>
               {/* <div className="flex items-center space-x-2 text-gray-400">
                 <Mail className="w-4 h-4" />
@@ -64,7 +64,7 @@ const Footer = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-gray-400 text-sm">
             © 2025 HealthProvida. All rights reserved. | Revolutionizing healthcare access in Sub-Saharan Africa.
