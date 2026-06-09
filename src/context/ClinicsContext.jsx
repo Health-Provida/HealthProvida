@@ -21,7 +21,6 @@
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { fetchClinics } from '@/utils/supabaseQueries';
-import { clinicsData as staticClinicsData } from '@/components/ClinicGrid';
 
 const ClinicsContext = createContext(null);
 
@@ -37,8 +36,8 @@ export function ClinicsProvider({ children }) {
     if (fetchError) {
       console.error('ClinicsContext: Failed to fetch clinics:', fetchError);
       setError(fetchError.message || 'Failed to load clinics');
-      // Fall back to hardcoded data when Supabase is unreachable
-      setClinics(staticClinicsData);
+      // Supabase unreachable — leave clinics empty so error UI shows
+      setClinics([]);
     } else {
       setClinics(data ?? []);
     }

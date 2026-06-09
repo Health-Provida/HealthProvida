@@ -12,6 +12,10 @@
  */
 import { supabase } from './supabase';
 
+// Guard: when supabase client isn't initialised (missing env vars)
+const NO_CLIENT_ERROR = { message: 'Supabase client is not configured. Check environment variables.' };
+function noClient() { return !supabase; }
+
 // ─── Local image fallback map ───────────────────────────────
 // Clinic IDs 1-9 have local PNGs bundled with the app.
 // When `image_url` is null/empty in the DB we fall back to these.
@@ -124,6 +128,7 @@ const CLINIC_SELECT = `
  * @returns {{ data: Array|null, error: Error|null }}
  */
 export async function fetchClinics() {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
   const { data, error } = await supabase
     .from('clinics')
     .select(CLINIC_SELECT)
@@ -142,6 +147,7 @@ export async function fetchClinics() {
  * @returns {{ data: Object|null, error: Error|null }}
  */
 export async function fetchClinicById(id) {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
   const { data, error } = await supabase
     .from('clinics')
     .select(CLINIC_SELECT)
@@ -175,6 +181,7 @@ export async function fetchClinicById(id) {
  * @returns {{ data: Array|null, error: Error|null }}
  */
 export async function fetchGallery() {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
   const { data: wards, error: wardsError } = await supabase
     .from('gallery_wards')
     .select('id, title, description, sort_order')
@@ -215,6 +222,7 @@ export async function fetchGallery() {
  * @returns {{ data: Array|null, error: Error|null }}
  */
 export async function fetchGalleryForClinic(clinicId) {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
   const { data: wards, error: wardsError } = await supabase
     .from('gallery_wards')
     .select('id, title, description, sort_order')
@@ -255,6 +263,7 @@ export async function fetchGalleryForClinic(clinicId) {
  * @returns {{ data: Array|null, error: Error|null }}
  */
 export async function fetchClinicOperatingHours(clinicId) {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
   const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const { data, error } = await supabase
@@ -288,6 +297,7 @@ export async function fetchClinicOperatingHours(clinicId) {
  * @returns {{ data: Array|null, error: Error|null }}
  */
 export async function fetchAppointmentSlots(clinicId) {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0]; // "YYYY-MM-DD"
 
@@ -329,6 +339,7 @@ export async function fetchAppointmentSlots(clinicId) {
  * @returns {{ data: Array|null, error: Error|null }}
  */
 export async function fetchMapPins() {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
   const { data, error } = await supabase
     .from('clinics')
     .select('id, practitioner_name, practice_type, address, rating, number_of_reviews, map_pin_x, map_pin_y, image_url')
@@ -359,6 +370,7 @@ export async function fetchMapPins() {
  * @returns {{ data: Array|null, error: Error|null }}
  */
 export async function fetchHMOs() {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
   const { data, error } = await supabase
     .from('hmos')
     .select('id, name, logo_url, is_active')
@@ -377,6 +389,7 @@ export async function fetchHMOs() {
  * @returns {{ data: Array|null, error: Error|null }}
  */
 export async function fetchCategoryCounts() {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
   // Supabase JS client doesn't support GROUP BY natively,
   // so we fetch minimal data and aggregate client-side.
   const { data, error } = await supabase
@@ -410,6 +423,7 @@ export async function fetchCategoryCounts() {
  * @returns {{ data: Object|null, error: Error|null }}
  */
 export async function fetchStats() {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
   // Run three lightweight count queries in parallel
   const [clinicsRes, reviewsRes, hmosRes] = await Promise.all([
     supabase.from('clinics').select('id', { count: 'exact', head: true }).eq('is_active', true),
