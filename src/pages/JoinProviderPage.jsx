@@ -684,6 +684,7 @@
 
 import React, { useState } from 'react';
 import { Briefcase, Mail, MapPin, Phone, User, CheckCircle, ArrowRight, ArrowLeft, Stethoscope, Shield, Tag, Clock, Upload, Plus, Trash2, Image } from 'lucide-react';
+import { submitProviderApplication } from '@/utils/submitProviderApplication';
 
 // Pre-registered HMOs
 const availableHMOs = [
@@ -846,9 +847,19 @@ export default function MultiStepProviderForm() {
     setCurrentStep(prev => prev - 1);
   };
 
-  const handleSubmit = () => {
-    console.log('Form submitted:', formData);
-    alert('Registration submitted successfully! We will review your application and get back to you soon.');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState(null);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    setSubmitResult(null);
+    const result = await submitProviderApplication(formData);
+    setSubmitting(false);
+    if (result.success) {
+      setSubmitResult({ type: 'success', message: 'Your application has been submitted successfully! We will review it and get back to you soon.' });
+    } else {
+      setSubmitResult({ type: 'error', message: result.error || 'Something went wrong. Please try again.' });
+    }
   };
 
   return (
@@ -1397,13 +1408,34 @@ export default function MultiStepProviderForm() {
               ) : (
                 <button
                   onClick={handleSubmit}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 px-6 rounded-lg font-medium transition flex items-center justify-center gap-2"
+                  disabled={submitting}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 px-6 rounded-lg font-medium transition flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <CheckCircle size={20} />
-                  Submit Application
+                  {submitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={20} />
+                      Submit Application
+                    </>
+                  )}
                 </button>
               )}
             </div>
+
+            {/* Submit result feedback */}
+            {submitResult && (
+              <div className={`mt-4 p-4 rounded-lg text-sm font-medium ${
+                submitResult.type === 'success'
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}>
+                {submitResult.message}
+              </div>
+            )}
         </div>
 
         {/* Help Section */}

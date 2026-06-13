@@ -12,20 +12,43 @@ import ClinicPage from '@/pages/ClinicPage';
 import ClinicPhotosPage from '@/pages/ClinicPhotosPage';
 import MapPage from '@/pages/MapPage';
 import FavoritesPage from '@/pages/FavoritesPage';
+import LoginPage from '@/pages/LoginPage';
+import SignUpPage from '@/pages/SignUpPage';
 import ScrollToTop from '@/components/ScrollToTop';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import AdminRouter from '@/pages/admin/AdminRouter';
+import { AuthProvider } from '@/context/AuthContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { ClinicsProvider } from '@/context/ClinicsContext';
 
 
 function App() {
   return (
+    <AuthProvider>
     <ClinicsProvider>
     <FavoritesProvider>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-teal-50 flex flex-col">
         <ScrollToTop />
         <Routes>
+          {/* Auth pages — no header/footer */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+
+          {/* Admin panel — its own layout, protected */}
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminRouter />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Standalone pages (no header/footer) */}
           <Route path="/clinic/:id/photos" element={<ClinicPhotosPage />} />
           <Route path="/map" element={<MapPage />} />
+
+          {/* Public pages with header/footer */}
           <Route path="*" element={
             <>
               <Header />
@@ -48,6 +71,7 @@ function App() {
       </div>
     </FavoritesProvider>
     </ClinicsProvider>
+    </AuthProvider>
   );
 }
 

@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu } from 'lucide-react';
+import { Menu, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProfileSidebar from '@/components/ProfileSidebar';
+import { useAuth } from '@/context/AuthContext';
 import logo from '../components/ui/logo.png'
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated, profile, isAdmin } = useAuth();
 
   const handleSearchClick = () => {
     navigate('/', { state: { scrollToSearch: true } });
   };
+
+  // Get user initial for avatar
+  const userInitial = profile?.full_name?.charAt(0)?.toUpperCase() || (isAuthenticated ? 'U' : 'G');
 
   return (
     <>
@@ -86,15 +91,44 @@ const Header = () => {
                 Find a Provider
               </Button>
 
-              {/* User Avatar Button */}
-              <button
-                id="user-avatar-button"
-                onClick={() => setIsSidebarOpen(true)}
-                className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white text-sm font-bold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 flex-shrink-0"
-                title="Open profile menu"
-              >
-                D
-              </button>
+              {/* Admin Panel Link — visible only to admins */}
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition shadow-sm"
+                  title="Admin Panel"
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  Admin
+                </Link>
+              )}
+
+              {/* Auth buttons or User Avatar */}
+              {isAuthenticated ? (
+                <button
+                  id="user-avatar-button"
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white text-sm font-bold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 flex-shrink-0"
+                  title="Open profile menu"
+                >
+                  {userInitial}
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/login"
+                    className="text-sm font-medium text-gray-700 hover:text-blue-600 transition hidden sm:block"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-xs sm:text-sm font-semibold hover:from-blue-700 hover:to-green-700 shadow-sm transition"
+                  >
+                    Sign up
+                  </Link>
+                </div>
+              )}
 
               <Button 
                 variant="ghost" 
@@ -143,6 +177,34 @@ const Header = () => {
               >
                 Join as a Provider
               </NavLink>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium"
+                >
+                  <Shield className="w-4 h-4" />
+                  Admin Panel
+                </Link>
+              )}
+              {!isAuthenticated && (
+                <div className="flex gap-3 pt-2 border-t border-gray-100">
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex-1 text-center py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex-1 text-center py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold"
+                  >
+                    Sign up
+                  </Link>
+                </div>
+              )}
             </motion.div>
           )}
         </div>

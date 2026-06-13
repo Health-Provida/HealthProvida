@@ -1,12 +1,13 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Heart, X, User, Settings, Globe, HelpCircle,
   LogOut, MessageSquare, CalendarCheck, ChevronRight,
-  Stethoscope
+  Stethoscope, Shield, LogIn
 } from 'lucide-react';
 import { useFavorites } from '@/context/FavoritesContext';
+import { useAuth } from '@/context/AuthContext';
 
 const menuItems = [
   {
@@ -30,6 +31,18 @@ const menuItems = [
 
 export default function ProfileSidebar({ isOpen, onClose }) {
   const { favoritesCount } = useFavorites();
+  const { isAuthenticated, profile, isAdmin, adminRole, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    onClose();
+    await signOut();
+    navigate('/');
+  };
+
+  const userInitial = profile?.full_name?.charAt(0)?.toUpperCase() || 'U';
+  const userName = profile?.full_name || 'Guest';
+  const userEmail = profile?.email || '';
 
   return (
     <AnimatePresence>
@@ -66,22 +79,43 @@ export default function ProfileSidebar({ isOpen, onClose }) {
 
             {/* User Profile Card */}
             <div className="px-6 py-6 border-b border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white text-xl font-bold shadow-lg flex-shrink-0">
-                  D
+              {isAuthenticated ? (
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white text-xl font-bold shadow-lg flex-shrink-0">
+                    {userInitial}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-base font-bold text-gray-900 truncate">{userName}</h3>
+                    <p className="text-sm text-gray-500 truncate">{userEmail}</p>
+                    {isAdmin && (
+                      <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full capitalize">
+                        <Shield className="w-3 h-3" />
+                        {adminRole?.replace('_', ' ')}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h3 className="text-base font-bold text-gray-900 truncate">Daniel Achonduh</h3>
-                  <p className="text-sm text-gray-500 truncate">daniel@healthprovida.com</p>
-                  <Link
-                    to="#"
-                    onClick={onClose}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-medium mt-0.5 inline-block"
-                  >
-                    View profile →
-                  </Link>
+              ) : (
+                <div className="text-center py-2">
+                  <p className="text-sm text-gray-500 mb-4">Sign in to access your account</p>
+                  <div className="flex gap-3">
+                    <Link
+                      to="/login"
+                      onClick={onClose}
+                      className="flex-1 py-2.5 text-center rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      Log in
+                    </Link>
+                    <Link
+                      to="/signup"
+                      onClick={onClose}
+                      className="flex-1 py-2.5 text-center rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-green-700 transition"
+                    >
+                      Sign up
+                    </Link>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Navigation */}
@@ -128,6 +162,26 @@ export default function ProfileSidebar({ isOpen, onClose }) {
                 </div>
               ))}
 
+              {/* Admin Panel Link */}
+              {isAdmin && (
+                <>
+                  <div className="mx-6 my-2 border-t border-gray-100" />
+                  <nav className="px-3">
+                    <Link
+                      to="/admin"
+                      onClick={onClose}
+                      className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-gray-900 hover:bg-slate-50 transition group"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-slate-900 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Shield className="w-[18px] h-[18px] text-white" />
+                      </div>
+                      <span className="flex-1">Admin Panel</span>
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition" />
+                    </Link>
+                  </nav>
+                </>
+              )}
+
               {/* Join as Provider CTA */}
               <div className="mx-6 my-4 border-t border-gray-100" />
               <div className="mx-6 mb-4">
@@ -153,18 +207,28 @@ export default function ProfileSidebar({ isOpen, onClose }) {
 
             {/* Footer */}
             <div className="px-6 py-4 border-t border-gray-100">
-              <button
-                onClick={() => {
-                  onClose();
-                  alert('Logged out!');
-                }}
-                className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
-              >
-                <div className="w-9 h-9 rounded-lg bg-gray-100 group-hover:bg-red-100 flex items-center justify-center transition">
-                  <LogOut className="w-[18px] h-[18px]" />
-                </div>
-                <span>Log out</span>
-              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-gray-100 group-hover:bg-red-100 flex items-center justify-center transition">
+                    <LogOut className="w-[18px] h-[18px]" />
+                  </div>
+                  <span>Log out</span>
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={onClose}
+                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-gray-100 group-hover:bg-blue-100 flex items-center justify-center transition">
+                    <LogIn className="w-[18px] h-[18px]" />
+                  </div>
+                  <span>Sign in</span>
+                </Link>
+              )}
             </div>
           </motion.aside>
         </>
