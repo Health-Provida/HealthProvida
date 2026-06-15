@@ -21,7 +21,7 @@ import { supabase } from './supabase';
  * @param {string[]} formData.equipment
  * @param {string[]} formData.tags
  * @param {string[]} formData.supportedHMOs
- * @param {File|null} formData.facilityImage
+ * @param {Array<{file: File, preview: string}>} formData.facilityImages - multiple facility photos (min 4)
  * @param {Array} formData.operatingHours
  * @param {string} formData.appointmentSlotDuration
  * @returns {Promise<{success: boolean, applicationId?: string, error?: string}>}
@@ -32,30 +32,32 @@ export async function submitProviderApplication(formData) {
   }
 
   try {
-    let facilityImageUrl = null;
+    // Upload facility images if provided
+    const facilityImageUrls = [];
+    if (Array.isArray(formData.facilityImages) && formData.facilityImages.length > 0) {
+      for (const { file } of formData.facilityImages) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${fileExt}`;
+        const filePath = `applications/${fileName}`;
 
-    // Upload facility image if provided
-    if (formData.facilityImage) {
-      const file = formData.facilityImage;
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${fileExt}`;
-      const filePath = `applications/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('provider-uploads')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-
-      if (uploadError) {
-        console.error('Image upload failed:', uploadError);
-        // Continue without image — don't block the application
-      } else {
-        const { data: urlData } = supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('provider-uploads')
-          .getPublicUrl(filePath);
-        facilityImageUrl = urlData?.publicUrl ?? null;
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          console.error('Image upload failed:', uploadError);
+          // Continue without this image — don't block the application
+        } else {
+          const { data: urlData } = supabase.storage
+            .from('provider-uploads')
+            .getPublicUrl(filePath);
+          if (urlData?.publicUrl) {
+            facilityImageUrls.push(urlData.publicUrl);
+          }
+        }
       }
     }
 
@@ -75,7 +77,8 @@ export async function submitProviderApplication(formData) {
       equipment: formData.equipment || [],
       tags: formData.tags || [],
       supported_hmos: formData.supportedHMOs || [],
-      facility_image_url: facilityImageUrl,
+      facility_image_url: facilityImageUrls[0] ?? null,        // keep first for backwards compat
+      facility_image_urls: facilityImageUrls,                  // all images
       operating_hours: JSON.stringify(formData.operatingHours || []),
       appointment_slot_duration: parseInt(formData.appointmentSlotDuration, 10) || 30,
       status: 'pending',

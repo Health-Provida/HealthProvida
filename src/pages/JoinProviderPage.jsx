@@ -750,9 +750,8 @@ export default function MultiStepProviderForm() {
     specialties: [],
     // Step 3
     supportedHMOs: [],
-    // Step 4
-    facilityImage: null,
-    facilityImagePreview: '',
+    // Step 4 — multiple images (min 4)
+    facilityImages: [],
     operatingHours: daysOfWeek.map(day => ({
       day,
       isOpen: day !== 'Sunday',
@@ -796,18 +795,27 @@ export default function MultiStepProviderForm() {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData(prev => ({
           ...prev,
-          facilityImage: file,
-          facilityImagePreview: reader.result
+          facilityImages: [...prev.facilityImages, { file, preview: reader.result }]
         }));
       };
       reader.readAsDataURL(file);
-    }
+    });
+    // Reset the input so the same files can be re-selected if needed
+    e.target.value = '';
+  };
+
+  const removeFacilityImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      facilityImages: prev.facilityImages.filter((_, i) => i !== index)
+    }));
   };
 
   const updateOperatingHours = (index, field, value) => {
@@ -851,6 +859,10 @@ export default function MultiStepProviderForm() {
   const [submitResult, setSubmitResult] = useState(null);
 
   const handleSubmit = async () => {
+    if (formData.facilityImages.length < 4) {
+      setSubmitResult({ type: 'error', message: 'Please upload at least 4 facility photos before submitting.' });
+      return;
+    }
     setSubmitting(true);
     setSubmitResult(null);
     const result = await submitProviderApplication(formData);
@@ -1250,58 +1262,76 @@ export default function MultiStepProviderForm() {
                     <Clock className="w-6 h-6 text-blue-600" />
                     Operating Hours & Facility Photos
                   </h2>
-                  <p className="text-gray-600 text-sm">Set your availability and upload a facility image</p>
+                  <p className="text-gray-600 text-sm">Set your availability and upload at least 4 facility photos</p>
                 </div>
 
-                {/* Facility Image Upload */}
+                {/* Facility Images Upload — min 4 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    <Image className="inline w-4 h-4 mr-1 mb-0.5" />
-                    Facility Image
-                  </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition">
-                    {formData.facilityImagePreview ? (
-                      <div className="space-y-4">
-                        <img
-                          src={formData.facilityImagePreview}
-                          alt="Facility preview"
-                          className="mx-auto max-h-48 rounded-lg object-cover shadow-md"
-                        />
-                        <div className="flex items-center justify-center gap-3">
-                          <label className="cursor-pointer px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition flex items-center gap-2">
-                            <Upload size={16} />
-                            Change Image
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleImageChange}
-                              className="hidden"
-                            />
-                          </label>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      <Image className="inline w-4 h-4 mr-1 mb-0.5" />
+                      Facility Photos
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                      formData.facilityImages.length >= 4
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-orange-100 text-orange-700'
+                    }`}>
+                      {formData.facilityImages.length} / 4 minimum
+                    </span>
+                  </div>
+
+                  {/* Thumbnail grid */}
+                  {formData.facilityImages.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
+                      {formData.facilityImages.map((img, index) => (
+                        <div key={index} className="relative group rounded-lg overflow-hidden shadow border border-gray-200" style={{ aspectRatio: '4/3' }}>
+                          <img
+                            src={img.preview}
+                            alt={`Facility ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
                           <button
                             type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, facilityImage: null, facilityImagePreview: '' }))}
-                            className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
+                            onClick={() => removeFacilityImage(index)}
+                            className="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                            title="Remove photo"
                           >
-                            <Trash2 size={16} />
-                            Remove
+                            <Trash2 size={12} />
                           </button>
+                          <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">
+                            {index + 1}
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <label className="cursor-pointer block">
-                        <Upload className="mx-auto w-12 h-12 text-gray-400 mb-3" />
-                        <p className="text-gray-600 font-medium">Click to upload a facility image</p>
-                        <p className="text-gray-400 text-sm mt-1">PNG, JPG, or WebP up to 5MB</p>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageChange}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
-                  </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Upload drop zone */}
+                  <label className="cursor-pointer block border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 hover:bg-blue-50/30 transition">
+                    <Upload className="mx-auto w-10 h-10 text-gray-400 mb-2" />
+                    <p className="text-gray-600 font-medium text-sm">
+                      {formData.facilityImages.length === 0
+                        ? 'Click to upload facility photos'
+                        : 'Click to add more photos'}
+                    </p>
+                    <p className="text-gray-400 text-xs mt-1">PNG, JPG, or WebP · Select multiple at once</p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {formData.facilityImages.length < 4 && (
+                    <p className="mt-2 text-xs text-orange-600 flex items-center gap-1">
+                      <span>⚠</span>
+                      At least 4 photos are required ({4 - formData.facilityImages.length} more needed)
+                    </p>
+                  )}
                 </div>
 
                 {/* Appointment Slot Duration */}
