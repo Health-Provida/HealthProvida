@@ -444,9 +444,14 @@ CREATE POLICY contact_insert ON contact_messages FOR INSERT WITH CHECK (true);
 -- ==================== AUTO-CREATE PROFILE ON SIGNUP ====================
 
 CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS trigger 
+LANGUAGE plpgsql
+SECURITY DEFINER 
+-- Forces Postgres to look in the public schema for tables
+SET search_path = public, pg_catalog 
+AS $$
 BEGIN
-  INSERT INTO profiles (id, full_name, email)
+  INSERT INTO public.profiles (id, full_name, email)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
@@ -454,7 +459,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users

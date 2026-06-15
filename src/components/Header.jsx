@@ -1,21 +1,33 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu, Shield } from 'lucide-react';
+import { Menu, X, Shield, HelpCircle, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProfileSidebar from '@/components/ProfileSidebar';
 import { useAuth } from '@/context/AuthContext';
 import logo from '../components/ui/logo.png'
 
 const Header = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, profile, isAdmin } = useAuth();
+  const menuRef = useRef(null);
 
   const handleSearchClick = () => {
     navigate('/', { state: { scrollToSearch: true } });
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Get user initial for avatar
   const userInitial = profile?.full_name?.charAt(0)?.toUpperCase() || (isAuthenticated ? 'U' : 'G');
@@ -83,13 +95,6 @@ const Header = () => {
               >
                 Join as a Provider
               </NavLink>
-              <Button
-                size="sm"
-                onClick={handleSearchClick}
-                className="hidden sm:inline-flex bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-xs sm:text-sm px-2 sm:px-4"
-              >
-                Find a Provider
-              </Button>
 
               {/* Admin Panel Link — visible only to admins */}
               {isAdmin && (
@@ -103,8 +108,8 @@ const Header = () => {
                 </Link>
               )}
 
-              {/* Auth buttons or User Avatar */}
-              {isAuthenticated ? (
+              {/* User Avatar (when authenticated) */}
+              {isAuthenticated && (
                 <button
                   id="user-avatar-button"
                   onClick={() => setIsSidebarOpen(true)}
@@ -113,100 +118,131 @@ const Header = () => {
                 >
                   {userInitial}
                 </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Link
-                    to="/login"
-                    className="text-sm font-medium text-gray-700 hover:text-blue-600 transition hidden sm:block"
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-xs sm:text-sm font-semibold hover:from-blue-700 hover:to-green-700 shadow-sm transition"
-                  >
-                    Sign up
-                  </Link>
-                </div>
               )}
 
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}  
-                className="md:hidden"
-              >
-                <Menu className="w-5 h-5" />
-              </Button>
+              {/* Hamburger menu — replaces Log in / Sign up buttons */}
+              <div className="relative" ref={menuRef}>
+                <button
+                  id="hamburger-menu-button"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  aria-label="Toggle menu"
+                  className="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 shadow-sm"
+                >
+                  <AnimatePresence mode="wait" initial={false}>
+                    {isMenuOpen ? (
+                      <motion.span
+                        key="close"
+                        initial={{ rotate: -90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: 90, opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        <X className="w-4 h-4 text-gray-700" />
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="menu"
+                        initial={{ rotate: 90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: -90, opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        <Menu className="w-4 h-4 text-gray-700" />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </button>
+
+                {/* Dropdown */}
+                <AnimatePresence>
+                  {isMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -8 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -8 }}
+                      transition={{ duration: 0.15, ease: 'easeOut' }}
+                      className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                    >
+                      {/* Mobile nav links (hidden on md+) */}
+                      <div className="md:hidden px-4 pt-4 pb-2 flex flex-col gap-1">
+                        <NavLink to="/" onClick={() => setIsMenuOpen(false)}
+                          className={({ isActive }) => `text-sm font-medium py-2 px-3 rounded-lg transition-colors ${
+                            isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+                          }`}>
+                          Home
+                        </NavLink>
+                        <NavLink to="/services" onClick={() => setIsMenuOpen(false)}
+                          className={({ isActive }) => `text-sm font-medium py-2 px-3 rounded-lg transition-colors ${
+                            isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+                          }`}>
+                          Services
+                        </NavLink>
+                        <NavLink to="/about" onClick={() => setIsMenuOpen(false)}
+                          className={({ isActive }) => `text-sm font-medium py-2 px-3 rounded-lg transition-colors ${
+                            isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+                          }`}>
+                          About
+                        </NavLink>
+                        <NavLink to="/join-provider" onClick={() => setIsMenuOpen(false)}
+                          className={({ isActive }) => `text-sm font-medium py-2 px-3 rounded-lg transition-colors ${
+                            isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+                          }`}>
+                          Join as a Provider
+                        </NavLink>
+                        {isAdmin && (
+                          <Link to="/admin" onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            <Shield className="w-3.5 h-3.5" />
+                            Admin Panel
+                          </Link>
+                        )}
+                      </div>
+
+                      {/* Quick links — always visible */}
+                      <div className="px-4 pt-3 pb-2 flex flex-col gap-1 border-t border-gray-100">
+                        <NavLink to="/join-provider" onClick={() => setIsMenuOpen(false)}
+                          className={({ isActive }) => `flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg transition-colors ${
+                            isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+                          }`}>
+                          <UserPlus className="w-3.5 h-3.5 flex-shrink-0" />
+                          Join as a Provider
+                        </NavLink>
+                        <NavLink to="/help" onClick={() => setIsMenuOpen(false)}
+                          className={({ isActive }) => `flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg transition-colors ${
+                            isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+                          }`}>
+                          <HelpCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                          Help Center
+                        </NavLink>
+                      </div>
+
+                      {/* Auth links */}
+                      {!isAuthenticated && (
+                        <div className="px-4 pt-2 pb-4 flex flex-col gap-2 border-t border-gray-100">
+                          <Link
+                            to="/login"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="text-center py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            Log in
+                          </Link>
+                          <Link
+                            to="/signup"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="text-center py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-green-700 transition-all shadow-sm"
+                          >
+                            Sign up
+                          </Link>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
 
-          {/* Mobile Menu */}
-          {isMobileMenuOpen && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden mt-4 py-4 border-t border-gray-100 flex flex-col space-y-4"
-            >
-              <NavLink
-                to="/"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={({ isActive }) => `text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
-              >
-                Home
-              </NavLink>
-              <NavLink
-                to="/services"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={({ isActive }) => `text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
-              >
-                Services
-              </NavLink>
-              <NavLink
-                to="/about"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={({ isActive }) => `text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
-              >
-                About
-              </NavLink>
-              <NavLink
-                to="/join-provider"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={({ isActive }) => `sm:hidden text-gray-700 hover:text-blue-600 font-medium ${isActive ? 'text-blue-600' : ''}`}
-              >
-                Join as a Provider
-              </NavLink>
-              {isAdmin && (
-                <Link
-                  to="/admin"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium"
-                >
-                  <Shield className="w-4 h-4" />
-                  Admin Panel
-                </Link>
-              )}
-              {!isAuthenticated && (
-                <div className="flex gap-3 pt-2 border-t border-gray-100">
-                  <Link
-                    to="/login"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex-1 text-center py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700"
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    to="/signup"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex-1 text-center py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold"
-                  >
-                    Sign up
-                  </Link>
-                </div>
-              )}
-            </motion.div>
-          )}
+
         </div>
       </motion.header>
 
