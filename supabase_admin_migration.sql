@@ -221,25 +221,25 @@ BEGIN
   ) RETURNING id INTO new_clinic_id;
 
   -- Create clinic tags
-  IF array_length(app_row.tags, 1) > 0 THEN
+  IF cardinality(app_row.tags) > 0 THEN
     INSERT INTO clinic_tags (clinic_id, tag)
     SELECT new_clinic_id, unnest(app_row.tags);
   END IF;
 
   -- Create clinic specialties
-  IF array_length(app_row.specialties, 1) > 0 THEN
+  IF cardinality(app_row.specialties) > 0 THEN
     INSERT INTO clinic_specialties (clinic_id, specialty)
     SELECT new_clinic_id, unnest(app_row.specialties);
   END IF;
 
   -- Create clinic equipment
-  IF array_length(app_row.equipment, 1) > 0 THEN
+  IF cardinality(app_row.equipment) > 0 THEN
     INSERT INTO clinic_equipment (clinic_id, equipment_name)
     SELECT new_clinic_id, unnest(app_row.equipment);
   END IF;
 
   -- Create clinic HMO associations
-  IF array_length(app_row.supported_hmos, 1) > 0 THEN
+  IF cardinality(app_row.supported_hmos) > 0 THEN
     FOR hmo_record IN 
       SELECT h.id FROM hmos h 
       WHERE h.name = ANY(app_row.supported_hmos)
@@ -250,7 +250,10 @@ BEGIN
   END IF;
 
   -- Create operating hours from JSONB
-  IF app_row.operating_hours IS NOT NULL AND jsonb_array_length(app_row.operating_hours) > 0 THEN
+  -- Handles both storage formats:
+  --   'array'  → stored correctly as JSONB array (new submissions)
+  --   'string' → stored as a JSONB string scalar due to JSON.stringify (old submissions)
+  IF app_row.operating_hours IS NOT NULL THEN
     INSERT INTO clinic_operating_hours (clinic_id, day, is_open, open_time, close_time)
     SELECT 
       new_clinic_id,
@@ -260,7 +263,14 @@ BEGIN
            THEN (entry->>'openTime')::TIME ELSE NULL END,
       CASE WHEN (entry->>'isOpen')::BOOLEAN 
            THEN (entry->>'closeTime')::TIME ELSE NULL END
-    FROM jsonb_array_elements(app_row.operating_hours) AS entry;
+    FROM jsonb_array_elements(
+      CASE jsonb_typeof(app_row.operating_hours)
+        WHEN 'array'  THEN app_row.operating_hours
+        WHEN 'string' THEN (app_row.operating_hours #>> '{}')::JSONB
+        ELSE '[]'::JSONB
+      END
+    ) AS entry
+    WHERE (entry->>'isOpen') IS NOT NULL;
   END IF;
 
   -- Promote applicant to provider role (only if they're currently a patient)

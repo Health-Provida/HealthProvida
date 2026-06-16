@@ -22,6 +22,7 @@ export default function ApplicationsListPage() {
   const [approveDialog, setApproveDialog] = useState({ open: false, id: null });
   const [rejectDialog, setRejectDialog] = useState({ open: false, id: null });
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState(null);
 
   const { hasAdminWrite } = useAuth();
   const navigate = useNavigate();
@@ -45,21 +46,27 @@ export default function ApplicationsListPage() {
 
   const handleApprove = async (notes) => {
     setActionLoading(true);
+    setActionError(null);
     const { error } = await approveApplication(approveDialog.id, notes);
     setActionLoading(false);
     if (!error) {
       setApproveDialog({ open: false, id: null });
       loadApplications();
+    } else {
+      setActionError(error.message || 'Failed to approve application. Please try again.');
     }
   };
 
   const handleReject = async (reason) => {
     setActionLoading(true);
+    setActionError(null);
     const { error } = await rejectApplication(rejectDialog.id, reason);
     setActionLoading(false);
     if (!error) {
       setRejectDialog({ open: false, id: null });
       loadApplications();
+    } else {
+      setActionError(error.message || 'Failed to reject application. Please try again.');
     }
   };
 
@@ -133,6 +140,20 @@ export default function ApplicationsListPage() {
 
   return (
     <div className="space-y-6">
+      {/* Action Error Banner */}
+      {actionError && (
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">
+          <span className="text-sm font-medium flex-1">{actionError}</span>
+          <button
+            onClick={() => setActionError(null)}
+            className="text-red-400 hover:text-red-600 transition text-lg leading-none"
+            aria-label="Dismiss error"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

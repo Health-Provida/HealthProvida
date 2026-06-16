@@ -8,6 +8,26 @@
  */
 import { supabase } from './supabase';
 
+// Maps the form's display labels → valid practitioner_type enum values in the DB
+const PRACTITIONER_TYPE_MAP = {
+  'Multi-specialty Clinic / General Practice': 'Clinic',
+  'General Hospital / Specialist Care':        'Hospital',
+  'Tertiary Care Hospital / National Referral Center': 'Hospital',
+  'Private Multi-specialty Clinic':            'Clinic',
+  'Fertility & Reproductive Health Clinic':    'Specialist Center',
+  'Reproductive Health & Family Planning Clinic': 'Specialist Center',
+  'General Private Hospital':                  'Hospital',
+  'Private General Hospital':                  'Hospital',
+  'Specialist Surgical Hospital':              'Specialist Center',
+  'Diagnostic Center':                         'Diagnostic Center',
+  'Pharmacy':                                  'Pharmacy',
+  'Dental Clinic':                             'Dental Clinic',
+  // DB enum values pass through unchanged
+  'Hospital':          'Hospital',
+  'Clinic':            'Clinic',
+  'Specialist Center': 'Specialist Center',
+};
+
 /**
  * Submit a provider application to the database.
  *
@@ -69,7 +89,7 @@ export async function submitProviderApplication(formData) {
     const applicationData = {
       applicant_id: applicantId,
       practitioner_name: formData.practitionerName.trim(),
-      practitioner_type: formData.practitionerType,
+      practitioner_type: PRACTITIONER_TYPE_MAP[formData.practitionerType] ?? formData.practitionerType,
       email: formData.email.trim().toLowerCase(),
       phone: formData.phone.trim(),
       address: formData.address.trim(),
@@ -79,7 +99,7 @@ export async function submitProviderApplication(formData) {
       supported_hmos: formData.supportedHMOs || [],
       facility_image_url: facilityImageUrls[0] ?? null,        // keep first for backwards compat
       facility_image_urls: facilityImageUrls,                  // all images
-      operating_hours: JSON.stringify(formData.operatingHours || []),
+      operating_hours: formData.operatingHours || [],
       appointment_slot_duration: parseInt(formData.appointmentSlotDuration, 10) || 30,
       status: 'pending',
     };
