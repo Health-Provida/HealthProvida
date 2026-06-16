@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, Quote, X, Search } from 'lucide-react';
+import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, Quote, X, Search, PenLine } from 'lucide-react';
 import { fetchClinicById, fetchGallery } from '@/utils/supabaseQueries';
 import { useFavorites } from '@/context/FavoritesContext';
+import { useAuth } from '@/context/AuthContext';
 
 function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,12 +52,24 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
           <h2 className="text-xl font-bold text-gray-900">
             {clinic.number_of_reviews} reviews
           </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-600" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                onClose();
+                window.location.href = `/clinic/${clinic.id}/review`;
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+            >
+              <PenLine className="w-4 h-4" />
+              Write a review
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable content */}
@@ -568,10 +581,13 @@ export default function ClinicPage() {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <ThumbsUp className="w-4 h-4 text-green-500" />
-                    <span><span className="font-semibold text-gray-900">{clinic.number_of_reviews}</span> verified reviews</span>
-                  </div>
+                  <button
+                    onClick={() => navigate(`/clinic/${clinic.id}/review`)}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white text-sm font-semibold rounded-lg transition shadow-sm hover:shadow-md"
+                  >
+                    <PenLine className="w-4 h-4" />
+                    Write a Review
+                  </button>
                   <button
                     onClick={() => setShowAllReviews(true)}
                     className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"

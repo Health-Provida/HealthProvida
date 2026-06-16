@@ -15,6 +15,7 @@ import FavoritesPage from '@/pages/FavoritesPage';
 import LoginPage from '@/pages/LoginPage';
 import SignUpPage from '@/pages/SignUpPage';
 import HelpCenterPage from '@/pages/HelpCenterPage';
+import WriteReviewPage from '@/pages/WriteReviewPage';
 import ScrollToTop from '@/components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRouter from '@/pages/admin/AdminRouter';
@@ -63,6 +64,7 @@ function App() {
                   <Route path="/clinic/:id" element={<ClinicPage />} />
                   <Route path="/favorites" element={<FavoritesPage />} />
                   <Route path="/help" element={<HelpCenterPage />} />
+                  <Route path="/clinic/:id/review" element={<WriteReviewPage />} />
                 </Routes>
               </main>
               <Footer />

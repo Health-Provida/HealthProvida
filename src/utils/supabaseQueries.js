@@ -92,6 +92,8 @@ function shapeClinic(row) {
 
     // Reviews → reviewHighlights (matching existing component expectations)
     reviewHighlights: (row.reviews ?? []).map((r) => ({
+      id: r.id,
+      patient_id: r.patient_id,
       author: r.author_name,
       rating: r.rating,
       date: r.review_date ?? '',
@@ -114,7 +116,7 @@ const CLINIC_SELECT = `
   clinic_specialties ( specialty ),
   clinic_equipment ( equipment_name ),
   clinic_hmos ( hmos ( name ) ),
-  reviews ( id, author_name, rating, review_text, review_date, is_verified )
+  reviews ( id, patient_id, author_name, rating, review_text, review_date, is_verified )
 `;
 
 // ═════════════════════════════════════════════════════════════
@@ -172,6 +174,29 @@ export async function fetchClinicById(id) {
   }
 
   return { data: shaped, error: null };
+}
+
+/**
+ * Fetch a user's existing review for a specific clinic.
+ * Returns null data if no review exists.
+ *
+ * @param {number|string} clinicId
+ * @param {string} userId
+ * @returns {{ data: Object|null, error: Error|null }}
+ */
+export async function fetchUserReviewForClinic(clinicId, userId) {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
+  if (!userId) return { data: null, error: null };
+
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('id, clinic_id, patient_id, author_name, rating, review_text, review_date, is_verified')
+    .eq('clinic_id', Number(clinicId))
+    .eq('patient_id', userId)
+    .maybeSingle();
+
+  if (error) return { data: null, error };
+  return { data, error: null };
 }
 
 /**
