@@ -36,20 +36,51 @@ export default function ResetPasswordPage() {
   }, []);
 
   // Supabase sends the user back with a session in the URL hash (PKCE flow).
-  // We listen for the PASSWORD_RECOVERY event to confirm the session is active.
+  // The PASSWORD_RECOVERY event fires once during token exchange — we must
+  // subscribe BEFORE calling getSession() to avoid missing it.
   useEffect(() => {
     if (!supabase) return;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+    let settled = false;
+
+    // 1. Subscribe first so we never miss the event.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' && session) {
+        settled = true;
         setSessionReady(true);
       }
     });
 
-    // Also check if there's already an active session (page refresh case)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setSessionReady(true);
-    });
+    // 2. Check if the URL itself contains a recovery token (handles the case
+    //    where the event already fired before this component mounted).
+    const hash = window.location.hash;
+    const search = window.location.search;
+    const isRecoveryUrl =
+      hash.includes('type=recovery') ||
+      search.includes('type=recovery') ||
+      hash.includes('access_token') || // implicit flow
+      new URLSearchParams(search).get('type') === 'recovery';
+
+    if (isRecoveryUrl) {
+      // Give Supabase a moment to exchange the token and fire the event.
+      // If it already fired and we caught it above, settled=true so this is a no-op.
+      const timer = setTimeout(() => {
+        if (!settled) {
+          // Token is in URL — Supabase will have exchanged it; get the session.
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session && !settled) {
+              settled = true;
+              setSessionReady(true);
+            }
+          });
+        }
+      }, 1500);
+
+      return () => {
+        clearTimeout(timer);
+        subscription?.unsubscribe();
+      };
+    }
 
     return () => subscription?.unsubscribe();
   }, []);
