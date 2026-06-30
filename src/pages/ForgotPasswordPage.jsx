@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, ArrowLeft, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { mapSupabaseError } from '@/utils/validationUtils';
 import logo from '../components/ui/logo.png';
 
 export default function ForgotPasswordPage() {
@@ -27,7 +28,7 @@ export default function ForgotPasswordPage() {
     setLoading(false);
 
     if (resetError) {
-      setError(resetError.message || 'Something went wrong. Please try again.');
+      setError(mapSupabaseError(resetError));
     } else {
       setSent(true);
     }

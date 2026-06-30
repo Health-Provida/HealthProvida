@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Eye, EyeOff, ArrowRight, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
+import { mapSupabaseError } from '@/utils/validationUtils';
 import logo from '../components/ui/logo.png';
 
 // Password strength helper
@@ -107,7 +108,7 @@ export default function ResetPasswordPage() {
     setLoading(false);
 
     if (updateError) {
-      setError(updateError.message || 'Failed to update password. The link may have expired.');
+      setError(mapSupabaseError(updateError));
     } else {
       setDone(true);
       setTimeout(() => navigate('/login', { replace: true }), 3000);
