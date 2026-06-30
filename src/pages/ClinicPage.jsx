@@ -600,53 +600,114 @@ export default function ClinicPage() {
           </div>
 
           {/* Booking Sidebar */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 sticky top-8">
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <Calendar className="w-6 h-6 text-blue-600" />
                 Book an Appointment
               </h2>
 
-              <div className="space-y-6 mb-8">
-                {clinic.timeSlots.map((daySlot, dayIndex) => (
-                  <div key={dayIndex}>
-                    <p className="font-semibold text-gray-800 mb-3 border-b pb-2">{daySlot.day}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {daySlot.slots.map((time, timeIndex) => (
-                        <button
-                          key={timeIndex}
-                          onClick={() => setSelectedSlot({ day: daySlot.day, time })}
-                          className={`py-2 px-3 text-sm rounded-lg border-2 transition-all duration-200 ${selectedSlot?.day === daySlot.day && selectedSlot?.time === time
-                            ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold shadow-sm'
-                            : 'border-gray-200 hover:border-blue-300 text-gray-700 hover:bg-gray-50'
-                            }`}
-                        >
-                          {time}
-                        </button>
-                      ))}
-                    </div>
+              {clinic.timeSlots && clinic.timeSlots.length > 0 ? (
+                <>
+                  <div className="space-y-6 mb-8">
+                    {clinic.timeSlots.map((daySlot, dayIndex) => (
+                      <div key={dayIndex}>
+                        <p className="font-semibold text-gray-800 mb-3 border-b pb-2">{daySlot.day}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {daySlot.slots.map((time, timeIndex) => (
+                            <button
+                              key={timeIndex}
+                              onClick={() => setSelectedSlot({ day: daySlot.day, time })}
+                              className={`py-2 px-3 text-sm rounded-lg border-2 transition-all duration-200 ${
+                                selectedSlot?.day === daySlot.day && selectedSlot?.time === time
+                                  ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold shadow-sm'
+                                  : 'border-gray-200 hover:border-blue-300 text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              {time}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              <div className="pt-4 border-t border-gray-200">
-                {selectedSlot && (
-                  <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-                    <span className="block font-semibold mb-1">Selected Time:</span>
-                    {selectedSlot.day} at {selectedSlot.time}
+                  <div className="pt-4 border-t border-gray-200">
+                    {selectedSlot && (
+                      <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                        <span className="block font-semibold mb-1">Selected Time:</span>
+                        {selectedSlot.day} at {selectedSlot.time}
+                      </div>
+                    )}
+                    <button
+                      onClick={handleBookAppointment}
+                      className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 px-6 rounded-lg text-lg font-semibold transition shadow-md hover:shadow-lg"
+                    >
+                      Confirm Booking
+                    </button>
+                    <p className="text-center text-gray-500 text-xs mt-3">
+                      No payment required to book
+                    </p>
                   </div>
-                )}
-                <button
-                  onClick={handleBookAppointment}
-                  className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 px-6 rounded-lg text-lg font-semibold transition shadow-md hover:shadow-lg"
-                >
-                  Confirm Booking
-                </button>
-                <p className="text-center text-gray-500 text-xs mt-3">
-                  No payment required to book
-                </p>
-              </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center text-center py-6 px-2">
+                  <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
+                    <Calendar className="w-8 h-8 text-blue-400" />
+                  </div>
+                  <h3 className="font-semibold text-gray-800 mb-1">No online slots available</h3>
+                  <p className="text-sm text-gray-500 mb-6">
+                    This provider hasn't published online appointment slots yet. Contact them directly to book.
+                  </p>
+                  {clinic.phone && (
+                    <a
+                      href={`tel:${clinic.phone}`}
+                      className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 px-6 rounded-lg text-base font-semibold transition shadow-md hover:shadow-lg mb-3"
+                    >
+                      <Phone className="w-5 h-5" />
+                      Call to Book
+                    </a>
+                  )}
+                  {clinic.email && (
+                    <a
+                      href={`mailto:${clinic.email}`}
+                      className="w-full flex items-center justify-center gap-2 border-2 border-gray-200 hover:border-blue-300 text-gray-700 hover:bg-gray-50 py-3 px-6 rounded-lg text-base font-semibold transition"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                      Send an Email
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* Operating Hours */}
+            {clinic.operatingHours && clinic.operatingHours.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Opening Hours
+                </h3>
+                <ul className="space-y-2">
+                  {clinic.operatingHours.map((h) => {
+                    const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }) === h.day;
+                    return (
+                      <li key={h.day} className={`flex justify-between text-sm py-1.5 px-2 rounded-lg ${
+                        isToday ? 'bg-blue-50 font-semibold text-blue-900' : 'text-gray-700'
+                      }`}>
+                        <span>{h.day}</span>
+                        <span>
+                          {h.isOpen && h.openTime && h.closeTime
+                            ? `${h.openTime} – ${h.closeTime}`
+                            : <span className="text-red-500 font-medium">Closed</span>
+                          }
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </div>

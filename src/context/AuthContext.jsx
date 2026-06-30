@@ -4,7 +4,8 @@
  * Provides authentication state and methods to the entire app.
  * 
  * Manages: user session, profile (including role), loading state.
- * Exposes: signUp, signIn, signOut, resetPassword, isAdmin,
+ * Exposes: signUp, signIn, signOut, resetPassword, verifyOtp,
+ *          checkPhoneExists, isAdmin, isProvider,
  *          isSuperAdmin, isModerator, hasAdminWrite, adminRole.
  * ──────────────────────────────────────────────────────────────
  */
@@ -105,15 +106,60 @@ export function AuthProvider({ children }) {
 
   // ─── Auth Methods ────────────────────────────────────────
 
-  const signUp = useCallback(async ({ email, password, fullName }) => {
+  const signUp = useCallback(async ({ email, password, firstName, lastName, dateOfBirth, phone, optOutPromo }) => {
     if (!supabase) return { error: { message: 'Supabase not configured' } };
+
+    const fullName = `${firstName} ${lastName}`.trim();
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: {
+          full_name: fullName,
+          first_name: firstName,
+          last_name: lastName,
+          date_of_birth: dateOfBirth || null,
+          phone: phone || null,
+          promo_opt_out: optOutPromo || false,
+        },
       },
+    });
+
+    return { data, error };
+  }, []);
+
+  /**
+   * Check if a phone number already exists in the profiles table.
+   * @param {string} phone
+   * @returns {Promise<{exists: boolean, error?: object}>}
+   */
+  const checkPhoneExists = useCallback(async (phone) => {
+    if (!supabase || !phone?.trim()) return { exists: false };
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('phone', phone.trim())
+      .limit(1);
+
+    if (error) return { exists: false, error };
+    return { exists: data && data.length > 0 };
+  }, []);
+
+  /**
+   * Verify an OTP code (6-digit) sent to email during signup.
+   * On success, automatically logs the user in.
+   * @param {{ email: string, token: string }} params
+   * @returns {Promise<{data?: object, error?: object}>}
+   */
+  const verifyOtp = useCallback(async ({ email, token }) => {
+    if (!supabase) return { error: { message: 'Supabase not configured' } };
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'signup',
     });
 
     return { data, error };
@@ -170,16 +216,19 @@ export function AuthProvider({ children }) {
       signOut,
       resetPassword,
       refreshProfile,
+      checkPhoneExists,
+      verifyOtp,
       // Role checks
       isAuthenticated: !!session,
       role,
       isAdmin: ADMIN_ROLES.includes(role),
+      isProvider: role === 'provider',
       isSuperAdmin: role === 'super_admin',
       isModerator: role === 'moderator',
       hasAdminWrite: ADMIN_WRITE_ROLES.includes(role),
       adminRole: ADMIN_ROLES.includes(role) ? role : null,
     };
-  }, [user, session, profile, loading, signUp, signIn, signOut, resetPassword, refreshProfile]);
+  }, [user, session, profile, loading, signUp, signIn, signOut, resetPassword, refreshProfile, checkPhoneExists, verifyOtp]);
 
   return (
     <AuthContext.Provider value={value}>

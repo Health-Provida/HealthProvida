@@ -52,6 +52,11 @@ export default function ProtectedRoute({
       if (!ADMIN_ROLES.includes(role)) {
         return <Navigate to="/" replace />;
       }
+    // For 'provider' requirement, allow providers AND admin-tier roles
+    } else if (requiredRole === 'provider') {
+      if (role !== 'provider' && !ADMIN_ROLES.includes(role)) {
+        return <Navigate to="/" replace />;
+      }
     } else if (role !== requiredRole) {
       return <Navigate to="/" replace />;
     }

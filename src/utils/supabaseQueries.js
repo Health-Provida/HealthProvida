@@ -150,13 +150,24 @@ export async function fetchClinics() {
  */
 export async function fetchClinicById(id) {
   if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
+
+  // Guard: if id is not a valid number, bail out early
+  const numericId = Number(id);
+  if (!id || isNaN(numericId)) {
+    return { data: null, error: { message: `Invalid clinic ID: "${id}"` } };
+  }
+
+  // Use .maybeSingle() instead of .single() to avoid the
+  // "Cannot coerce the result to a single JSON object" error
+  // that occurs when the query unexpectedly returns 0 or multiple rows.
   const { data, error } = await supabase
     .from('clinics')
     .select(CLINIC_SELECT)
-    .eq('id', Number(id))
-    .single();
+    .eq('id', numericId)
+    .maybeSingle();
 
   if (error) return { data: null, error };
+  if (!data) return { data: null, error: { message: `No clinic found with ID ${numericId}` } };
 
   const shaped = shapeClinic(data);
 

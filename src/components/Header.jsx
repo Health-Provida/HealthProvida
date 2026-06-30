@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, Shield, HelpCircle, UserPlus } from 'lucide-react';
+import { Menu, X, Shield, HelpCircle, UserPlus, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProfileSidebar from '@/components/ProfileSidebar';
 import { useAuth } from '@/context/AuthContext';
@@ -11,7 +11,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated, profile, isAdmin } = useAuth();
+  const { isAuthenticated, profile, isAdmin, isProvider } = useAuth();
   const menuRef = useRef(null);
 
   const handleSearchClick = () => {
@@ -108,6 +108,18 @@ const Header = () => {
                 </Link>
               )}
 
+              {/* Provider Dashboard Link — visible only to providers */}
+              {isProvider && (
+                <Link
+                  to="/provider/dashboard"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-teal-600 to-green-600 text-white text-xs font-semibold hover:from-teal-700 hover:to-green-700 transition shadow-sm"
+                  title="Provider Dashboard"
+                >
+                  <Stethoscope className="w-3.5 h-3.5" />
+                  Dashboard
+                </Link>
+              )}
+
               {/* User Avatar (when authenticated) */}
               {isAuthenticated && (
                 <button
@@ -194,6 +206,13 @@ const Header = () => {
                             className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                             <Shield className="w-3.5 h-3.5" />
                             Admin Panel
+                          </Link>
+                        )}
+                        {isProvider && (
+                          <Link to="/provider/dashboard" onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            <Stethoscope className="w-3.5 h-3.5" />
+                            Provider Dashboard
                           </Link>
                         )}
                       </div>

@@ -31,7 +31,7 @@ const menuItems = [
 
 export default function ProfileSidebar({ isOpen, onClose }) {
   const { favoritesCount } = useFavorites();
-  const { isAuthenticated, profile, isAdmin, adminRole, signOut } = useAuth();
+  const { isAuthenticated, profile, isAdmin, isProvider, adminRole, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -182,27 +182,51 @@ export default function ProfileSidebar({ isOpen, onClose }) {
                 </>
               )}
 
-              {/* Join as Provider CTA */}
-              <div className="mx-6 my-4 border-t border-gray-100" />
-              <div className="mx-6 mb-4">
-                <Link
-                  to="/join-provider"
-                  onClick={onClose}
-                  className="block p-4 rounded-2xl bg-gradient-to-br from-blue-50 via-green-50 to-teal-50 border border-gray-100 hover:shadow-md transition-all duration-300 group"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center flex-shrink-0 shadow-md">
-                      <Stethoscope className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-900 text-sm group-hover:text-blue-700 transition">Become a Provider</p>
-                      <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                        It's easy to start hosting and earn extra income.
-                      </p>
-                    </div>
+              {/* Provider Dashboard Link */}
+              {isProvider && (
+                <>
+                  <div className="mx-6 my-2 border-t border-gray-100" />
+                  <nav className="px-3">
+                    <Link
+                      to="/provider/dashboard"
+                      onClick={onClose}
+                      className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-gray-900 hover:bg-teal-50 transition group"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-green-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Stethoscope className="w-[18px] h-[18px] text-white" />
+                      </div>
+                      <span className="flex-1">My Clinic</span>
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition" />
+                    </Link>
+                  </nav>
+                </>
+              )}
+
+              {/* Join as Provider CTA — only show if NOT already a provider */}
+              {!isProvider && (
+                <>
+                  <div className="mx-6 my-4 border-t border-gray-100" />
+                  <div className="mx-6 mb-4">
+                    <Link
+                      to="/join-provider"
+                      onClick={onClose}
+                      className="block p-4 rounded-2xl bg-gradient-to-br from-blue-50 via-green-50 to-teal-50 border border-gray-100 hover:shadow-md transition-all duration-300 group"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                          <Stethoscope className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900 text-sm group-hover:text-blue-700 transition">Become a Provider</p>
+                          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                            It's easy to start hosting and earn extra income.
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
                   </div>
-                </Link>
-              </div>
+                </>
+              )}
             </div>
 
             {/* Footer */}
