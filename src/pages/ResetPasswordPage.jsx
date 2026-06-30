@@ -103,15 +103,33 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
 
-    const { error: updateError } = await supabase.auth.updateUser({ password });
+    try {
+      // Verify the recovery session is still valid before attempting the update.
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!currentSession) {
+        setError('Your reset link has expired. Please request a new one.');
+        setLoading(false);
+        return;
+      }
 
-    setLoading(false);
+      // Race the update against a 15-second timeout so we never hang indefinitely.
+      const updatePromise = supabase.auth.updateUser({ password });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out. Please try again.')), 15000)
+      );
 
-    if (updateError) {
-      setError(mapSupabaseError(updateError));
-    } else {
-      setDone(true);
-      setTimeout(() => navigate('/login', { replace: true }), 3000);
+      const { error: updateError } = await Promise.race([updatePromise, timeoutPromise]);
+
+      if (updateError) {
+        setError(mapSupabaseError(updateError));
+      } else {
+        setDone(true);
+        setTimeout(() => navigate('/login', { replace: true }), 3000);
+      }
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
