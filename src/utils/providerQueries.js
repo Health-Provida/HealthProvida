@@ -108,6 +108,25 @@ export async function updateClinicEquipment(clinicId, equipment) {
   return { error };
 }
 
+/**
+ * Replace clinic HMOs (delete all, insert new by HMO ID).
+ * @param {string} clinicId
+ * @param {string[]} hmoIds  – array of HMO UUIDs
+ */
+export async function updateClinicHMOs(clinicId, hmoIds) {
+  if (!supabase) return { error: { message: 'Not configured' } };
+
+  await supabase.from('clinic_hmos').delete().eq('clinic_id', clinicId);
+
+  if (hmoIds.length === 0) return { error: null };
+
+  const { error } = await supabase
+    .from('clinic_hmos')
+    .insert(hmoIds.map((hmo_id) => ({ clinic_id: clinicId, hmo_id })));
+
+  return { error };
+}
+
 // ─── Appointments ──────────────────────────────────────────────
 
 /**
