@@ -237,6 +237,8 @@ export default function ClinicPhotosPage() {
                   src={ward.images[0]}
                   alt={ward.title}
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
               <span className={`text-[11px] sm:text-xs font-medium sm:font-semibold text-center leading-tight max-w-[72px] sm:max-w-none transition-colors ${
@@ -285,6 +287,8 @@ export default function ClinicPhotosPage() {
                         src={imgSrc}
                         alt={`${ward.title} - Photo ${index + 1}`}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        loading="lazy"
+                        decoding="async"
                       />
                     </div>
                   ))}

@@ -350,6 +350,8 @@ function ClinicDialog({ clinic, isOpen, onClose }) {
               src={clinic.image_src}
               alt={clinic.practitioner_name}
               className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover flex-shrink-0"
+              loading="lazy"
+              decoding="async"
             />
             <div className="min-w-0 flex-1">
               <h2 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{clinic.practitioner_name}</h2>
@@ -509,6 +511,8 @@ function ClinicCard({ clinic, onClick }) {
             className="w-full h-full object-cover"
             alt={`${clinic.practitioner_name} medical facility`}
             src={clinic.image_src}
+            loading="lazy"
+            decoding="async"
           />
         </div>
 

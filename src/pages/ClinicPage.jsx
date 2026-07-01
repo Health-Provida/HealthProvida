@@ -323,6 +323,9 @@ export default function ClinicPage() {
                 src={img}
                 alt={`${clinic.practitioner_name} gallery ${idx + 1}`}
                 className="w-full h-full object-cover"
+                loading={idx === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                fetchPriority={idx === 0 ? 'high' : 'auto'}
               />
               <div className="absolute inset-0 bg-black opacity-0 active:opacity-10 transition-opacity"></div>
             </div>
@@ -393,6 +396,9 @@ export default function ClinicPage() {
                   src={gallery[0]}
                   alt={`${clinic.practitioner_name} main`}
                   className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
                 />
                 <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
               </div>
@@ -405,28 +411,49 @@ export default function ClinicPage() {
                 <img
                   src={gallery[1]}
                   alt="Ward 1"
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
               </div>
               <div
                 className="col-span-1 row-span-1 h-full relative cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
               >
-                <img src={gallery[2]} alt="Ward 2" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                <img
+                  src={gallery[2]}
+                  alt="Ward 2"
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
               </div>
               <div
                 className="col-span-1 row-span-1 h-full relative cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
               >
-                <img src={gallery[3]} alt="Ward 3" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                <img
+                  src={gallery[3]}
+                  alt="Ward 3"
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
               </div>
               <div
                 className="col-span-1 row-span-1 h-full relative cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
               >
-                <img src={gallery[4]} alt="Ward 4" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                <img
+                  src={gallery[4]}
+                  alt="Ward 4"
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity"></div>
               </div>
             </div>
