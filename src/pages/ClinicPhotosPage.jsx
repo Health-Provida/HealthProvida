@@ -14,7 +14,7 @@ export default function ClinicPhotosPage() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Swipe state
+  // Swipe state (touch)
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const minSwipeDistance = 50;
@@ -33,6 +33,29 @@ export default function ClinicPhotosPage() {
     const distance = touchStart - touchEnd;
     if (distance > minSwipeDistance) handleNextImage();
     if (distance < -minSwipeDistance) handlePrevImage();
+  };
+
+  // Swipe state (mouse drag)
+  const [mouseStart, setMouseStart] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const onMouseDown = (e) => {
+    setMouseStart(e.clientX);
+    setIsDragging(true);
+  };
+
+  const onMouseUp = (e) => {
+    if (!isDragging || mouseStart === null) return;
+    const distance = mouseStart - e.clientX;
+    if (distance > minSwipeDistance) handleNextImage();
+    else if (distance < -minSwipeDistance) handlePrevImage();
+    setMouseStart(null);
+    setIsDragging(false);
+  };
+
+  const onMouseLeave = () => {
+    setMouseStart(null);
+    setIsDragging(false);
   };
 
   const clinic = clinics.find(c => c.id === parseInt(id));
@@ -318,10 +341,13 @@ export default function ClinicPhotosPage() {
 
           {/* Main Viewer Area */}
           <div 
-            className="flex-1 relative flex items-center justify-center overflow-hidden bg-white sm:bg-gray-50/50 p-4 sm:p-0"
+            className={`flex-1 relative flex items-center justify-center overflow-hidden bg-white sm:bg-gray-50/50 p-4 sm:p-0 select-none${isDragging ? ' cursor-grabbing' : ' cursor-grab'}`}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEndHandler}
+            onMouseDown={onMouseDown}
+            onMouseUp={onMouseUp}
+            onMouseLeave={onMouseLeave}
           >
             {/* Desktop Navigation */}
             <button 
