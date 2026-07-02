@@ -29,6 +29,7 @@ export default function ResetPasswordPage() {
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
   const [sessionReady, setSessionReady] = useState(false);
+  const [linkExpired, setLinkExpired] = useState(false);
 
   const navigate = useNavigate();
 
@@ -36,54 +37,82 @@ export default function ResetPasswordPage() {
     document.title = 'Reset Password | HealthProvida';
   }, []);
 
-  // Supabase sends the user back with a session in the URL hash (PKCE flow).
-  // The PASSWORD_RECOVERY event fires once during token exchange — we must
-  // subscribe BEFORE calling getSession() to avoid missing it.
+  // ── Session detection ─────────────────────────────────────────────
+  // Supabase v2 supports two token-delivery flows:
+  //   • PKCE  → URL has ?code=<code>  (default for new projects)
+  //   • Implicit → URL has #access_token=...&type=recovery
+  //
+  // Strategy: poll getSession() which works regardless of which listener
+  // consumed the PASSWORD_RECOVERY event first (AuthContext's global
+  // listener often beats this component's own listener).
+  // A hard 8-second cap avoids infinite spinning.
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+      setLinkExpired(true);
+      return;
+    }
 
     let settled = false;
+    let pollInterval = null;
+    let hardTimeout = null;
 
-    // 1. Subscribe first so we never miss the event.
+    const markReady = () => {
+      if (settled) return;
+      settled = true;
+      clearInterval(pollInterval);
+      clearTimeout(hardTimeout);
+      setSessionReady(true);
+    };
+
+    const markExpired = () => {
+      if (settled) return;
+      settled = true;
+      clearInterval(pollInterval);
+      setLinkExpired(true);
+    };
+
+    // 1. Subscribe to catch the event if it fires after we mount.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY' && session) {
-        settled = true;
-        setSessionReady(true);
+      if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
+        markReady();
       }
     });
 
-    // 2. Check if the URL itself contains a recovery token (handles the case
-    //    where the event already fired before this component mounted).
+    // 2. Detect whether the current URL carries reset-link tokens.
     const hash = window.location.hash;
-    const search = window.location.search;
+    const searchParams = new URLSearchParams(window.location.search);
     const isRecoveryUrl =
-      hash.includes('type=recovery') ||
-      search.includes('type=recovery') ||
-      hash.includes('access_token') || // implicit flow
-      new URLSearchParams(search).get('type') === 'recovery';
+      searchParams.has('code') ||                          // PKCE flow
+      searchParams.get('type') === 'recovery' ||           // explicit type param
+      hash.includes('type=recovery') ||                    // implicit flow
+      hash.includes('access_token');                       // implicit flow (no type)
 
-    if (isRecoveryUrl) {
-      // Give Supabase a moment to exchange the token and fire the event.
-      // If it already fired and we caught it above, settled=true so this is a no-op.
-      const timer = setTimeout(() => {
-        if (!settled) {
-          // Token is in URL — Supabase will have exchanged it; get the session.
-          supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session && !settled) {
-              settled = true;
-              setSessionReady(true);
-            }
-          });
-        }
-      }, 1500);
-
-      return () => {
-        clearTimeout(timer);
-        subscription?.unsubscribe();
-      };
+    if (!isRecoveryUrl) {
+      // No token at all — show expired state immediately.
+      markExpired();
+      subscription?.unsubscribe();
+      return;
     }
 
-    return () => subscription?.unsubscribe();
+    // 3. Poll getSession() every 400 ms for up to 8 s.
+    //    Supabase automatically exchanges the PKCE code on page load;
+    //    by the time we poll, the session is usually already available.
+    pollInterval = setInterval(async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) markReady();
+      } catch (_) { /* ignore */ }
+    }, 400);
+
+    // 4. Hard cap — never spin beyond 8 seconds.
+    hardTimeout = setTimeout(markExpired, 8000);
+
+    return () => {
+      settled = true;
+      clearInterval(pollInterval);
+      clearTimeout(hardTimeout);
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const strength = getStrength(password);
@@ -174,14 +203,12 @@ export default function ResetPasswordPage() {
     );
   }
 
-  // ── Invalid / expired link state ─────────────────────────────────
-  if (!sessionReady) {
+  // ── Verifying spinner ─────────────────────────────────────────────
+  if (!sessionReady && !linkExpired) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50">
         <div className="px-6 py-5">
-          <Link to="/">
-            <img src={logo} alt="HealthProvida" style={{ width: '9rem' }} />
-          </Link>
+          <Link to="/"><img src={logo} alt="HealthProvida" style={{ width: '9rem' }} /></Link>
         </div>
         <div className="flex-1 flex items-center justify-center px-4 pb-16">
           <motion.div
@@ -194,7 +221,7 @@ export default function ResetPasswordPage() {
               <div className="h-1.5 bg-gradient-to-r from-blue-600 via-teal-500 to-green-500" />
               <div className="px-8 pt-10 pb-10 text-center">
                 <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-5" />
-                <p className="text-gray-500 text-sm">Verifying your reset link…</p>
+                <p className="text-gray-700 text-sm font-medium">Verifying your reset link…</p>
                 <p className="text-gray-400 text-xs mt-3">
                   If this takes too long, your link may have expired.{' '}
                   <Link to="/forgot-password" className="text-blue-600 hover:text-blue-700 font-medium">
@@ -202,6 +229,55 @@ export default function ResetPasswordPage() {
                   </Link>
                   .
                 </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Expired / invalid link state ──────────────────────────────────
+  if (linkExpired) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50">
+        <div className="px-6 py-5">
+          <Link to="/"><img src={logo} alt="HealthProvida" style={{ width: '9rem' }} /></Link>
+        </div>
+        <div className="flex-1 flex items-center justify-center px-4 pb-16">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="w-full max-w-md"
+          >
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+              <div className="h-1.5 bg-gradient-to-r from-red-400 via-orange-400 to-amber-400" />
+              <div className="px-8 pt-10 pb-10 text-center">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', damping: 12, delay: 0.1 }}
+                  className="w-16 h-16 mx-auto mb-5 rounded-full bg-red-50 flex items-center justify-center"
+                >
+                  <AlertCircle className="w-8 h-8 text-red-500" />
+                </motion.div>
+                <h1 className="text-xl font-bold text-gray-900 mb-2">Reset link expired</h1>
+                <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                  This password reset link has expired or is invalid. Reset links are only valid for 60 minutes.
+                </p>
+                <Link
+                  to="/forgot-password"
+                  className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold text-sm shadow-lg shadow-blue-200/50 transition-all duration-200"
+                >
+                  Request a new reset link
+                </Link>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center justify-center gap-1 mt-4 text-sm text-gray-500 hover:text-gray-700 transition"
+                >
+                  Back to sign in
+                </Link>
               </div>
             </div>
           </motion.div>
