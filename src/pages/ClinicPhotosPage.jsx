@@ -198,7 +198,8 @@ export default function ClinicPhotosPage() {
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      const headerOffset = window.innerWidth < 640 ? 110 : 140;
+      // const headerOffset = window.innerWidth < 640 ? 110 : 140;
+      const headerOffset = window.innerWidth < 640 ? 70 : 100;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -327,7 +328,7 @@ export default function ClinicPhotosPage() {
         <div className="fixed inset-0 z-[100] bg-white flex flex-col animate-in fade-in duration-200">
           {/* Top Bar */}
           <div className="flex items-center justify-between p-4 border-b border-gray-100 flex-shrink-0">
-            <button onClick={handleCopyLink} className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700" title="Copy Link">
+            <button onClick={handleCopyLink} className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 invisible" title="Copy Link">
               <Copy className="w-5 h-5" />
             </button>
             <div className="text-center">
@@ -360,7 +361,7 @@ export default function ClinicPhotosPage() {
             <img 
               src={allImages[currentImageIndex].url} 
               alt={allImages[currentImageIndex].room}
-              className="w-full h-full object-cover rounded-[2rem] sm:max-h-[85vh] sm:max-w-[85vw] sm:rounded-2xl sm:object-contain sm:shadow-2xl"
+              className="max-h-[80vh] max-w-[90vw] sm:max-h-[85vh] sm:max-w-[85vw] object-contain rounded-2xl shadow-2xl"
               draggable="false"
             />
 

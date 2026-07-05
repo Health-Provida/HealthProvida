@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, Shield, HelpCircle, UserPlus, Stethoscope } from 'lucide-react';
+import { Menu, X, Shield, HelpCircle, UserPlus, Stethoscope, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProfileSidebar from '@/components/ProfileSidebar';
 import { useAuth } from '@/context/AuthContext';
+import { useFavorites } from '@/context/FavoritesContext';
 import logo from '../components/ui/logo.png'
 
 const Header = () => {
@@ -12,6 +13,7 @@ const Header = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, profile, isAdmin, isProvider } = useAuth();
+  const { favoritesCount } = useFavorites();
   const menuRef = useRef(null);
 
   const handleSearchClick = () => {
@@ -219,6 +221,18 @@ const Header = () => {
 
                       {/* Quick links — always visible */}
                       <div className="px-4 pt-3 pb-2 flex flex-col gap-1 border-t border-gray-100">
+                        <NavLink to="/favorites" onClick={() => setIsMenuOpen(false)}
+                          className={({ isActive }) => `flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg transition-colors ${
+                            isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+                          }`}>
+                          <Heart className="w-3.5 h-3.5 flex-shrink-0" />
+                          Wishlists
+                          {favoritesCount > 0 && (
+                            <span className="ml-auto px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-600 text-white min-w-[18px] text-center leading-none">
+                              {favoritesCount}
+                            </span>
+                          )}
+                        </NavLink>
                         <NavLink to="/join-provider" onClick={() => setIsMenuOpen(false)}
                           className={({ isActive }) => `flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg transition-colors ${
                             isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
