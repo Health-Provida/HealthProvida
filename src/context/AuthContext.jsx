@@ -188,7 +188,7 @@ export function AuthProvider({ children }) {
     if (!supabase) return { error: { message: 'Supabase not configured' } };
 
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/auth/confirm`,
     });
 
     return { data, error };

@@ -60,27 +60,27 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    // Supabase automatically picks up the token from the URL hash
-    // and fires a PASSWORD_RECOVERY event
+    // Listen for PASSWORD_RECOVERY event (fires when session is established via /auth/confirm)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (event === 'PASSWORD_RECOVERY') {
+        if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
           setSessionReady(true);
           setChecking(false);
         }
       }
     );
 
-    // Also check if there's already an active session (page refresh scenario)
+    // Check if session was already established by /auth/confirm before this page loaded
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setSessionReady(true);
+        setChecking(false);
       } else {
-        // Give a short time for the hash to be processed
+        // Give a short time for the auth state change to propagate
         setTimeout(() => {
           setChecking(false);
-        }, 2000);
+        }, 3000);
       }
     };
 
@@ -111,26 +111,41 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
 
-    const { error: updateError } = await supabase.auth.updateUser({
-      password,
-    });
+    try {
+      // Wrap updateUser in a timeout to prevent indefinite hanging
+      const updatePromise = supabase.auth.updateUser({ password });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('TIMEOUT')), 15000)
+      );
 
-    if (updateError) {
-      if (/same.*password/i.test(updateError.message)) {
-        setError('New password must be different from your current password.');
-      } else if (/weak/i.test(updateError.message)) {
-        setError('Password is too weak. Please choose a stronger password.');
+      const { error: updateError } = await Promise.race([updatePromise, timeoutPromise]);
+
+      if (updateError) {
+        if (/same.*password/i.test(updateError.message)) {
+          setError('New password must be different from your current password.');
+        } else if (/weak/i.test(updateError.message)) {
+          setError('Password is too weak. Please choose a stronger password.');
+        } else {
+          setError(updateError.message || 'Failed to update password. Please try again.');
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Sign out so user can log in fresh with new password
+      await supabase.auth.signOut();
+      setSuccess(true);
+      setLoading(false);
+    } catch (err) {
+      if (err.message === 'TIMEOUT') {
+        setError(
+          'The request timed out. Your session may have expired — please request a new password reset link.'
+        );
       } else {
-        setError(updateError.message || 'Failed to update password. Please try again.');
+        setError('An unexpected error occurred. Please try again.');
       }
       setLoading(false);
-      return;
     }
-
-    // Sign out so user can log in fresh with new password
-    await supabase.auth.signOut();
-    setSuccess(true);
-    setLoading(false);
   };
 
   // ─── Invalid / Expired Link State ─────────────────────────────

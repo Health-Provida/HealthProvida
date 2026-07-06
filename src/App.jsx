@@ -16,9 +16,11 @@ import LoginPage from '@/pages/LoginPage';
 import SignUpPage from '@/pages/SignUpPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
+import AuthConfirmPage from '@/pages/AuthConfirmPage';
 import HelpCenterPage from '@/pages/HelpCenterPage';
 import WriteReviewPage from '@/pages/WriteReviewPage';
 import EmailVerificationPage from '@/pages/EmailVerificationPage';
+import ProfilePage from '@/pages/ProfilePage';
 import ScrollToTop from '@/components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRouter from '@/pages/admin/AdminRouter';
@@ -42,6 +44,7 @@ function App() {
           <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/auth/confirm" element={<AuthConfirmPage />} />
 
           {/* Admin panel — its own layout, protected */}
           <Route
@@ -86,6 +89,7 @@ function App() {
                   <Route path="/favorites" element={<FavoritesPage />} />
                   <Route path="/help" element={<HelpCenterPage />} />
                   <Route path="/clinic/:id/review" element={<WriteReviewPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
                   {/* Legal placeholder routes */}
                   <Route path="/terms" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Terms of Service</h1><p className="text-gray-500">Coming soon.</p></div>} />
                   <Route path="/payment-terms" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Payment Terms of Service</h1><p className="text-gray-500">Coming soon.</p></div>} />
