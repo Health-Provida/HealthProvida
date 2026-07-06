@@ -6,6 +6,7 @@ import { useFavorites } from '@/context/FavoritesContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import BookingConfirmationModal from '@/components/BookingConfirmationModal';
+import ShareModal from '@/components/ShareModal';
 
 function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -178,6 +179,9 @@ export default function ClinicPage() {
   const [isBooking, setIsBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingError, setBookingError] = useState(null);
+
+  // Share modal state
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const handleShowMore = (index) => {
     setTargetReviewIndex(index);
@@ -365,7 +369,10 @@ export default function ClinicPage() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex gap-2">
-          <button className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-gray-700 shadow-sm">
+          <button
+            onClick={() => setShowShareModal(true)}
+            className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-gray-700 shadow-sm"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" x2="12" y1="2" y2="15" /></svg>
           </button>
           <button 
@@ -447,7 +454,10 @@ export default function ClinicPage() {
                 <Heart className={`w-5 h-5 ${favorited ? 'fill-red-500' : ''}`} />
                 <span>{favorited ? 'Saved' : 'Save'}</span>
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition font-medium">
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition font-medium"
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" x2="12" y1="2" y2="15" /></svg>
                 <span>Share</span>
               </button>
@@ -837,6 +847,17 @@ export default function ClinicPage() {
           setTargetReviewIndex(null);
         }}
         initialScrollTarget={targetReviewIndex}
+      />
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        title="Share this clinic"
+        subtitle={`${clinic.practitioner_name} · ★${clinic.rating} · ${clinic.practice_type}`}
+        imageUrl={clinic.image_src}
+        shareUrl={window.location.href}
+        shareText={`Check out ${clinic.practitioner_name} on HealthProvida`}
       />
     </div>
   );

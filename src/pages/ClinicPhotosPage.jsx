@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Share, Heart, X, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import { useClinics } from '@/context/ClinicsContext';
 import { fetchGallery } from '@/utils/supabaseQueries';
+import ShareModal from '@/components/ShareModal';
 
 export default function ClinicPhotosPage() {
   const { id } = useParams();
@@ -13,6 +14,7 @@ export default function ClinicPhotosPage() {
   const [activeSection, setActiveSection] = useState('');
   const [viewerOpen, setViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Swipe state (touch)
   const [touchStart, setTouchStart] = useState(null);
@@ -230,7 +232,11 @@ export default function ClinicPhotosPage() {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2">
-            <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700" title="Share">
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700"
+              title="Share"
+            >
               <Share className="w-5 h-5" />
             </button>
             <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700" title="Save">
@@ -374,6 +380,17 @@ export default function ClinicPhotosPage() {
           </div>
         </div>
       )}
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        title="Share this clinic"
+        subtitle={clinic ? `${clinic.practitioner_name} · ★${clinic.rating} · ${clinic.practice_type}` : 'HealthProvida Clinic Photos'}
+        imageUrl={clinic?.image_src}
+        shareUrl={typeof window !== 'undefined' ? window.location.href : ''}
+        shareText={clinic ? `Check out ${clinic.practitioner_name} on HealthProvida` : 'Check out this clinic on HealthProvida'}
+      />
     </div>
   );
 }
