@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { supabase } from '@/utils/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { fetchPatientAppointments, cancelAppointment } from '@/utils/supabaseQueries';
 
 // ─── Sidebar Navigation Items ─────────────────────────────────────────────────
 const navItems = [
@@ -211,32 +212,67 @@ function HealthBadge({ label, value, icon: Icon, color }) {
 }
 
 // ─── Appointment Stub ─────────────────────────────────────────────────────────
-function AppointmentStub({ title, date, status, clinic }) {
-  const statusStyles = {
-    upcoming:  { bg: 'bg-blue-50',  text: 'text-blue-700',  dot: 'bg-blue-500' },
-    completed: { bg: 'bg-green-50', text: 'text-green-700', dot: 'bg-green-500' },
-    cancelled: { bg: 'bg-red-50',   text: 'text-red-700',   dot: 'bg-red-400' },
+// ─── Appointment Card (real data) ─────────────────────────────────────────────
+function AppointmentCard({ appointment, onCancel, isCancelling }) {
+  const STATUS_STYLES = {
+    pending:   { bg: 'bg-amber-50',  text: 'text-amber-700',  dot: 'bg-amber-400', label: 'Pending' },
+    confirmed: { bg: 'bg-blue-50',   text: 'text-blue-700',   dot: 'bg-blue-400',  label: 'Confirmed' },
+    completed: { bg: 'bg-green-50',  text: 'text-green-700',  dot: 'bg-green-500', label: 'Completed' },
+    cancelled: { bg: 'bg-red-50',    text: 'text-red-700',    dot: 'bg-red-400',   label: 'Cancelled' },
+    no_show:   { bg: 'bg-gray-50',   text: 'text-gray-600',   dot: 'bg-gray-400',  label: 'No Show' },
   };
-  const s = statusStyles[status] || statusStyles.upcoming;
+  const s = STATUS_STYLES[appointment.status] || STATUS_STYLES.pending;
+  const canCancel = ['pending', 'confirmed'].includes(appointment.status);
+  const formattedDate = appointment.date
+    ? new Date(appointment.date + 'T00:00:00').toLocaleDateString('en-US', {
+        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+      })
+    : '';
+
   return (
-    <div className="flex items-start gap-4 p-4 rounded-2xl border border-gray-100 hover:border-blue-100 hover:bg-blue-50/30 transition group">
-      <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center flex-shrink-0`}>
-        <CalendarCheck className={`w-5 h-5 ${s.text}`} />
+    <div className="flex items-start gap-4 p-4 rounded-2xl border border-gray-100 hover:border-blue-100 hover:bg-blue-50/20 transition group">
+      {/* Clinic image */}
+      <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+        <img
+          src={appointment.clinicImage}
+          alt={appointment.clinicName}
+          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+        />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <p className="font-semibold text-gray-900 text-sm">{title}</p>
-          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${s.bg} ${s.text}`}>
+          <Link to={`/clinic/${appointment.clinicId}`} className="font-semibold text-gray-900 text-sm hover:text-blue-700 transition truncate">
+            {appointment.clinicName}
+          </Link>
+          <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase px-2.5 py-1 rounded-full ${s.bg} ${s.text} border border-transparent`}>
             <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {s.label}
           </span>
         </div>
-        <p className="text-xs text-gray-500 mt-0.5">{clinic}</p>
-        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-          <Clock className="w-3 h-3" /> {date}
-        </p>
+        <p className="text-xs text-gray-500 mt-0.5">{appointment.clinicType}</p>
+        <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+          <span className="flex items-center gap-1">
+            <CalendarCheck className="w-3 h-3" />
+            {formattedDate}
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {appointment.time}
+          </span>
+        </div>
+        {appointment.notes && (
+          <p className="text-xs text-gray-400 mt-1.5 italic truncate">Note: {appointment.notes}</p>
+        )}
+        {canCancel && (
+          <button
+            onClick={() => onCancel(appointment.id)}
+            disabled={isCancelling}
+            className="mt-2.5 text-xs font-medium text-red-500 hover:text-red-700 hover:underline transition disabled:opacity-50"
+          >
+            {isCancelling ? 'Cancelling...' : 'Cancel Appointment'}
+          </button>
+        )}
       </div>
-      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-400 flex-shrink-0 mt-2 transition" />
     </div>
   );
 }
@@ -275,6 +311,11 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('about');
   const [showEditModal, setShowEditModal] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Appointments state
+  const [appointments, setAppointments] = useState([]);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(false);
+  const [cancellingId, setCancellingId] = useState(null);
 
   const favoriteClinics = getFavoriteClinics();
 
@@ -337,6 +378,33 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
+  };
+
+  // Fetch appointments when the appointments tab is activated
+  const loadAppointments = useCallback(async () => {
+    if (!user?.id) return;
+    setAppointmentsLoading(true);
+    const { data } = await fetchPatientAppointments(user.id);
+    setAppointments(data || []);
+    setAppointmentsLoading(false);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (activeTab === 'appointments') {
+      loadAppointments();
+    }
+  }, [activeTab, loadAppointments]);
+
+  const handleCancelAppointment = async (appointmentId) => {
+    setCancellingId(appointmentId);
+    const { error } = await cancelAppointment(appointmentId);
+    if (error) {
+      toast({ title: 'Error', description: error.message || 'Failed to cancel appointment.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Appointment cancelled', description: 'Your appointment has been cancelled and the slot released.' });
+      await loadAppointments();
+    }
+    setCancellingId(null);
   };
 
   // ─── Section renderer ──────────────────────────────────────────────────────
@@ -510,27 +578,69 @@ export default function ProfilePage() {
               </Link>
             </div>
 
-            <div className="space-y-3 mb-6">
-              <AppointmentStub title="General Consultation"  date="Mon, 14 Jul 2025 at 10:30" status="upcoming"  clinic="Harley Street Medical Centre" />
-              <AppointmentStub title="Annual Health Check"   date="Thu, 12 Jun 2025 at 09:00" status="completed" clinic="Bupa Health Clinic, London" />
-              <AppointmentStub title="Dermatology Follow-up" date="Fri, 30 May 2025 at 14:00" status="cancelled" clinic="The Skin Clinic" />
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center mx-auto mb-4">
-                <CalendarCheck className="w-8 h-8 text-blue-400" />
+            {appointmentsLoading ? (
+              /* Loading skeleton */
+              <div className="space-y-3 mb-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-start gap-4 p-4 rounded-2xl border border-gray-100 animate-pulse">
+                    <div className="w-14 h-14 rounded-xl bg-gray-200 flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-40 bg-gray-200 rounded" />
+                      <div className="h-3 w-28 bg-gray-100 rounded" />
+                      <div className="h-3 w-48 bg-gray-100 rounded" />
+                    </div>
+                  </div>
+                ))}
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Book Your Next Visit</h3>
-              <p className="text-sm text-gray-500 mb-5 max-w-xs mx-auto leading-relaxed">
-                Browse thousands of clinics and book an appointment in seconds.
-              </p>
-              <Link
-                to="/"
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-green-700 transition shadow-md"
-              >
-                <Stethoscope className="w-4 h-4" /> Find a Clinic
-              </Link>
-            </div>
+            ) : appointments.length > 0 ? (
+              /* Real appointment cards */
+              <div className="space-y-3 mb-6">
+                {appointments.map((appt) => (
+                  <AppointmentCard
+                    key={appt.id}
+                    appointment={appt}
+                    onCancel={handleCancelAppointment}
+                    isCancelling={cancellingId === appt.id}
+                  />
+                ))}
+              </div>
+            ) : (
+              /* Empty state */
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center mb-6">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center mx-auto mb-4">
+                  <CalendarCheck className="w-8 h-8 text-blue-400" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">No Appointments Yet</h3>
+                <p className="text-sm text-gray-500 mb-5 max-w-xs mx-auto leading-relaxed">
+                  Browse thousands of clinics and book an appointment in seconds.
+                </p>
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-green-700 transition shadow-md"
+                >
+                  <Stethoscope className="w-4 h-4" /> Find a Clinic
+                </Link>
+              </div>
+            )}
+
+            {/* CTA for finding more clinics */}
+            {appointments.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center mx-auto mb-4">
+                  <CalendarCheck className="w-8 h-8 text-blue-400" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Book Your Next Visit</h3>
+                <p className="text-sm text-gray-500 mb-5 max-w-xs mx-auto leading-relaxed">
+                  Browse thousands of clinics and book an appointment in seconds.
+                </p>
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-green-700 transition shadow-md"
+                >
+                  <Stethoscope className="w-4 h-4" /> Find a Clinic
+                </Link>
+              </div>
+            )}
           </SectionFade>
         );
 

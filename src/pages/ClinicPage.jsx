@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, Quote, X, Search, PenLine } from 'lucide-react';
-import { fetchClinicById, fetchGallery } from '@/utils/supabaseQueries';
+import { fetchClinicById, fetchGallery, fetchAppointmentSlots, createAppointment } from '@/utils/supabaseQueries';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
+import BookingConfirmationModal from '@/components/BookingConfirmationModal';
 
 function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -161,6 +163,7 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
 export default function ClinicPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [clinic, setClinic] = useState(null);
   const [galleryData, setGalleryData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -170,11 +173,19 @@ export default function ClinicPage() {
   const [targetReviewIndex, setTargetReviewIndex] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // Booking modal state
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [isBooking, setIsBooking] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [bookingError, setBookingError] = useState(null);
+
   const handleShowMore = (index) => {
     setTargetReviewIndex(index);
     setShowAllReviews(true);
   };
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
 
   // Fetch clinic and gallery data from Supabase
   useEffect(() => {
@@ -278,10 +289,69 @@ export default function ClinicPage() {
 
   const handleBookAppointment = () => {
     if (!selectedSlot) {
-      alert("Please select a time slot");
+      toast({
+        title: 'No slot selected',
+        description: 'Please select a time slot before booking.',
+        variant: 'destructive',
+      });
       return;
     }
-    alert(`Appointment booked for ${selectedSlot.day} at ${selectedSlot.time}`);
+
+    // Auth gate: redirect to login if not authenticated
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: location } });
+      return;
+    }
+
+    // Open booking confirmation modal
+    setBookingError(null);
+    setBookingSuccess(false);
+    setShowBookingModal(true);
+  };
+
+  const handleConfirmBooking = async (notes) => {
+    if (!selectedSlot || !user?.id) return;
+
+    setIsBooking(true);
+    setBookingError(null);
+
+    const { data, error: bookErr } = await createAppointment(
+      clinic.id,
+      user.id,
+      selectedSlot.date,
+      selectedSlot.rawTime,
+      selectedSlot.slotId,
+      notes
+    );
+
+    if (bookErr) {
+      setBookingError(bookErr.message || 'Failed to book appointment. Please try again.');
+      setIsBooking(false);
+      return;
+    }
+
+    // Success: show success state in modal
+    setIsBooking(false);
+    setBookingSuccess(true);
+    setSelectedSlot(null);
+
+    toast({
+      title: 'Appointment booked!',
+      description: `Your appointment has been submitted for ${selectedSlot.day} at ${selectedSlot.time}.`,
+    });
+
+    // Refresh slots so the booked slot disappears
+    const slotsResult = await fetchAppointmentSlots(id);
+    if (slotsResult.data) {
+      setClinic((prev) => ({ ...prev, timeSlots: slotsResult.data }));
+    }
+  };
+
+  const handleCloseBookingModal = () => {
+    setShowBookingModal(false);
+    setBookingError(null);
+    // Only reset success if it was showing — let the auto-close handle it
+    setTimeout(() => setBookingSuccess(false), 300);
   };
 
   return (
@@ -641,17 +711,24 @@ export default function ClinicPage() {
                       <div key={dayIndex}>
                         <p className="font-semibold text-gray-800 mb-3 border-b pb-2">{daySlot.day}</p>
                         <div className="grid grid-cols-2 gap-2">
-                          {daySlot.slots.map((time, timeIndex) => (
+                          {daySlot.slots.map((slot) => (
                             <button
-                              key={timeIndex}
-                              onClick={() => setSelectedSlot({ day: daySlot.day, time })}
+                              key={slot.id}
+                              onClick={() => setSelectedSlot({
+                                day: daySlot.day,
+                                date: daySlot.date,
+                                time: slot.time,
+                                rawTime: slot.rawTime,
+                                slotId: slot.id,
+                                durationMinutes: slot.durationMinutes,
+                              })}
                               className={`py-2 px-3 text-sm rounded-lg border-2 transition-all duration-200 ${
-                                selectedSlot?.day === daySlot.day && selectedSlot?.time === time
+                                selectedSlot?.slotId === slot.id
                                   ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold shadow-sm'
                                   : 'border-gray-200 hover:border-blue-300 text-gray-700 hover:bg-gray-50'
                               }`}
                             >
-                              {time}
+                              {slot.time}
                             </button>
                           ))}
                         </div>
@@ -738,6 +815,18 @@ export default function ClinicPage() {
           </div>
         </div>
       </div>
+
+      {/* Booking Confirmation Modal */}
+      <BookingConfirmationModal
+        isOpen={showBookingModal}
+        onClose={handleCloseBookingModal}
+        onConfirm={handleConfirmBooking}
+        clinic={clinic}
+        slot={selectedSlot}
+        isBooking={isBooking}
+        isSuccess={bookingSuccess}
+        bookingError={bookingError}
+      />
 
       {/* Reviews Dialog */}
       <ReviewsDialog

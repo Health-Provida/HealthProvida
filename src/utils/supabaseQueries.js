@@ -326,8 +326,8 @@ export async function fetchClinicOperatingHours(clinicId) {
 
 /**
  * Fetch available (un-booked) appointment slots for a clinic.
- * Groups them by date in a shape matching the existing `timeSlots`
- * array: `[{ day: "Today", slots: ["2:00 PM", …] }]`
+ * Groups them by date with enriched slot objects containing the
+ * metadata needed for the booking flow (slot ID, raw time, duration).
  *
  * @param {number|string} clinicId
  * @returns {{ data: Array|null, error: Error|null }}
@@ -339,7 +339,7 @@ export async function fetchAppointmentSlots(clinicId) {
 
   const { data, error } = await supabase
     .from('appointment_slots')
-    .select('slot_date, slot_time, is_booked, duration_minutes')
+    .select('id, slot_date, slot_time, is_booked, duration_minutes')
     .eq('clinic_id', Number(clinicId))
     .eq('is_booked', false)
     .gte('slot_date', todayStr)
@@ -348,15 +348,19 @@ export async function fetchAppointmentSlots(clinicId) {
 
   if (error) return { data: null, error };
 
-  // Group by date and format as friendly labels
+  // Group by date with enriched slot objects
   const grouped = {};
   for (const slot of (data ?? [])) {
     const dateKey = slot.slot_date;
     if (!grouped[dateKey]) grouped[dateKey] = [];
 
-    // Convert "14:00:00" → "2:00 PM"
-    const timeStr = formatTime(slot.slot_time);
-    grouped[dateKey].push(timeStr);
+    // Each slot is now an object with display + API fields
+    grouped[dateKey].push({
+      id: slot.id,
+      time: formatTime(slot.slot_time),           // "2:00 PM" (display)
+      rawTime: slot.slot_time.slice(0, 5),         // "14:00"   (API)
+      durationMinutes: slot.duration_minutes ?? 30,
+    });
   }
 
   // Convert to array with day labels
@@ -478,6 +482,171 @@ export async function fetchStats() {
     },
     error: null,
   };
+}
+
+// ─── Appointment Booking ────────────────────────────────────
+
+/**
+ * Create a new appointment for a patient at a clinic.
+ * Includes a duplicate-booking check: prevents the same patient from
+ * having multiple active appointments at the same clinic on the same day.
+ *
+ * The existing `trg_mark_slot_booked` trigger will automatically set
+ * `is_booked = true` on the linked appointment slot.
+ *
+ * @param {number|string} clinicId
+ * @param {string} patientId - UUID of the patient
+ * @param {string} slotDate  - "YYYY-MM-DD"
+ * @param {string} slotTime  - "HH:MM" (24h)
+ * @param {number} slotId    - appointment_slots.id
+ * @param {string} [notes]   - Optional notes for the provider
+ * @returns {{ data: Object|null, error: Error|null }}
+ */
+export async function createAppointment(clinicId, patientId, slotDate, slotTime, slotId, notes) {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
+
+  // Step 1: Duplicate check — prevent same patient+clinic+date with active status
+  const { data: existing, error: checkError } = await supabase
+    .from('appointments')
+    .select('id')
+    .eq('patient_id', patientId)
+    .eq('clinic_id', Number(clinicId))
+    .eq('appointment_date', slotDate)
+    .in('status', ['pending', 'confirmed'])
+    .limit(1);
+
+  if (checkError) return { data: null, error: checkError };
+
+  if (existing && existing.length > 0) {
+    return {
+      data: null,
+      error: { message: 'You already have an appointment at this clinic on this date.' },
+    };
+  }
+
+  // Step 2: Insert the appointment
+  const { data, error } = await supabase
+    .from('appointments')
+    .insert({
+      clinic_id: Number(clinicId),
+      patient_id: patientId,
+      slot_id: slotId,
+      appointment_date: slotDate,
+      appointment_time: slotTime,
+      status: 'pending',
+      notes: notes || null,
+    })
+    .select()
+    .single();
+
+  // Step 3: trg_mark_slot_booked trigger fires automatically
+
+  return { data, error };
+}
+
+/**
+ * Fetch all appointments for a patient, joined with clinic details.
+ * Used by the Profile → Appointments tab.
+ *
+ * @param {string} patientId - UUID of the patient
+ * @returns {{ data: Array, error: Error|null }}
+ */
+export async function fetchPatientAppointments(patientId) {
+  if (noClient()) return { data: [], error: NO_CLIENT_ERROR };
+  if (!patientId) return { data: [], error: null };
+
+  const { data, error } = await supabase
+    .from('appointments')
+    .select(`
+      id,
+      clinic_id,
+      appointment_date,
+      appointment_time,
+      status,
+      notes,
+      created_at,
+      clinics (
+        practitioner_name,
+        practice_type,
+        address,
+        image_url
+      )
+    `)
+    .eq('patient_id', patientId)
+    .order('appointment_date', { ascending: false })
+    .order('appointment_time', { ascending: false });
+
+  if (error) return { data: [], error };
+
+  // Shape the data for UI consumption
+  const shaped = (data ?? []).map((appt) => ({
+    id: appt.id,
+    clinicId: appt.clinic_id,
+    clinicName: appt.clinics?.practitioner_name ?? 'Unknown Clinic',
+    clinicType: appt.clinics?.practice_type ?? '',
+    clinicAddress: appt.clinics?.address ?? '',
+    clinicImage: appt.clinics?.image_url || LOCAL_IMAGE_MAP[appt.clinic_id] || DEFAULT_CLINIC_IMAGE,
+    date: appt.appointment_date,
+    time: appt.appointment_time ? formatTime(appt.appointment_time) : '',
+    rawTime: appt.appointment_time?.slice(0, 5) ?? '',
+    status: appt.status,
+    notes: appt.notes,
+    createdAt: appt.created_at,
+  }));
+
+  return { data: shaped, error: null };
+}
+
+/**
+ * Cancel an appointment and release the linked slot.
+ *
+ * Updates the appointment status to 'cancelled' and sets
+ * `is_booked = false` on the linked appointment_slots row.
+ * (The DB trigger `release_slot_on_cancel` will also do this
+ *  atomically, but we do it client-side as well for immediacy.)
+ *
+ * @param {string} appointmentId - UUID of the appointment
+ * @returns {{ data: Object|null, error: Error|null }}
+ */
+export async function cancelAppointment(appointmentId) {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
+
+  // Fetch the appointment to get the slot_id before updating
+  const { data: appt, error: fetchErr } = await supabase
+    .from('appointments')
+    .select('id, slot_id, status')
+    .eq('id', appointmentId)
+    .single();
+
+  if (fetchErr) return { data: null, error: fetchErr };
+
+  // Only allow cancellation of pending or confirmed appointments
+  if (!['pending', 'confirmed'].includes(appt.status)) {
+    return {
+      data: null,
+      error: { message: `Cannot cancel an appointment with status "${appt.status}".` },
+    };
+  }
+
+  // Update status to cancelled
+  const { data, error } = await supabase
+    .from('appointments')
+    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+    .eq('id', appointmentId)
+    .select()
+    .single();
+
+  if (error) return { data: null, error };
+
+  // Release the linked slot (client-side fallback for the DB trigger)
+  if (appt.slot_id) {
+    await supabase
+      .from('appointment_slots')
+      .update({ is_booked: false })
+      .eq('id', appt.slot_id);
+  }
+
+  return { data, error: null };
 }
 
 // ─── Formatting utilities ───────────────────────────────────
