@@ -187,8 +187,10 @@ export function AuthProvider({ children }) {
   const resetPassword = useCallback(async (email) => {
     if (!supabase) return { error: { message: 'Supabase not configured' } };
 
+    // Strip any trailing slash from origin to prevent //auth/confirm double-slash URLs
+    const origin = window.location.origin.replace(/\/$/, '');
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/confirm`,
+      redirectTo: `${origin}/auth/confirm`,
     });
 
     return { data, error };

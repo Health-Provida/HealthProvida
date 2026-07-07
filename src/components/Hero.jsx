@@ -4,7 +4,7 @@ import { Search, MapPin, Clock } from 'lucide-react';
 import RotatingText from './RotatingText';
 
 // Words that rotate in the hero heading. Edit this list to change the cycle.
-const ROTATING_WORDS = ['Healthcare', 'Hospitals', 'Clinics', 'Practitioners'];
+const ROTATING_WORDS = ['Healthcare', 'Hospitals', 'Clinics', 'Pharmacies', 'Practitioners'];
 
 const Hero = () => {
   return (
