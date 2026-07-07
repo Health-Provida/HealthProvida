@@ -182,7 +182,7 @@ const Header = () => {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -8 }}
                     transition={{ duration: 0.15, ease: 'easeOut' }}
-                    className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                    className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 max-h-[85vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full"
                   >
                     {/* Mobile nav links (hidden on md+) */}
                     <div className="md:hidden px-4 pt-4 pb-2 flex flex-col gap-1">
@@ -219,7 +219,7 @@ const Header = () => {
                       >
                         About
                       </NavLink>
-                      {isAdmin && (
+                      {isAuthenticated && isAdmin && (
                         <Link
                           to="/admin"
                           onClick={() => setIsMenuOpen(false)}
@@ -229,7 +229,7 @@ const Header = () => {
                           Admin Panel
                         </Link>
                       )}
-                      {isProvider && (
+                      {isAuthenticated && isProvider && (
                         <Link
                           to="/provider/dashboard"
                           onClick={() => setIsMenuOpen(false)}
@@ -243,6 +243,7 @@ const Header = () => {
 
                     {/* ── Main account links ── */}
                     <div className="px-3 pt-3 pb-1 flex flex-col gap-0.5 border-t border-gray-100 md:border-t-0 md:pt-3">
+                      {/* Wishlists — visible to all users */}
                       <NavLink
                         to="/favorites"
                         onClick={() => setIsMenuOpen(false)}
@@ -261,63 +262,72 @@ const Header = () => {
                         )}
                       </NavLink>
 
-                      <Link
-                        to="#"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <CalendarCheck className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">Appointments</span>
-                      </Link>
+                      {/* Auth-only items */}
+                      {isAuthenticated && (
+                        <>
+                          <Link
+                            to="#"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <CalendarCheck className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">Appointments</span>
+                          </Link>
 
-                      <Link
-                        to="#"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <MessageSquare className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">Messages</span>
-                      </Link>
+                          <Link
+                            to="#"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">Messages</span>
+                          </Link>
 
-                      <Link
-                        to="/profile"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <User className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">Profile</span>
-                      </Link>
+                          <Link
+                            to="/profile"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <User className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">Profile</span>
+                          </Link>
+                        </>
+                      )}
                     </div>
 
                     {/* ── Settings & support ── */}
                     <div className="mx-4 my-1 border-t border-gray-100" />
                     <div className="px-3 pb-1 flex flex-col gap-0.5">
-                      <Link
-                        to="#"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <Bell className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">Notifications</span>
-                      </Link>
+                      {isAuthenticated && (
+                        <>
+                          <Link
+                            to="#"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <Bell className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">Notifications</span>
+                          </Link>
 
-                      <Link
-                        to="#"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <Settings className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">Account settings</span>
-                      </Link>
+                          {/* <Link
+                            to="#"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <Settings className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">Account settings</span>
+                          </Link> */}
 
-                      <Link
-                        to="#"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <Globe className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">Languages &amp; currency</span>
-                      </Link>
+                          {/* <Link
+                            to="#"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <Globe className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">Languages &amp; currency</span>
+                          </Link> */}
+                        </>
+                      )}
 
                       <NavLink
                         to="/help"
@@ -348,10 +358,10 @@ const Header = () => {
                             </div>
                             <div>
                               <p className="font-bold text-gray-900 text-sm group-hover:text-blue-700 transition">
-                                Become a Provider
+                                Join as a Provider
                               </p>
                               <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                                It's easy to start hosting and earn extra income.
+                                It's easy to register your hospital, clinic, or private practice
                               </p>
                             </div>
                           </NavLink>

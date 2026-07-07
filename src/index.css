@@ -58,6 +58,52 @@
   .hero-gradient {
     background: linear-gradient(135deg, #1e3a8a 0%, #059669 50%, #0891b2 100%);
   }
+
+  /* ── Rotating Text ─────────────────────────────────────────────────────────
+   * The wrapper uses inline-grid with a single named grid area so every
+   * animated word is stacked in exactly the same cell.  This eliminates all
+   * layout shifts when a shorter or longer phrase appears.
+   *
+   * min-width is set to ch units matching the longest word ("private
+   * practitioners") so the surrounding heading text is never nudged.
+   * ──────────────────────────────────────────────────────────────────────── */
+  .rotating-text-wrapper {
+    display: inline-grid;
+    grid-template-areas: 'text';
+    /* Reserve width for the longest phrase at every viewport */
+    min-width: 18ch;          /* ~"private practitioners" */
+    vertical-align: bottom;   /* align nicely with baseline siblings */
+    overflow: hidden;         /* clip any vertical slide overshoot */
+  }
+
+  /* The sr-only child sits in the same grid cell but is visually hidden */
+  .rotating-text-wrapper > .sr-only {
+    grid-area: text;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Each animated word occupies the same grid cell */
+  .rotating-text-word {
+    grid-area: text;
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  /* Honour the user's motion preference at the CSS layer as a safety net */
+  @media (prefers-reduced-motion: reduce) {
+    .rotating-text-word {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
 }
 @media (max-width: 768px) { /* Example breakpoint for small screens */
   .hide-on-small {

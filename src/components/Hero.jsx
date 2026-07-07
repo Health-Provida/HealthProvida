@@ -1,10 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Clock } from 'lucide-react';
+import RotatingText from './RotatingText';
+
+// Words that rotate in the hero heading. Edit this list to change the cycle.
+const ROTATING_WORDS = ['Healthcare', 'Hospitals', 'Clinics', 'Practitioners'];
 
 const Hero = () => {
   return (
-    <section className="hero-gradient text-white py-20 relative overflow-hidden">
+    <section className="hero-gradient text-white min-h-[calc(100vh-60px)] flex items-center relative overflow-hidden">
       <div className="absolute inset-0 bg-black/20"></div>
       <div className="container mx-auto px-4 relative z-10">
         <motion.div 
@@ -14,7 +18,16 @@ const Hero = () => {
           className="text-center max-w-4xl mx-auto"
         >
           <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-            Find Quality Healthcare
+            {/* "healthcare" is replaced by a rotating word sequence.
+                RotatingText reserves width for the longest phrase so the
+                heading never reflows between transitions. */}
+            Find Quality{' '}
+            <RotatingText
+              words={ROTATING_WORDS}
+              interval={2800}
+              // className="text-green-300"
+              className="inline"
+            />
             <span className="block text-green-300">Near You</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-blue-100 max-w-2xl mx-auto">
@@ -47,7 +60,7 @@ const Hero = () => {
         </motion.div>
       </div>
       
-      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-blue-50 to-transparent"></div>
+      {/* <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-blue-50 to-transparent"></div> */}
     </section>
   );
 };

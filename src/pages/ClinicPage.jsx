@@ -634,76 +634,102 @@ export default function ClinicPage() {
             </div>
 
             {/* Review Highlights */}
-            {clinic.reviewHighlights && clinic.reviewHighlights.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                  <MessageSquare className="w-6 h-6 text-blue-600" />
-                  Review Highlights
-                </h2>
-                <p className="text-sm text-gray-500 mb-6">What patients are saying about {clinic.practitioner_name}</p>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <MessageSquare className="w-6 h-6 text-blue-600" />
+                Review Highlights
+              </h2>
 
-                <div className="flex overflow-x-auto gap-4 pb-4 -mx-6 px-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] md:mx-0 md:px-0 md:flex-col md:gap-0 md:space-y-5 md:overflow-visible">
-                  {clinic.reviewHighlights.map((review, index) => (
-                    <div
-                      key={index}
-                      className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl p-5 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-300 w-[85vw] max-w-[320px] md:w-auto md:max-w-none md:min-w-0 snap-start shrink-0"
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                          {review.author.charAt(0)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 text-sm">{review.author}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <div className="flex items-center gap-0.5">
-                              {Array.from({ length: 5 }, (_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`w-3.5 h-3.5 ${
-                                    i < review.rating
-                                      ? 'text-yellow-400 fill-yellow-400'
-                                      : 'text-gray-200'
-                                  }`}
-                                />
-                              ))}
+              {clinic.reviewHighlights && clinic.reviewHighlights.length > 0 ? (
+                <>
+                  <p className="text-sm text-gray-500 mb-6">What patients are saying about {clinic.practitioner_name}</p>
+
+                  <div className="flex overflow-x-auto gap-4 pb-4 -mx-6 px-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] md:mx-0 md:px-0 md:flex-col md:gap-0 md:space-y-5 md:overflow-visible">
+                    {clinic.reviewHighlights.map((review, index) => (
+                      <div
+                        key={index}
+                        className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl p-5 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-300 w-[85vw] max-w-[320px] md:w-auto md:max-w-none md:min-w-0 snap-start shrink-0"
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                            {review.author.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm">{review.author}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <div className="flex items-center gap-0.5">
+                                {Array.from({ length: 5 }, (_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-3.5 h-3.5 ${
+                                      i < review.rating
+                                        ? 'text-yellow-400 fill-yellow-400'
+                                        : 'text-gray-200'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-xs text-gray-400">·</span>
+                              <p className="text-xs text-gray-500">{review.date}</p>
                             </div>
-                            <span className="text-xs text-gray-400">·</span>
-                            <p className="text-xs text-gray-500">{review.date}</p>
                           </div>
                         </div>
+                        <p className="text-gray-700 text-sm leading-relaxed pl-[52px]">
+                          {review.text.length > 120 ? (
+                            <>
+                              <span>{review.text.substring(0, 120)}...</span>
+                              <br />
+                              <button onClick={() => handleShowMore(index)} className="font-semibold underline text-gray-900 mt-1 hover:text-blue-600 transition-colors">Show more</button>
+                            </>
+                          ) : (
+                            review.text
+                          )}
+                        </p>
                       </div>
-                      <p className="text-gray-700 text-sm leading-relaxed pl-[52px]">
-                        {review.text.length > 120 ? (
-                          <>
-                            <span>{review.text.substring(0, 120)}...</span>
-                            <br />
-                            <button onClick={() => handleShowMore(index)} className="font-semibold underline text-gray-900 mt-1 hover:text-blue-600 transition-colors">Show more</button>
-                          </>
-                        ) : (
-                          review.text
-                        )}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
-                <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+                  <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <button
+                      onClick={() => navigate(`/clinic/${clinic.id}/review`)}
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white text-sm font-semibold rounded-lg transition shadow-sm hover:shadow-md"
+                    >
+                      <PenLine className="w-4 h-4" />
+                      Write a Review
+                    </button>
+                    <button
+                      onClick={() => setShowAllReviews(true)}
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                    >
+                      See all reviews →
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* No reviews yet empty state */
+                <div className="flex flex-col items-center text-center py-10 px-4">
+                  <div className="relative mb-5">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+                      <MessageSquare className="w-9 h-9 text-blue-300" />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-yellow-50 border-2 border-white flex items-center justify-center">
+                      <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">No reviews yet</h3>
+                  <p className="text-sm text-gray-500 mb-6 max-w-xs leading-relaxed">
+                    Be the first to share your experience at <span className="font-medium text-gray-700">{clinic.practitioner_name}</span> and help others make an informed choice.
+                  </p>
                   <button
                     onClick={() => navigate(`/clinic/${clinic.id}/review`)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white text-sm font-semibold rounded-lg transition shadow-sm hover:shadow-md"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white text-sm font-semibold rounded-lg transition shadow-sm hover:shadow-md"
                   >
                     <PenLine className="w-4 h-4" />
-                    Write a Review
-                  </button>
-                  <button
-                    onClick={() => setShowAllReviews(true)}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                  >
-                    See all reviews →
+                    Write the first review
                   </button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Booking Sidebar */}
