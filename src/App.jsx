@@ -21,6 +21,7 @@ import HelpCenterPage from '@/pages/HelpCenterPage';
 import WriteReviewPage from '@/pages/WriteReviewPage';
 import EmailVerificationPage from '@/pages/EmailVerificationPage';
 import ProfilePage from '@/pages/ProfilePage';
+import NotFoundPage from '@/pages/NotFoundPage';
 import ScrollToTop from '@/components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRouter from '@/pages/admin/AdminRouter';
@@ -89,12 +90,18 @@ function App() {
                   <Route path="/favorites" element={<FavoritesPage />} />
                   <Route path="/help" element={<HelpCenterPage />} />
                   <Route path="/clinic/:id/review" element={<WriteReviewPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  } />
                   {/* Legal placeholder routes */}
                   <Route path="/terms" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Terms of Service</h1><p className="text-gray-500">Coming soon.</p></div>} />
                   <Route path="/payment-terms" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Payment Terms of Service</h1><p className="text-gray-500">Coming soon.</p></div>} />
                   <Route path="/non-discrimination" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Non-discrimination Policy</h1><p className="text-gray-500">Coming soon.</p></div>} />
                   <Route path="/privacy" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Privacy Policy</h1><p className="text-gray-500">Coming soon.</p></div>} />
+                  {/* 404 catch-all */}
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </main>
               <Footer />
