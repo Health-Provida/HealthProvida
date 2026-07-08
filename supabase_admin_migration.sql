@@ -140,7 +140,7 @@ CREATE POLICY hours_admin_all ON clinic_operating_hours
   FOR ALL USING (has_admin_write());
 CREATE POLICY slots_admin_all ON appointment_slots 
   FOR ALL USING (has_admin_write());
-CREATE POLICY gallery_images_admin_all ON gallery_images 
+CREATE POLICY clinic_images_admin_all ON clinic_images
   FOR ALL USING (has_admin_write());
 CREATE POLICY gallery_wards_admin_all ON gallery_wards 
   FOR ALL USING (has_admin_write());
@@ -173,22 +173,26 @@ CREATE POLICY audit_admin_insert ON admin_audit_log
 
 -- ==================== RPC: APPROVE APPLICATION ====================
 
+-- NOTE: approve_provider_application() is superseded by
+-- supabase_clinic_images_migration.sql which re-creates it with
+-- full clinic_images population from facility_image_urls[].
+-- The version below is kept for reference only.
 CREATE OR REPLACE FUNCTION approve_provider_application(
   app_id UUID,
   notes TEXT DEFAULT NULL
 )
 RETURNS JSON AS $$
 DECLARE
-  app_row provider_applications%ROWTYPE;
+  app_row       provider_applications%ROWTYPE;
   new_clinic_id BIGINT;
-  hmo_record RECORD;
+  hmo_record    RECORD;
+  img_url       TEXT;
+  img_idx       INT;
 BEGIN
-  -- Verify caller has admin-write access
   IF NOT has_admin_write() THEN
     RAISE EXCEPTION 'Unauthorized: admin or super_admin role required';
   END IF;
 
-  -- Fetch the application
   SELECT * INTO app_row FROM provider_applications WHERE id = app_id;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Application not found';
@@ -197,71 +201,76 @@ BEGIN
     RAISE EXCEPTION 'Application is not in pending status (current: %)', app_row.status;
   END IF;
 
-  -- Update application status
-  UPDATE provider_applications 
+  UPDATE provider_applications
   SET status = 'approved', admin_notes = COALESCE(notes, admin_notes), updated_at = now()
   WHERE id = app_id;
 
-  -- Create clinic from application data
   INSERT INTO clinics (
-    owner_id, practitioner_name, practice_type, 
+    owner_id, practitioner_name, practice_type,
     practitioner_category, address, phone, email,
     image_url, is_verified, is_active
   ) VALUES (
-    app_row.applicant_id, 
+    app_row.applicant_id,
     app_row.practitioner_name,
     app_row.practitioner_type::TEXT,
     app_row.practitioner_type,
-    app_row.address, 
-    app_row.phone, 
+    app_row.address,
+    app_row.phone,
     app_row.email,
-    app_row.facility_image_url,
+    COALESCE(
+      NULLIF(app_row.facility_image_urls[1], ''),
+      app_row.facility_image_url
+    ),
     true,
     true
   ) RETURNING id INTO new_clinic_id;
 
-  -- Create clinic tags
+  IF cardinality(app_row.facility_image_urls) > 0 THEN
+    img_idx := 0;
+    FOREACH img_url IN ARRAY app_row.facility_image_urls LOOP
+      INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order)
+      VALUES ('reception', new_clinic_id, img_url, img_idx);
+      img_idx := img_idx + 1;
+    END LOOP;
+  ELSIF app_row.facility_image_url IS NOT NULL THEN
+    INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order)
+    VALUES ('reception', new_clinic_id, app_row.facility_image_url, 0);
+  END IF;
+
   IF cardinality(app_row.tags) > 0 THEN
     INSERT INTO clinic_tags (clinic_id, tag)
     SELECT new_clinic_id, unnest(app_row.tags);
   END IF;
 
-  -- Create clinic specialties
   IF cardinality(app_row.specialties) > 0 THEN
     INSERT INTO clinic_specialties (clinic_id, specialty)
     SELECT new_clinic_id, unnest(app_row.specialties);
   END IF;
 
-  -- Create clinic equipment
   IF cardinality(app_row.equipment) > 0 THEN
     INSERT INTO clinic_equipment (clinic_id, equipment_name)
     SELECT new_clinic_id, unnest(app_row.equipment);
   END IF;
 
-  -- Create clinic HMO associations
   IF cardinality(app_row.supported_hmos) > 0 THEN
-    FOR hmo_record IN 
-      SELECT h.id FROM hmos h 
+    FOR hmo_record IN
+      SELECT h.id FROM hmos h
       WHERE h.name = ANY(app_row.supported_hmos)
     LOOP
-      INSERT INTO clinic_hmos (clinic_id, hmo_id) 
+      INSERT INTO clinic_hmos (clinic_id, hmo_id)
       VALUES (new_clinic_id, hmo_record.id);
     END LOOP;
   END IF;
 
-  -- Create operating hours from JSONB
-  -- Handles both storage formats:
-  --   'array'  → stored correctly as JSONB array (new submissions)
-  --   'string' → stored as a JSONB string scalar due to JSON.stringify (old submissions)
   IF app_row.operating_hours IS NOT NULL THEN
     INSERT INTO clinic_operating_hours (clinic_id, day, is_open, open_time, close_time)
-    SELECT 
+    SELECT
       new_clinic_id,
       (entry->>'day')::day_of_week,
       (entry->>'isOpen')::BOOLEAN,
-      CASE WHEN (entry->>'isOpen')::BOOLEAN 
+      CASE WHEN (entry->>'isOpen')::BOOLEAN
            THEN (entry->>'openTime')::TIME ELSE NULL END,
-      CASE WHEN (entry->>'isOpen')::BOOLEAN 
+      CASE WHEN (entry->>'isOpen')::BOOLEAN
            THEN (entry->>'closeTime')::TIME ELSE NULL END
     FROM jsonb_array_elements(
       CASE jsonb_typeof(app_row.operating_hours)
@@ -273,31 +282,31 @@ BEGIN
     WHERE (entry->>'isOpen') IS NOT NULL;
   END IF;
 
-  -- Promote applicant to provider role (only if they're currently a patient)
   IF app_row.applicant_id IS NOT NULL THEN
-    UPDATE profiles 
-    SET role = 'provider' 
+    UPDATE profiles
+    SET role = 'provider'
     WHERE id = app_row.applicant_id AND role = 'patient';
   END IF;
 
-  -- Log the action
   INSERT INTO admin_audit_log (admin_id, action, target_type, target_id, details)
   VALUES (
-    auth.uid(), 
-    'approve_application', 
-    'provider_application', 
+    auth.uid(),
+    'approve_application',
+    'provider_application',
     app_id::TEXT,
     json_build_object(
-      'clinic_id', new_clinic_id,
+      'clinic_id',         new_clinic_id,
       'practitioner_name', app_row.practitioner_name,
-      'notes', notes
+      'images_imported',   cardinality(app_row.facility_image_urls),
+      'notes',             notes
     )::JSONB
   );
 
   RETURN json_build_object(
-    'success', true, 
-    'clinic_id', new_clinic_id,
-    'message', 'Application approved and clinic created'
+    'success',         true,
+    'clinic_id',       new_clinic_id,
+    'images_imported', cardinality(app_row.facility_image_urls),
+    'message',         'Application approved and clinic created'
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

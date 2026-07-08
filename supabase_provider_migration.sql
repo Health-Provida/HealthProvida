@@ -132,16 +132,16 @@ CREATE POLICY reviews_provider_select ON reviews
 
 -- ==================== GALLERY ====================
 
--- Providers can manage gallery images for their clinic
-CREATE POLICY gallery_images_provider_select ON gallery_images
+-- Clinic images
+CREATE POLICY clinic_images_provider_select ON clinic_images
   FOR SELECT USING (
     clinic_id IN (SELECT id FROM clinics WHERE owner_id = auth.uid())
   );
-CREATE POLICY gallery_images_provider_insert ON gallery_images
+CREATE POLICY clinic_images_provider_insert ON clinic_images
   FOR INSERT WITH CHECK (
     clinic_id IN (SELECT id FROM clinics WHERE owner_id = auth.uid())
   );
-CREATE POLICY gallery_images_provider_delete ON gallery_images
+CREATE POLICY clinic_images_provider_delete ON clinic_images
   FOR DELETE USING (
     clinic_id IN (SELECT id FROM clinics WHERE owner_id = auth.uid())
   );

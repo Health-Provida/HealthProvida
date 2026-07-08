@@ -226,7 +226,7 @@ export async function fetchGallery() {
   if (wardsError) return { data: null, error: wardsError };
 
   const { data: images, error: imagesError } = await supabase
-    .from('gallery_images')
+    .from('clinic_images')
     .select('id, ward_id, clinic_id, image_url, sort_order')
     .is('clinic_id', null) // shared/common images only
     .order('sort_order', { ascending: true });
@@ -268,7 +268,7 @@ export async function fetchGalleryForClinic(clinicId) {
 
   // Fetch both clinic-specific AND shared images
   const { data: images, error: imagesError } = await supabase
-    .from('gallery_images')
+    .from('clinic_images')
     .select('id, ward_id, clinic_id, image_url, sort_order')
     .or(`clinic_id.eq.${Number(clinicId)},clinic_id.is.null`)
     .order('sort_order', { ascending: true });

@@ -272,29 +272,29 @@ WHERE c.id BETWEEN 1 AND 9;
 -- In production, upload to Supabase Storage and update URLs
 
 -- Reception
-INSERT INTO gallery_images (ward_id, clinic_id, image_url, sort_order) VALUES
+INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
   ('reception', NULL, 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800', 2),
   ('reception', NULL, 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=800', 3),
   ('reception', NULL, 'https://images.unsplash.com/photo-1519494080410-f9aa76cb4283?auto=format&fit=crop&q=80&w=800', 4);
 
 -- Consulting Room
-INSERT INTO gallery_images (ward_id, clinic_id, image_url, sort_order) VALUES
+INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
   ('consulting_room', NULL, 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=800', 1),
   ('consulting_room', NULL, 'https://images.unsplash.com/photo-1550831107-1553da8c8464?auto=format&fit=crop&q=80&w=800', 2),
   ('consulting_room', NULL, 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=800', 3);
 
 -- Private Ward
-INSERT INTO gallery_images (ward_id, clinic_id, image_url, sort_order) VALUES
+INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
   ('private_ward', NULL, 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800', 2),
   ('private_ward', NULL, 'https://images.unsplash.com/photo-1505692952047-1a78307da8f2?auto=format&fit=crop&q=80&w=800', 3),
   ('private_ward', NULL, 'https://images.unsplash.com/photo-1512678080530-7760d81faba6?auto=format&fit=crop&q=80&w=800', 4);
 
 -- Laboratory
-INSERT INTO gallery_images (ward_id, clinic_id, image_url, sort_order) VALUES
+INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
   ('laboratory', NULL, 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=800', 1),
   ('laboratory', NULL, 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&q=80&w=800', 3);
 
 -- Special Units
-INSERT INTO gallery_images (ward_id, clinic_id, image_url, sort_order) VALUES
+INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
   ('special_units', NULL, 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800', 2),
   ('special_units', NULL, 'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&q=80&w=800', 4);

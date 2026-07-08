@@ -208,16 +208,59 @@ export default function ApplicationDetailPage() {
           </Section>
         )}
 
-        {/* Facility Image */}
-        {app.facility_image_url && (
-          <Section icon={Image} title="Facility Image">
-            <img
-              src={app.facility_image_url}
-              alt="Facility"
-              className="rounded-xl max-w-full max-h-[400px] object-cover border border-gray-200"
-            />
-          </Section>
-        )}
+        {/* Facility Images */}
+        {(() => {
+          // Prefer the new facility_image_urls array; fall back to the
+          // legacy scalar for applications submitted before the fix.
+          const images = (app.facility_image_urls?.length > 0)
+            ? app.facility_image_urls
+            : (app.facility_image_url ? [app.facility_image_url] : []);
+
+          if (images.length === 0) return null;
+
+          const STATUS_CONFIG = {
+            pending:      { label: 'Pending Review',   bg: 'bg-amber-50',  text: 'text-amber-700',  border: 'border-amber-200' },
+            approved:     { label: 'Images Approved',  bg: 'bg-green-50',  text: 'text-green-700',  border: 'border-green-200' },
+            rejected:     { label: 'Images Rejected',  bg: 'bg-red-50',    text: 'text-red-700',    border: 'border-red-200'   },
+            needs_review: { label: 'Needs Manual Review', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+          };
+          const statusKey = app.image_review_status ?? 'pending';
+          const cfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending;
+
+          return (
+            <Section icon={Image} title={`Facility Images (${images.length})`}>
+              {/* Image review status badge */}
+              <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold border mb-4 ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                {cfg.label}
+              </div>
+
+              {/* Responsive image grid — first image is hero-sized */}
+              <div className={`grid gap-3 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                {images.map((src, i) => (
+                  <a
+                    key={i}
+                    href={src}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`block rounded-xl overflow-hidden border border-gray-100 hover:opacity-90 transition ${
+                      i === 0 && images.length > 1 ? 'col-span-2 aspect-[16/9]' : 'aspect-square'
+                    }`}
+                    title={`Open image ${i + 1} in new tab`}
+                  >
+                    <img
+                      src={src}
+                      alt={`Facility photo ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                    />
+                  </a>
+                ))}
+              </div>
+            </Section>
+          );
+        })()}
+
 
         {/* Admin Notes */}
         <Section icon={FileText} title="Admin Notes">

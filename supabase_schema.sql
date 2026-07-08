@@ -179,11 +179,12 @@ CREATE TABLE gallery_wards (
   sort_order INT NOT NULL DEFAULT 0
 );
 
--- 13. Gallery Images
-CREATE TABLE gallery_images (
+-- 13. Clinic Images (ward-categorised facility photos per clinic)
+-- NULL clinic_id = shared/common images shown across all clinics
+CREATE TABLE clinic_images (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   ward_id TEXT NOT NULL REFERENCES gallery_wards(id) ON DELETE CASCADE,
-  clinic_id BIGINT REFERENCES clinics(id) ON DELETE CASCADE, -- NULL = shared/common
+  clinic_id BIGINT REFERENCES clinics(id) ON DELETE CASCADE,
   image_url TEXT NOT NULL,
   sort_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -211,7 +212,12 @@ CREATE TABLE provider_applications (
   equipment TEXT[] NOT NULL DEFAULT '{}',
   tags TEXT[] NOT NULL DEFAULT '{}',
   supported_hmos TEXT[] NOT NULL DEFAULT '{}',
-  facility_image_url TEXT,
+  facility_image_url TEXT,                        -- legacy: first image (kept for backward compat)
+  facility_image_urls TEXT[] NOT NULL DEFAULT '{}', -- all submitted facility images
+  -- Lifecycle status for future automated image quality review pipeline
+  -- ('pending' | 'approved' | 'rejected' | 'needs_review')
+  image_review_status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (image_review_status IN ('pending', 'approved', 'rejected', 'needs_review')),
   operating_hours JSONB, -- stores the full operating hours object
   appointment_slot_duration INT DEFAULT 30,
   status provider_application_status NOT NULL DEFAULT 'pending',
@@ -250,8 +256,12 @@ CREATE INDEX idx_appointments_clinic ON appointments(clinic_id);
 CREATE INDEX idx_appointments_date ON appointments(appointment_date);
 CREATE INDEX idx_reviews_clinic ON reviews(clinic_id);
 CREATE INDEX idx_reviews_rating ON reviews(clinic_id, rating);
-CREATE INDEX idx_gallery_images_ward ON gallery_images(ward_id);
-CREATE INDEX idx_gallery_images_clinic ON gallery_images(clinic_id);
+CREATE INDEX idx_clinic_images_ward     ON clinic_images(ward_id);
+CREATE INDEX idx_clinic_images_clinic_id ON clinic_images(clinic_id);
+CREATE INDEX idx_clinic_images_clinic_order ON clinic_images(clinic_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_provider_apps_image_review_status
+  ON provider_applications(image_review_status)
+  WHERE status = 'pending';
 CREATE INDEX idx_favorites_user ON favorites(user_id);
 CREATE INDEX idx_favorites_clinic ON favorites(clinic_id);
 CREATE INDEX idx_provider_apps_status ON provider_applications(status);
@@ -349,7 +359,7 @@ ALTER TABLE appointment_slots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE gallery_wards ENABLE ROW LEVEL SECURITY;
-ALTER TABLE gallery_images ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clinic_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE favorites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE provider_applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
@@ -421,11 +431,15 @@ CREATE POLICY reviews_insert ON reviews FOR INSERT WITH CHECK (auth.uid() = pati
 CREATE POLICY reviews_update ON reviews FOR UPDATE USING (auth.uid() = patient_id);
 CREATE POLICY reviews_delete ON reviews FOR DELETE USING (auth.uid() = patient_id);
 
--- Gallery: public read
+-- Gallery wards: public read
 CREATE POLICY wards_select ON gallery_wards FOR SELECT USING (true);
-CREATE POLICY images_select ON gallery_images FOR SELECT USING (true);
-CREATE POLICY images_insert ON gallery_images FOR INSERT
+
+-- Clinic images: public read, owners can insert/delete their clinic's images
+CREATE POLICY clinic_images_select ON clinic_images FOR SELECT USING (true);
+CREATE POLICY clinic_images_insert ON clinic_images FOR INSERT
   WITH CHECK (clinic_id IS NULL OR EXISTS (SELECT 1 FROM clinics WHERE id = clinic_id AND owner_id = auth.uid()));
+CREATE POLICY clinic_images_delete ON clinic_images FOR DELETE
+  USING (clinic_id IS NOT NULL AND EXISTS (SELECT 1 FROM clinics WHERE id = clinic_id AND owner_id = auth.uid()));
 
 -- Favorites: users manage own
 CREATE POLICY favorites_select ON favorites FOR SELECT USING (auth.uid() = user_id);
