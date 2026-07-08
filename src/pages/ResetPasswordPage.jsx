@@ -23,9 +23,8 @@ function PasswordStrengthMeter({ score, strength }) {
           className={`h-full rounded-full transition-all duration-500 ${colors[strength]} ${widths[strength]}`}
         />
       </div>
-      <p className={`text-xs mt-1 font-medium ${
-        strength === 'weak' ? 'text-red-500' : strength === 'fair' ? 'text-amber-500' : 'text-emerald-500'
-      }`}>
+      <p className={`text-xs mt-1 font-medium ${strength === 'weak' ? 'text-red-500' : strength === 'fair' ? 'text-amber-500' : 'text-emerald-500'
+        }`}>
         {labels[strength]} password
       </p>
     </div>
@@ -77,10 +76,12 @@ export default function ResetPasswordPage() {
         setSessionReady(true);
         setChecking(false);
       } else {
-        // Give a short time for the auth state change to propagate
+        // Give extra time for the auth state change to propagate from verifyOtp.
+        // AuthConfirmPage now waits for the event before navigating, so this
+        // timeout is only a safety net for unexpected edge cases.
         setTimeout(() => {
           setChecking(false);
-        }, 3000);
+        }, 5000);
       }
     };
 
@@ -291,11 +292,10 @@ export default function ResetPasswordPage() {
                             required
                             autoComplete="new-password"
                             autoFocus
-                            className={`w-full pl-11 pr-12 py-3 rounded-xl border bg-gray-50/50 focus:bg-white focus:ring-2 outline-none transition text-sm ${
-                              passwordErrors.length
+                            className={`w-full pl-11 pr-12 py-3 rounded-xl border bg-gray-50/50 focus:bg-white focus:ring-2 outline-none transition text-sm ${passwordErrors.length
                                 ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
                                 : 'border-gray-200 focus:border-blue-400 focus:ring-blue-100'
-                            }`}
+                              }`}
                           />
                           <button
                             type="button"
@@ -338,11 +338,10 @@ export default function ResetPasswordPage() {
                             placeholder="Re-enter your password"
                             required
                             autoComplete="new-password"
-                            className={`w-full pl-11 pr-12 py-3 rounded-xl border bg-gray-50/50 focus:bg-white focus:ring-2 outline-none transition text-sm ${
-                              confirmPassword && password !== confirmPassword
+                            className={`w-full pl-11 pr-12 py-3 rounded-xl border bg-gray-50/50 focus:bg-white focus:ring-2 outline-none transition text-sm ${confirmPassword && password !== confirmPassword
                                 ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
                                 : 'border-gray-200 focus:border-blue-400 focus:ring-blue-100'
-                            }`}
+                              }`}
                           />
                           <button
                             type="button"

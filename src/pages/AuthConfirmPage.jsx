@@ -59,8 +59,22 @@ export default function AuthConfirmPage() {
           return;
         }
 
-        // Session is now established — redirect based on flow type
+        // verifyOtp establishes the session, but onAuthStateChange fires
+        // asynchronously. We wait for it to propagate before navigating so
+        // that ResetPasswordPage.getSession() finds an active session immediately.
         if (type === 'recovery') {
+          await new Promise((resolve) => {
+            const { data: { subscription } } = supabase.auth.onAuthStateChange(
+              (event, session) => {
+                if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
+                  subscription.unsubscribe();
+                  resolve();
+                }
+              }
+            );
+            // Safety net: navigate anyway after 3 s even if event never fires
+            setTimeout(resolve, 3000);
+          });
           navigate('/reset-password', { replace: true });
         } else if (type === 'signup' || type === 'email') {
           navigate('/', { replace: true });
