@@ -1123,7 +1123,7 @@ export default function ProfilePage() {
           <div className="flex gap-8 items-start">
 
             {/* Desktop Sidebar */}
-            <aside className="w-64 flex-shrink-0 hidden md:block sticky top-6">
+            <aside className="w-64 flex-shrink-0 hidden md:block">
               <nav className="space-y-1">
                 {navItems.map(item => {
                   const Icon = item.icon;

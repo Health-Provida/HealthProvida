@@ -10,7 +10,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
  *  - interval   {number}    Milliseconds between transitions (default 2800).
  *  - className  {string}    Extra class names for the wrapper span.
  */
-const RotatingText = ({ words = [], interval = 2800, className = '' }) => {
+const RotatingText = ({ words = [], interval = 2800, initialDelay = 0, className = '' }) => {
   const [index, setIndex] = useState(0);
   const prefersReducedMotion = useReducedMotion();
   const timerRef = useRef(null);
@@ -19,12 +19,19 @@ const RotatingText = ({ words = [], interval = 2800, className = '' }) => {
   useEffect(() => {
     if (words.length <= 1) return;
 
-    timerRef.current = setInterval(() => {
-      setIndex((prev) => (prev + 1) % words.length);
-    }, interval);
+    // Wait for the initialDelay before starting the rotation interval,
+    // so the first word is shown statically when the page loads.
+    const delayRef = setTimeout(() => {
+      timerRef.current = setInterval(() => {
+        setIndex((prev) => (prev + 1) % words.length);
+      }, interval);
+    }, initialDelay);
 
-    return () => clearInterval(timerRef.current);
-  }, [words.length, interval]);
+    return () => {
+      clearTimeout(delayRef);
+      clearInterval(timerRef.current);
+    };
+  }, [words.length, interval, initialDelay]);
 
   // Framer Motion variants.
   // When reduced-motion is preferred we skip the translate and just crossfade.
