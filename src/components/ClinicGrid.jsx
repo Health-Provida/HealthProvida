@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Star, MapPin, Phone, Clock, Heart, X, Calendar, Shield, Stethoscope, Search } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Star, MapPin, Phone, Clock, Heart, X, Calendar, Shield, Stethoscope } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useClinics } from '@/context/ClinicsContext';
+
 
 // This component wraps around your existing ClinicGrid
 // You'll need to export clinicsData from your ClinicGrid.jsx file
@@ -603,79 +604,20 @@ function ClinicCard({ clinic, onClick }) {
 
 export default function ClinicCardsApp() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { clinics, loading, error } = useClinics();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('distance');
-  const [filteredClinics, setFilteredClinics] = useState([]);
-  const searchInputRef = useRef(null);
+  const [sortedClinics, setSortedClinics] = useState([]);
 
-  // Sync filteredClinics when clinics data arrives from context
+  // Sort by popularity: most reviews first, then by rating as tiebreaker
   useEffect(() => {
     if (clinics.length > 0) {
-      setFilteredClinics(clinics);
+      const results = [...clinics].sort((a, b) => {
+        const reviewDiff = (b.number_of_reviews || 0) - (a.number_of_reviews || 0);
+        if (reviewDiff !== 0) return reviewDiff;
+        return (b.rating || 0) - (a.rating || 0);
+      });
+      setSortedClinics(results);
     }
   }, [clinics]);
-
-  useEffect(() => {
-    if (location.state?.scrollToSearch && searchInputRef.current) {
-      searchInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 500);
-      
-      // Clear the state so it doesn't happen again if navigating back
-      navigate('.', { replace: true, state: {} });
-    }
-  }, [location, navigate]);
-
-  const handleSearch = () => {
-    let results = [...clinics];
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      results = results.filter(clinic => {
-        const nameMatch = clinic.practitioner_name?.toLowerCase().includes(query);
-        const specialtyMatch = clinic.specialties?.some(specialty =>
-          specialty.toLowerCase().includes(query)
-        );
-        const tagsMatch = clinic.tags?.some(tag =>
-          tag.toLowerCase().includes(query)
-        );
-        const practiceTypeMatch = clinic.practice_type?.toLowerCase().includes(query);
-
-        return nameMatch || specialtyMatch || tagsMatch || practiceTypeMatch;
-      });
-    }
-
-    results.sort((a, b) => {
-      switch (sortBy) {
-        case 'distance':
-          const distanceA = parseFloat(a.distance_from_location) || 0;
-          const distanceB = parseFloat(b.distance_from_location) || 0;
-          return distanceA - distanceB;
-
-        case 'review':
-          return (b.rating || 0) - (a.rating || 0);
-
-        case 'tags':
-          const tagA = a.tags?.[0] || '';
-          const tagB = b.tags?.[0] || '';
-          return tagA.localeCompare(tagB);
-
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredClinics(results);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
 
   const navigateToClinic = (clinicId) => {
     window.open(`/clinic/${clinicId}`, '_blank');
@@ -685,67 +627,8 @@ export default function ClinicCardsApp() {
     <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 sm:mb-8 px-2 sm:px-0">
-          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">Find Healthcare Providers</h1>
-          <p className="text-sm sm:text-base text-gray-600">Verified providers across Sub-Saharan Africa ready to serve you</p>
-        </div>
-
-        {/* Search Section */}
-        <div className="w-full mb-6 bg-white rounded-lg shadow-md p-6">
-          <div className="space-y-4">
-            <div className="relative">
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search by clinic name, specialty, or tag..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 placeholder-gray-400"
-              />
-              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <div className="flex items-center gap-3 flex-1">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Sort by:
-                </label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="flex-1 sm:flex-initial px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-700 cursor-pointer"
-                >
-                  <option value="distance">Distance (Nearest First)</option>
-                  <option value="review">Rating (Highest First)</option>
-                  <option value="tags">Tags (Alphabetical)</option>
-                </select>
-              </div>
-
-              <button
-                onClick={handleSearch}
-                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold py-2.5 px-8 rounded-lg transition duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] shadow-md"
-              >
-                Search
-              </button>
-            </div>
-
-            <div className="text-sm text-gray-600 pt-2 border-t border-gray-100">
-              {loading ? (
-                <span className="text-gray-400 animate-pulse">Loading clinics…</span>
-              ) : (
-                <>
-                  {searchQuery && (
-                    <span className="mr-4">
-                      <span className="font-medium">Search term:</span> "{searchQuery}"
-                    </span>
-                  )}
-                  <span className="font-medium">
-                    Showing {filteredClinics.length} of {clinics.length} clinics
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">Most Popular Clinics</h1>
+          <p className="text-sm sm:text-base text-gray-600">Verified providers across Sub-Saharan Africa — ranked by patient popularity</p>
         </div>
 
         <div className="space-y-6">
@@ -781,8 +664,8 @@ export default function ClinicCardsApp() {
                 </div>
               </div>
             ))
-          ) : filteredClinics.length > 0 ? (
-            filteredClinics.map((clinic) => (
+          ) : sortedClinics.length > 0 ? (
+            sortedClinics.map((clinic) => (
               <ClinicCard
                 key={clinic.id}
                 clinic={clinic}
@@ -807,8 +690,8 @@ export default function ClinicCardsApp() {
             </div>
           ) : (
             <div className="text-center py-12 bg-white rounded-lg shadow-md">
-              <p className="text-gray-600 text-lg">No clinics found matching your search criteria.</p>
-              <p className="text-gray-500 mt-2">Try adjusting your search terms or filters.</p>
+              <p className="text-gray-600 text-lg">No clinics available at this time.</p>
+              <p className="text-gray-500 mt-2">Please check back soon.</p>
             </div>
           )}
         </div>

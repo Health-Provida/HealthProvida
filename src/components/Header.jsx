@@ -18,7 +18,7 @@ const Header = () => {
   const menuRef = useRef(null);
 
   const handleSearchClick = () => {
-    navigate('/', { state: { scrollToSearch: true } });
+    navigate('/search');
   };
 
   // Close dropdown when clicking outside
@@ -381,20 +381,13 @@ const Header = () => {
                           <span>Log out</span>
                         </button>
                       ) : (
-                        <div className="flex flex-col gap-2 pt-1">
+                        <div className="pt-1">
                           <Link
                             to="/login"
                             onClick={() => setIsMenuOpen(false)}
-                            className="text-center py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                            className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-green-700 transition-all shadow-sm"
                           >
-                            Log in
-                          </Link>
-                          <Link
-                            to="/signup"
-                            onClick={() => setIsMenuOpen(false)}
-                            className="text-center py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-green-700 transition-all shadow-sm"
-                          >
-                            Sign up
+                            Sign in
                           </Link>
                         </div>
                       )}

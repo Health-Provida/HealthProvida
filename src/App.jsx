@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -13,15 +13,12 @@ import ClinicPhotosPage from '@/pages/ClinicPhotosPage';
 import MapPage from '@/pages/MapPage';
 import FavoritesPage from '@/pages/FavoritesPage';
 import LoginPage from '@/pages/LoginPage';
-import SignUpPage from '@/pages/SignUpPage';
-import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
-import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import AuthConfirmPage from '@/pages/AuthConfirmPage';
 import HelpCenterPage from '@/pages/HelpCenterPage';
 import WriteReviewPage from '@/pages/WriteReviewPage';
-import EmailVerificationPage from '@/pages/EmailVerificationPage';
 import ProfilePage from '@/pages/ProfilePage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import SearchPage from '@/pages/SearchPage';
 import ScrollToTop from '@/components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRouter from '@/pages/admin/AdminRouter';
@@ -41,11 +38,13 @@ function App() {
         <Routes>
           {/* Auth pages — no header/footer */}
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/verify-email" element={<EmailVerificationPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/auth/confirm" element={<AuthConfirmPage />} />
+
+          {/* Redirects for removed pages */}
+          <Route path="/signup" element={<Navigate to="/login" replace />} />
+          <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
+          <Route path="/reset-password" element={<Navigate to="/login" replace />} />
+          <Route path="/verify-email" element={<Navigate to="/login" replace />} />
 
           {/* Admin panel — its own layout, protected */}
           <Route
@@ -78,6 +77,7 @@ function App() {
               <main className="flex-grow">
                 <Routes>
                   <Route path="/" element={<HomePage />} />
+                  <Route path="/search" element={<SearchPage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/services" element={<ServicesPage />} />
                   <Route path="/join-provider" element={

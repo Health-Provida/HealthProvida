@@ -7,13 +7,14 @@ import {
   Shield, HelpCircle, LogOut, ChevronRight, Edit2, Camera,
   Phone, Mail, Clock, Star, Activity, FileText,
   Stethoscope, AlertCircle, CheckCircle2, Bell, Lock,
-  Globe, Syringe, PlusCircle, ArrowRight, BadgeCheck
+  Globe, Syringe, PlusCircle, ArrowRight, BadgeCheck, Eye, EyeOff
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { supabase } from '@/utils/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { fetchPatientAppointments, cancelAppointment } from '@/utils/supabaseQueries';
+import { validatePassword } from '@/utils/validationUtils';
 
 // ─── Sidebar Navigation Items ─────────────────────────────────────────────────
 const navItems = [
@@ -21,7 +22,7 @@ const navItems = [
   { id: 'health',        icon: Activity,      label: 'Health Details',  description: 'Medical information' },
   { id: 'appointments',  icon: CalendarCheck, label: 'Appointments',    description: 'Upcoming & past visits' },
   { id: 'saved',         icon: Heart,         label: 'Saved Clinics',   description: 'Your wishlists' },
-  { id: 'security',      icon: Lock,          label: 'Security',        description: 'Password & privacy' },
+  { id: 'security',      icon: Lock,          label: 'Security',        description: 'Account & privacy' },
   { id: 'notifications', icon: Bell,          label: 'Notifications',   description: 'Alert preferences' },
 ];
 
@@ -301,8 +302,249 @@ function NotificationToggle({ label, desc, icon: Icon, color, bg, defaultOn }) {
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
+
+// ─── Password Change Form (inline) ───────────────────────────────────────────
+function PasswordChangeForm() {
+  const { updatePassword } = useAuth();
+  const { toast } = useToast();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const pwResult = newPassword ? validatePassword(newPassword) : null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!newPassword.trim()) return;
+
+    const { isValid, errors } = validatePassword(newPassword);
+    if (!isValid) {
+      toast({ title: 'Weak password', description: errors[0], variant: 'destructive' });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({ title: 'Mismatch', description: 'Passwords do not match.', variant: 'destructive' });
+      return;
+    }
+
+    setSaving(true);
+    const { error } = await updatePassword(newPassword);
+    setSaving(false);
+
+    if (error) {
+      toast({ title: 'Error', description: error.message || 'Could not update password.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Password updated', description: 'Your password has been changed successfully.' });
+      setNewPassword('');
+      setConfirmPassword('');
+      setExpanded(false);
+    }
+  };
+
+  if (!expanded) {
+    return (
+      <button
+        onClick={() => setExpanded(true)}
+        className="text-sm font-semibold text-blue-600 hover:text-blue-700 underline-offset-2 hover:underline transition"
+      >
+        Set or change password
+      </button>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="relative">
+        <input
+          type={showPassword ? 'text' : 'password'}
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          placeholder="New password"
+          autoComplete="new-password"
+          className="w-full px-4 pr-12 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm transition"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+          tabIndex={-1}
+        >
+          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
+      </div>
+      {pwResult && (
+        <div className={`text-xs font-medium ${
+          pwResult.strength === 'weak' ? 'text-red-500' : pwResult.strength === 'fair' ? 'text-amber-500' : 'text-emerald-500'
+        }`}>
+          {pwResult.strength === 'weak' ? 'Weak' : pwResult.strength === 'fair' ? 'Fair' : 'Strong'} password
+        </div>
+      )}
+      <input
+        type={showPassword ? 'text' : 'password'}
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        placeholder="Confirm new password"
+        autoComplete="new-password"
+        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm transition"
+      />
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => { setExpanded(false); setNewPassword(''); setConfirmPassword(''); }}
+          className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={saving || !newPassword || !confirmPassword}
+          className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-green-700 transition disabled:opacity-60"
+        >
+          {saving ? 'Saving…' : 'Update Password'}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ─── Onboarding Modal ─────────────────────────────────────────────────────────
+function OnboardingModal({ onClose, onSave }) {
+  const [form, setForm] = useState({
+    full_name: '',
+    phone: '',
+    date_of_birth: '',
+    password: '',
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    await onSave(form);
+    setSaving(false);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+    >
+      <motion.div
+        initial={{ scale: 0.92, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.92, opacity: 0 }}
+        transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
+      >
+        {/* Gradient bar */}
+        <div className="h-1.5 bg-gradient-to-r from-blue-600 via-teal-500 to-green-500" />
+
+        <div className="p-8">
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-600 to-green-600 flex items-center justify-center shadow-lg shadow-blue-200">
+              <User className="w-7 h-7 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">Complete your profile</h3>
+            <p className="text-gray-500 text-sm mt-2 leading-relaxed">
+              Add your details to book appointments or join as a provider.
+            </p>
+          </div>
+
+          {/* Info banner */}
+          <div className="mb-6 px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 text-xs leading-relaxed">
+            <strong>Note:</strong> A complete profile is required to book appointments or join the provider network. You can skip this for now and complete it later.
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Full Name</label>
+              <input
+                name="full_name"
+                value={form.full_name}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm font-medium transition"
+                placeholder="Your full name"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Phone Number <span className="text-gray-300 font-normal normal-case">(optional)</span></label>
+              <input
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm font-medium transition"
+                placeholder="+234 800 000 0000"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Date of Birth <span className="text-gray-300 font-normal normal-case">(optional)</span></label>
+              <input
+                type="date"
+                name="date_of_birth"
+                value={form.date_of_birth}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm font-medium transition"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Password <span className="text-gray-300 font-normal normal-case">(optional)</span></label>
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={handleChange}
+                  className="w-full px-4 pr-12 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm font-medium transition"
+                  placeholder="Set a password (optional)"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-1.5">You don't need a password to sign in, but you can set one as a backup.</p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+              >
+                Skip for now
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-green-700 transition disabled:opacity-60"
+              >
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function ProfilePage() {
-  const { user, profile, signOut, refreshProfile } = useAuth();
+  const { user, profile, signOut, refreshProfile, updatePassword, isProfileIncomplete } = useAuth();
   const { getFavoriteClinics, favoritesCount } = useFavorites();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -713,25 +955,22 @@ export default function ProfilePage() {
           <SectionFade tabKey="security">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Security</h2>
-              <p className="text-gray-500 text-sm mt-0.5">Manage your password and account safety</p>
+              <p className="text-gray-500 text-sm mt-0.5">Manage your account and privacy settings</p>
             </div>
 
             <div className="space-y-4">
+              {/* Inline Password Change */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                      <Lock className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 text-sm">Password</p>
-                      <p className="text-xs text-gray-400 mt-0.5">Keep your account secure with a strong password</p>
-                    </div>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                    <Lock className="w-5 h-5 text-blue-600" />
                   </div>
-                  <Link to="/forgot-password" className="text-sm font-semibold text-blue-600 hover:text-blue-700 underline-offset-2 hover:underline transition">
-                    Change
-                  </Link>
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">Password</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Set or update your password (optional — you can always sign in with email OTP)</p>
+                  </div>
                 </div>
+                <PasswordChangeForm />
               </div>
 
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
@@ -792,6 +1031,54 @@ export default function ProfilePage() {
       default:
         return null;
     }
+  };
+
+  // ─── Onboarding state ─────────────────────────────────────
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const onboardingShownRef = useRef(false);
+
+  // Show onboarding modal on first render if profile is incomplete
+  useEffect(() => {
+    if (isProfileIncomplete && !onboardingShownRef.current) {
+      onboardingShownRef.current = true;
+      // Small delay so the page renders first
+      const timer = setTimeout(() => setShowOnboarding(true), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isProfileIncomplete]);
+
+  const handleOnboardingSave = async (form) => {
+    if (!supabase || !user?.id) return;
+
+    // Update profile fields
+    const updates = {};
+    if (form.full_name?.trim()) updates.full_name = form.full_name.trim();
+    if (form.phone?.trim()) updates.phone = form.phone.trim();
+    if (form.date_of_birth) updates.date_of_birth = form.date_of_birth;
+
+    if (Object.keys(updates).length > 0) {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+
+      if (error) {
+        toast({ title: 'Error', description: 'Could not save profile. Please try again.', variant: 'destructive' });
+        return;
+      }
+    }
+
+    // Set password if provided
+    if (form.password?.trim()) {
+      const { error: pwError } = await updatePassword(form.password.trim());
+      if (pwError) {
+        toast({ title: 'Password Error', description: pwError.message || 'Could not set password.', variant: 'destructive' });
+      }
+    }
+
+    await refreshProfile();
+    setShowOnboarding(false);
+    toast({ title: 'Profile updated', description: 'Your profile has been saved successfully.' });
   };
 
   return (
@@ -907,6 +1194,16 @@ export default function ProfilePage() {
             profile={profile}
             onClose={() => setShowEditModal(false)}
             onSave={handleSaveProfile}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Onboarding Modal */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <OnboardingModal
+            onClose={() => setShowOnboarding(false)}
+            onSave={handleOnboardingSave}
           />
         )}
       </AnimatePresence>

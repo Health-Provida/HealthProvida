@@ -98,22 +98,13 @@ export default function ProfileSidebar({ isOpen, onClose }) {
               ) : (
                 <div className="text-center py-2">
                   <p className="text-sm text-gray-500 mb-4">Sign in to access your account</p>
-                  <div className="flex gap-3">
-                    <Link
-                      to="/login"
-                      onClick={onClose}
-                      className="flex-1 py-2.5 text-center rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-                    >
-                      Log in
-                    </Link>
-                    <Link
-                      to="/signup"
-                      onClick={onClose}
-                      className="flex-1 py-2.5 text-center rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-green-700 transition"
-                    >
-                      Sign up
-                    </Link>
-                  </div>
+                  <Link
+                    to="/login"
+                    onClick={onClose}
+                    className="block w-full py-2.5 text-center rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-green-700 transition"
+                  >
+                    Sign in
+                  </Link>
                 </div>
               )}
             </div>

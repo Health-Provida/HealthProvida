@@ -28,9 +28,9 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
 
   const filteredReviews = searchQuery.trim()
     ? clinic.reviewHighlights.filter(r =>
-        r.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        r.author.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      r.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.author.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : clinic.reviewHighlights;
 
   // Calculate rating breakdown
@@ -123,32 +123,31 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
               filteredReviews.map((review, index) => {
                 const originalIndex = clinic.reviewHighlights.indexOf(review);
                 return (
-                <div key={index} id={`dialog-review-${originalIndex}`} className="pb-6 border-b border-gray-100 last:border-0 last:pb-0 rounded-lg p-2 -mx-2">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                      {review.author.charAt(0)}
+                  <div key={index} id={`dialog-review-${originalIndex}`} className="pb-6 border-b border-gray-100 last:border-0 last:pb-0 rounded-lg p-2 -mx-2">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        {review.author.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900 text-sm">{review.author}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 text-sm">{review.author}</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3.5 h-3.5 ${i < review.rating
+                                ? 'text-gray-900 fill-gray-900'
+                                : 'text-gray-300'
+                              }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-gray-500 text-xs">· {review.date}</span>
                     </div>
+                    <p className="text-gray-700 text-sm leading-relaxed">{review.text}</p>
                   </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex items-center gap-0.5">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-3.5 h-3.5 ${
-                            i < review.rating
-                              ? 'text-gray-900 fill-gray-900'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-gray-500 text-xs">· {review.date}</span>
-                  </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">{review.text}</p>
-                </div>
                 );
               })
             ) : (
@@ -249,19 +248,19 @@ export default function ClinicPage() {
         <div className="md:hidden h-[350px] bg-gray-200" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            {[1,2,3].map(i => (
+            {[1, 2, 3].map(i => (
               <div key={i} className="bg-white rounded-xl p-6 space-y-3">
                 <div className="h-6 w-48 bg-gray-200 rounded" />
-                <div className="flex gap-2 flex-wrap">{[1,2,3,4].map(j => <div key={j} className="h-8 w-24 bg-gray-100 rounded-lg" />)}</div>
+                <div className="flex gap-2 flex-wrap">{[1, 2, 3, 4].map(j => <div key={j} className="h-8 w-24 bg-gray-100 rounded-lg" />)}</div>
               </div>
             ))}
           </div>
           <div className="bg-white rounded-xl p-6 h-fit space-y-4">
             <div className="h-6 w-40 bg-gray-200 rounded" />
-            {[1,2,3].map(i => (
+            {[1, 2, 3].map(i => (
               <div key={i} className="space-y-2">
                 <div className="h-4 w-20 bg-gray-200 rounded" />
-                <div className="grid grid-cols-2 gap-2">{[1,2,3,4].map(j => <div key={j} className="h-10 bg-gray-100 rounded-lg" />)}</div>
+                <div className="grid grid-cols-2 gap-2">{[1, 2, 3, 4].map(j => <div key={j} className="h-10 bg-gray-100 rounded-lg" />)}</div>
               </div>
             ))}
           </div>
@@ -375,7 +374,7 @@ export default function ClinicPage() {
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" x2="12" y1="2" y2="15" /></svg>
           </button>
-          <button 
+          <button
             onClick={() => toggleFavorite(clinic.id)}
             className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-gray-700 shadow-sm"
           >
@@ -386,7 +385,7 @@ export default function ClinicPage() {
 
       {/* Mobile Swipeable Photo Gallery (Moved to top) */}
       <div className="md:hidden relative h-[350px] w-full group">
-        <div 
+        <div
           className="flex h-full overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           onScroll={handleScroll}
         >
@@ -447,9 +446,8 @@ export default function ClinicPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => toggleFavorite(clinic.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition font-medium ${
-                  favorited ? 'text-red-500 bg-red-50 hover:bg-red-100' : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition font-medium ${favorited ? 'text-red-500 bg-red-50 hover:bg-red-100' : 'text-gray-700 hover:bg-gray-100'
+                  }`}
               >
                 <Heart className={`w-5 h-5 ${favorited ? 'fill-red-500' : ''}`} />
                 <span>{favorited ? 'Saved' : 'Save'}</span>
@@ -555,7 +553,7 @@ export default function ClinicPage() {
         <div className="md:hidden mb-8 text-center sm:text-left">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">{clinic.practitioner_name}</h1>
           <p className="text-sm text-gray-500 mb-4">{clinic.address}</p>
-          
+
           <div className="flex items-center justify-center sm:justify-start gap-4 text-sm divide-x divide-gray-200 border-y border-gray-100 py-3">
             <div className="flex flex-col items-center px-4">
               <div className="flex items-center font-bold text-gray-900">
@@ -573,7 +571,7 @@ export default function ClinicPage() {
             </div>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
@@ -661,11 +659,10 @@ export default function ClinicPage() {
                                 {Array.from({ length: 5 }, (_, i) => (
                                   <Star
                                     key={i}
-                                    className={`w-3.5 h-3.5 ${
-                                      i < review.rating
+                                    className={`w-3.5 h-3.5 ${i < review.rating
                                         ? 'text-yellow-400 fill-yellow-400'
                                         : 'text-gray-200'
-                                    }`}
+                                      }`}
                                   />
                                 ))}
                               </div>
@@ -734,7 +731,7 @@ export default function ClinicPage() {
 
           {/* Booking Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 sticky top-8">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 sticky top-50">
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <Calendar className="w-6 h-6 text-blue-600" />
                 Book an Appointment
@@ -758,11 +755,10 @@ export default function ClinicPage() {
                                 slotId: slot.id,
                                 durationMinutes: slot.durationMinutes,
                               })}
-                              className={`py-2 px-3 text-sm rounded-lg border-2 transition-all duration-200 ${
-                                selectedSlot?.slotId === slot.id
+                              className={`py-2 px-3 text-sm rounded-lg border-2 transition-all duration-200 ${selectedSlot?.slotId === slot.id
                                   ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold shadow-sm'
                                   : 'border-gray-200 hover:border-blue-300 text-gray-700 hover:bg-gray-50'
-                              }`}
+                                }`}
                             >
                               {slot.time}
                             </button>
@@ -813,7 +809,7 @@ export default function ClinicPage() {
                       href={`mailto:${clinic.email}`}
                       className="w-full flex items-center justify-center gap-2 border-2 border-gray-200 hover:border-blue-300 text-gray-700 hover:bg-gray-50 py-3 px-6 rounded-lg text-base font-semibold transition"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
                       Send an Email
                     </a>
                   )}
@@ -825,16 +821,15 @@ export default function ClinicPage() {
             {clinic.operatingHours && clinic.operatingHours.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                   Opening Hours
                 </h3>
                 <ul className="space-y-2">
                   {clinic.operatingHours.map((h) => {
                     const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }) === h.day;
                     return (
-                      <li key={h.day} className={`flex justify-between text-sm py-1.5 px-2 rounded-lg ${
-                        isToday ? 'bg-blue-50 font-semibold text-blue-900' : 'text-gray-700'
-                      }`}>
+                      <li key={h.day} className={`flex justify-between text-sm py-1.5 px-2 rounded-lg ${isToday ? 'bg-blue-50 font-semibold text-blue-900' : 'text-gray-700'
+                        }`}>
                         <span>{h.day}</span>
                         <span>
                           {h.isOpen && h.openTime && h.closeTime

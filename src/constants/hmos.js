@@ -1,0 +1,35 @@
+/**
+ * Canonical list of HMOs supported by HealthProvida.
+ * Used in both the JoinProvider form and the clinic search/filter on the HomePage.
+ */
+export const availableHMOs = [
+  "AIHS",
+  "Alleanza Health",
+  "Anchor HMO",
+  "AXA",
+  "Avilla Healthcare",
+  "AVON HMO",
+  "Bastion Health",
+  "Clearline HMO",
+  "Delog HMO",
+  "Dot HMO",
+  "Gorah Healthcare",
+  "Health Partners",
+  "Healthspring HMO",
+  "HCI Healthcare",
+  "Hygeia HMO",
+  "Integrated Healthcare",
+  "Leadway Health",
+  "MB&O Healthcare",
+  "Metro Health",
+  "Monsberger",
+  "MSL HMO",
+  "NEM",
+  "NHIS",
+  "Peramare HMO",
+  "Pro Health",
+  "Red Care",
+  "Reliance",
+  "Sunu Health",
+  "Venus Medicare",
+];

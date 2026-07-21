@@ -3,10 +3,17 @@
  * ──────────────────────────────────────────────────────────────
  * Provides authentication state and methods to the entire app.
  * 
- * Manages: user session, profile (including role), loading state.
- * Exposes: signUp, signIn, signOut, resetPassword, verifyOtp,
- *          checkPhoneExists, isAdmin, isProvider,
- *          isSuperAdmin, isModerator, hasAdminWrite, adminRole.
+ * Auth model: passwordless email OTP.
+ *  - signIn  → sends a 6-digit OTP to the user's email
+ *  - signInVerifyOtp → verifies the OTP and establishes session
+ *  - Users are auto-created on first OTP sign-in by Supabase.
+ *  - Password is optional and can be set/changed in-app while
+ *    already authenticated (no reset email needed).
+ *
+ * Exposes: signIn, signInVerifyOtp, signOut, verifyOtp,
+ *          updatePassword, refreshProfile,
+ *          isAdmin, isProvider, isSuperAdmin, isModerator,
+ *          hasAdminWrite, adminRole, isProfileIncomplete.
  * ──────────────────────────────────────────────────────────────
  */
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
@@ -106,23 +113,18 @@ export function AuthProvider({ children }) {
 
   // ─── Auth Methods ────────────────────────────────────────
 
-  const signUp = useCallback(async ({ email, password, firstName, lastName, dateOfBirth, phone, optOutPromo }) => {
+  /**
+   * Send a 6-digit OTP to the user's email.
+   * If the user doesn't exist, Supabase auto-creates the account.
+   * @param {{ email: string }} params
+   */
+  const signIn = useCallback(async ({ email }) => {
     if (!supabase) return { error: { message: 'Supabase not configured' } };
 
-    const fullName = `${firstName} ${lastName}`.trim();
-
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signInWithOtp({
       email,
-      password,
       options: {
-        data: {
-          full_name: fullName,
-          first_name: firstName,
-          last_name: lastName,
-          date_of_birth: dateOfBirth || null,
-          phone: phone || null,
-          promo_opt_out: optOutPromo || false,
-        },
+        shouldCreateUser: true,
       },
     });
 
@@ -130,28 +132,26 @@ export function AuthProvider({ children }) {
   }, []);
 
   /**
-   * Check if a phone number already exists in the profiles table.
-   * @param {string} phone
-   * @returns {Promise<{exists: boolean, error?: object}>}
+   * Verify a 6-digit OTP code sent to email during sign-in.
+   * On success, establishes the session (auto-login).
+   * @param {{ email: string, token: string }} params
    */
-  const checkPhoneExists = useCallback(async (phone) => {
-    if (!supabase || !phone?.trim()) return { exists: false };
+  const signInVerifyOtp = useCallback(async ({ email, token }) => {
+    if (!supabase) return { error: { message: 'Supabase not configured' } };
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('phone', phone.trim())
-      .limit(1);
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'email',
+    });
 
-    if (error) return { exists: false, error };
-    return { exists: data && data.length > 0 };
+    return { data, error };
   }, []);
 
   /**
    * Verify an OTP code (6-digit) sent to email during signup.
-   * On success, automatically logs the user in.
+   * Kept for backward compatibility with older signup-type flows.
    * @param {{ email: string, token: string }} params
-   * @returns {Promise<{data?: object, error?: object}>}
    */
   const verifyOtp = useCallback(async ({ email, token }) => {
     if (!supabase) return { error: { message: 'Supabase not configured' } };
@@ -165,12 +165,16 @@ export function AuthProvider({ children }) {
     return { data, error };
   }, []);
 
-  const signIn = useCallback(async ({ email, password }) => {
+  /**
+   * Update the user's password while already authenticated.
+   * No reset email required — works directly with the current session.
+   * @param {string} newPassword
+   */
+  const updatePassword = useCallback(async (newPassword) => {
     if (!supabase) return { error: { message: 'Supabase not configured' } };
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword,
     });
 
     return { data, error };
@@ -184,18 +188,6 @@ export function AuthProvider({ children }) {
     setProfile(null);
   }, []);
 
-  const resetPassword = useCallback(async (email) => {
-    if (!supabase) return { error: { message: 'Supabase not configured' } };
-
-    // Strip any trailing slash from origin to prevent //auth/confirm double-slash URLs
-    const origin = window.location.origin.replace(/\/$/, '');
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/confirm`,
-    });
-
-    return { data, error };
-  }, []);
-
   const refreshProfile = useCallback(async () => {
     if (user?.id) {
       return await fetchProfile(user.id);
@@ -207,19 +199,22 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(() => {
     const role = profile?.role ?? 'patient';
+    const isProfileIncomplete = !profile?.full_name || profile.full_name.trim() === '';
+
     return {
       user,
       session,
       profile,
       loading,
       // Auth methods
-      signUp,
       signIn,
+      signInVerifyOtp,
       signOut,
-      resetPassword,
+      updatePassword,
       refreshProfile,
-      checkPhoneExists,
       verifyOtp,
+      // Profile state
+      isProfileIncomplete,
       // Role checks
       isAuthenticated: !!session,
       role,
@@ -230,7 +225,7 @@ export function AuthProvider({ children }) {
       hasAdminWrite: ADMIN_WRITE_ROLES.includes(role),
       adminRole: ADMIN_ROLES.includes(role) ? role : null,
     };
-  }, [user, session, profile, loading, signUp, signIn, signOut, resetPassword, refreshProfile, checkPhoneExists, verifyOtp]);
+  }, [user, session, profile, loading, signIn, signInVerifyOtp, signOut, updatePassword, refreshProfile, verifyOtp]);
 
   return (
     <AuthContext.Provider value={value}>

@@ -685,20 +685,9 @@
 import React, { useState } from 'react';
 import { Briefcase, Mail, MapPin, Phone, User, CheckCircle, ArrowRight, ArrowLeft, Stethoscope, Shield, Tag, Clock, Upload, Plus, Trash2, Image } from 'lucide-react';
 import { submitProviderApplication } from '@/utils/submitProviderApplication';
+import { availableHMOs } from '@/constants/hmos';
 
-// Pre-registered HMOs
-const availableHMOs = [
-  "Hygeia HMO",
-  "Avon Healthcare",
-  "Reliance HMO",
-  "AXA Mansard",
-  "MetroHealth HMO",
-  "Apex Healthcare",
-  "Total Health Trust",
-  "Wellness HMO",
-  "Sterling Health HMO",
-  "Clearline HMO"
-];
+// availableHMOs imported from @/constants/hmos
 
 // Common equipment options
 const commonEquipment = [
@@ -729,7 +718,16 @@ const commonSpecialties = [
   "Surgery",
   "Emergency Medicine",
   "Radiology",
-  "Neurology"
+  "Neurology",
+"Nephrology",
+"Endocrinology",
+"Ear, Nose and Throat",
+"Cardiac/ Heart Surgery",
+"Neurosurgery",
+"Spine Surgery",
+"Orthopaedic Surgery",
+"Gastroenterology",
+"Pulmonology"
 ];
 
 // Days of the week for operating hours

@@ -9,11 +9,11 @@ import logo from '../components/ui/logo.png';
  * AuthConfirmPage
  * ──────────────────────────────────────────────────────────────
  * Handles Supabase auth callback for email-based flows such as
- * password recovery. Extracts `token_hash` and `type` from URL
- * query parameters, calls verifyOtp() to establish an
- * authenticated session, then redirects to the appropriate page.
+ * email verification and magic links. Extracts `token_hash` and
+ * `type` from URL query parameters, calls verifyOtp() to
+ * establish an authenticated session, then redirects.
  *
- * Expected URL: /auth/confirm?token_hash=<hash>&type=recovery
+ * Expected URL: /auth/confirm?token_hash=<hash>&type=email
  * ──────────────────────────────────────────────────────────────
  */
 export default function AuthConfirmPage() {
@@ -53,20 +53,19 @@ export default function AuthConfirmPage() {
           setStatus('error');
           setErrorMessage(
             error.message?.includes('expired')
-              ? 'This link has expired. Please request a new password reset.'
+              ? 'This link has expired. Please request a new one.'
               : error.message || 'Verification failed. Please try again.'
           );
           return;
         }
 
         // verifyOtp establishes the session, but onAuthStateChange fires
-        // asynchronously. We wait for it to propagate before navigating so
-        // that ResetPasswordPage.getSession() finds an active session immediately.
-        if (type === 'recovery') {
+        // asynchronously. We wait for it to propagate before navigating.
+        if (type === 'signup' || type === 'email' || type === 'magiclink') {
           await new Promise((resolve) => {
             const { data: { subscription } } = supabase.auth.onAuthStateChange(
               (event, session) => {
-                if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
+                if ((event === 'SIGNED_IN') && session) {
                   subscription.unsubscribe();
                   resolve();
                 }
@@ -75,8 +74,6 @@ export default function AuthConfirmPage() {
             // Safety net: navigate anyway after 3 s even if event never fires
             setTimeout(resolve, 3000);
           });
-          navigate('/reset-password', { replace: true });
-        } else if (type === 'signup' || type === 'email') {
           navigate('/', { replace: true });
         } else {
           // Fallback for other types
@@ -122,18 +119,18 @@ export default function AuthConfirmPage() {
                 </p>
                 <div className="mt-8 flex flex-col gap-3">
                   <Link
-                    to="/forgot-password"
+                    to="/login"
                     className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold text-sm shadow-lg shadow-blue-200/50 hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
                   >
-                    Request a new link
+                    Try again
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
-                    to="/login"
+                    to="/"
                     className="inline-flex items-center justify-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-semibold transition"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    Back to sign in
+                    Back to home
                   </Link>
                 </div>
               </div>

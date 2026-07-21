@@ -1,12 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, MapPin, Clock } from 'lucide-react';
+import { Search } from 'lucide-react';
 import RotatingText from './RotatingText';
 
 // Words that rotate in the hero heading. Edit this list to change the cycle.
 const ROTATING_WORDS = ['Healthcare', 'Hospitals', 'Clinics', 'Pharmacies', 'Practitioners'];
 
 const Hero = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+
+  const handleSearch = () => {
+    const trimmed = searchQuery.trim();
+    if (trimmed) {
+      navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+    } else {
+      navigate('/search');
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <section className="hero-gradient text-white min-h-[calc(100vh-60px)] flex items-center relative overflow-hidden">
       <div className="absolute inset-0 bg-black/20"></div>
@@ -34,29 +53,32 @@ const Hero = () => {
             Discover trusted medical clinics, compare services, and book appointments with ease. Your health journey starts here.
           </p>
           
-          <div className="flex flex-wrap justify-center gap-8 mt-12">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg px-6 py-4 w-50"
-            >
-              <Search className="w-6 h-6 text-green-300" />
-              <span className="font-medium">Easy Search</span>
-            </motion.div>
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg px-6 py-4 w-49"
-            >
-              <MapPin className="w-6 h-6 text-green-300" />
-              <span className="font-medium">Location Based</span>
-            </motion.div>
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg px-6 py-4 w-59.999"
-            >
-              <Clock className="w-6 h-6 text-green-300" />
-              <span className="font-medium">Quick Booking</span>
-            </motion.div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="mt-10 max-w-2xl mx-auto"
+          >
+            <div className="flex items-center bg-white/15 backdrop-blur-md border border-white/30 rounded-2xl px-4 py-3 shadow-2xl focus-within:border-green-300 transition-all duration-300">
+              <Search className="w-5 h-5 text-green-300 flex-shrink-0 mr-3" />
+              <input
+                type="text"
+                placeholder="Search clinics, hospitals, pharmacies..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="flex-1 bg-transparent text-white placeholder-blue-200 outline-none text-base font-medium"
+              />
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={handleSearch}
+                className="ml-3 bg-green-400 hover:bg-green-300 text-white hover:text-gray-900 font-semibold px-5 py-2 rounded-xl transition-colors duration-200 flex-shrink-0"
+              >
+                Search
+              </motion.button>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
       
