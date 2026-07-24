@@ -270,7 +270,7 @@ const Header = () => {
                       {isAuthenticated && (
                         <>
                           <Link
-                            to="#"
+                            to="/appointments"
                             onClick={() => setIsMenuOpen(false)}
                             className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
                           >
@@ -279,7 +279,7 @@ const Header = () => {
                           </Link>
 
                           <Link
-                            to="#"
+                            to="/messages"
                             onClick={() => setIsMenuOpen(false)}
                             className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
                           >

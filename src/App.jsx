@@ -19,6 +19,8 @@ import WriteReviewPage from '@/pages/WriteReviewPage';
 import ProfilePage from '@/pages/ProfilePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import SearchPage from '@/pages/SearchPage';
+import AppointmentsPage from '@/pages/AppointmentsPage';
+import MessagesPage from '@/pages/MessagesPage';
 import ScrollToTop from '@/components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRouter from '@/pages/admin/AdminRouter';
@@ -90,6 +92,16 @@ function App() {
                       <Route path="/favorites" element={<FavoritesPage />} />
                       <Route path="/help" element={<HelpCenterPage />} />
                       <Route path="/clinic/:slug/review" element={<WriteReviewPage />} />
+                      <Route path="/appointments" element={
+                        <ProtectedRoute>
+                          <AppointmentsPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/messages" element={
+                        <ProtectedRoute>
+                          <MessagesPage />
+                        </ProtectedRoute>
+                      } />
                       <Route path="/profile" element={
                         <ProtectedRoute>
                           <ProfilePage />
