@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft, Loader2, PenLine, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { fetchClinicById, fetchUserReviewForClinic } from '@/utils/supabaseQueries';
+import { fetchClinicBySlug, fetchUserReviewForClinic } from '@/utils/supabaseQueries';
+import { getClinicUrl } from '@/utils/slugUtils';
 import { submitReview, updateReview } from '@/utils/submitReview';
 import { toast } from '@/components/ui/use-toast';
 
@@ -46,7 +47,7 @@ function StarRating({ rating, onRate, hoverRating, onHover, onLeave, size = 'lg'
 }
 
 export default function WriteReviewPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
 
@@ -67,9 +68,9 @@ export default function WriteReviewPage() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate(`/login?redirect=/clinic/${id}/review`, { replace: true });
+      navigate(`/login?redirect=/clinic/${slug}/review`, { replace: true });
     }
-  }, [authLoading, isAuthenticated, navigate, id]);
+  }, [authLoading, isAuthenticated, navigate, slug]);
 
   // Load clinic + existing review
   const loadData = useCallback(async () => {
@@ -77,22 +78,25 @@ export default function WriteReviewPage() {
     setPageLoading(true);
 
     const [clinicResult, reviewResult] = await Promise.all([
-      fetchClinicById(id),
-      fetchUserReviewForClinic(id, user.id),
+      fetchClinicBySlug(slug),
+      // We need the clinic ID for the review query, but we don't have it yet.
+      // We'll fetch the review after we have the clinic data.
+      Promise.resolve({ data: null }),
     ]);
 
     if (clinicResult.data) {
       setClinic(clinicResult.data);
-    }
-
-    if (reviewResult.data) {
-      setExistingReview(reviewResult.data);
-      setRating(reviewResult.data.rating);
-      setReviewText(reviewResult.data.review_text);
+      // Now fetch existing review using the numeric clinic ID
+      const reviewResult = await fetchUserReviewForClinic(clinicResult.data.id, user.id);
+      if (reviewResult.data) {
+        setExistingReview(reviewResult.data);
+        setRating(reviewResult.data.rating);
+        setReviewText(reviewResult.data.review_text);
+      }
     }
 
     setPageLoading(false);
-  }, [id, user]);
+  }, [slug, user]);
 
   useEffect(() => {
     if (user) loadData();
@@ -127,7 +131,7 @@ export default function WriteReviewPage() {
       });
     } else {
       result = await submitReview({
-        clinicId: Number(id),
+        clinicId: clinic.id,
         patientId: user.id,
         authorName: profile?.full_name || user.email?.split('@')[0] || 'Patient',
         rating,
@@ -158,7 +162,7 @@ export default function WriteReviewPage() {
 
     // Navigate back after brief delay
     setTimeout(() => {
-      navigate(`/clinic/${id}`, { replace: true });
+      navigate(getClinicUrl(clinic), { replace: true });
     }, 1500);
   };
 
@@ -229,7 +233,7 @@ export default function WriteReviewPage() {
       <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
-            onClick={() => navigate(`/clinic/${id}`)}
+            onClick={() => navigate(getClinicUrl(clinic))}
             className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Go back"
           >

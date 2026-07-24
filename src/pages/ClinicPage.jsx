@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, Quote, X, Search, PenLine } from 'lucide-react';
-import { fetchClinicById, fetchGallery, fetchAppointmentSlots, createAppointment } from '@/utils/supabaseQueries';
+import { fetchClinicBySlug, fetchGallery, fetchAppointmentSlots, createAppointment } from '@/utils/supabaseQueries';
+import { getClinicUrl } from '@/utils/slugUtils';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -59,7 +60,7 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
             <button
               onClick={() => {
                 onClose();
-                window.location.href = `/clinic/${clinic.id}/review`;
+                window.location.href = `${getClinicUrl(clinic)}/review`;
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
             >
@@ -138,8 +139,8 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
                           <Star
                             key={i}
                             className={`w-3.5 h-3.5 ${i < review.rating
-                                ? 'text-gray-900 fill-gray-900'
-                                : 'text-gray-300'
+                              ? 'text-gray-900 fill-gray-900'
+                              : 'text-gray-300'
                               }`}
                           />
                         ))}
@@ -161,7 +162,7 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
 }
 
 export default function ClinicPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const [clinic, setClinic] = useState(null);
@@ -197,7 +198,7 @@ export default function ClinicPage() {
       setLoading(true);
       setError(null);
       const [clinicResult, galleryResult] = await Promise.all([
-        fetchClinicById(id),
+        fetchClinicBySlug(slug),
         fetchGallery(),
       ]);
       if (cancelled) return;
@@ -213,7 +214,7 @@ export default function ClinicPage() {
     }
     loadData();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [slug]);
 
   const favorited = clinic ? isFavorite(clinic.id) : false;
 
@@ -393,7 +394,7 @@ export default function ClinicPage() {
             <div
               key={idx}
               className="w-full h-full flex-shrink-0 snap-center relative cursor-pointer"
-              onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+              onClick={() => navigate(`${getClinicUrl(clinic)}/photos`)}
             >
               <img
                 src={img}
@@ -415,13 +416,6 @@ export default function ClinicPage() {
       {/* Desktop Hero Section */}
       <div className="hidden md:block bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center text-gray-500 hover:text-blue-600 transition mb-4 font-medium"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Search
-          </button>
 
           {/* Clinic Header Info (Desktop) */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
@@ -468,7 +462,7 @@ export default function ClinicPage() {
               {/* Large left image */}
               <div
                 className="col-span-2 row-span-2 h-full relative cursor-pointer overflow-hidden"
-                onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+                onClick={() => navigate(`${getClinicUrl(clinic)}/photos`)}
               >
                 <img
                   src={gallery[0]}
@@ -484,7 +478,7 @@ export default function ClinicPage() {
               {/* 4 small right images */}
               <div
                 className="col-span-1 row-span-1 h-full relative cursor-pointer overflow-hidden"
-                onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+                onClick={() => navigate(`${getClinicUrl(clinic)}/photos`)}
               >
                 <img
                   src={gallery[1]}
@@ -497,7 +491,7 @@ export default function ClinicPage() {
               </div>
               <div
                 className="col-span-1 row-span-1 h-full relative cursor-pointer overflow-hidden"
-                onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+                onClick={() => navigate(`${getClinicUrl(clinic)}/photos`)}
               >
                 <img
                   src={gallery[2]}
@@ -510,7 +504,7 @@ export default function ClinicPage() {
               </div>
               <div
                 className="col-span-1 row-span-1 h-full relative cursor-pointer overflow-hidden"
-                onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+                onClick={() => navigate(`${getClinicUrl(clinic)}/photos`)}
               >
                 <img
                   src={gallery[3]}
@@ -523,7 +517,7 @@ export default function ClinicPage() {
               </div>
               <div
                 className="col-span-1 row-span-1 h-full relative cursor-pointer overflow-hidden"
-                onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+                onClick={() => navigate(`${getClinicUrl(clinic)}/photos`)}
               >
                 <img
                   src={gallery[4]}
@@ -538,7 +532,7 @@ export default function ClinicPage() {
 
             {/* Show all photos button */}
             <button
-              onClick={() => navigate(`/clinic/${clinic.id}/photos`)}
+              onClick={() => navigate(`${getClinicUrl(clinic)}/photos`)}
               className="absolute bottom-4 right-4 bg-white text-gray-900 font-semibold py-1.5 px-4 rounded-lg border border-gray-900 hover:bg-gray-100 flex items-center gap-2 transition shadow-sm z-10"
             >
               <LayoutGrid className="w-4 h-4" />
@@ -660,8 +654,8 @@ export default function ClinicPage() {
                                   <Star
                                     key={i}
                                     className={`w-3.5 h-3.5 ${i < review.rating
-                                        ? 'text-yellow-400 fill-yellow-400'
-                                        : 'text-gray-200'
+                                      ? 'text-yellow-400 fill-yellow-400'
+                                      : 'text-gray-200'
                                       }`}
                                   />
                                 ))}
@@ -688,7 +682,7 @@ export default function ClinicPage() {
 
                   <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
                     <button
-                      onClick={() => navigate(`/clinic/${clinic.id}/review`)}
+                      onClick={() => navigate(`${getClinicUrl(clinic)}/review`)}
                       className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white text-sm font-semibold rounded-lg transition shadow-sm hover:shadow-md"
                     >
                       <PenLine className="w-4 h-4" />
@@ -718,7 +712,7 @@ export default function ClinicPage() {
                     Be the first to share your experience at <span className="font-medium text-gray-700">{clinic.practitioner_name}</span> and help others make an informed choice.
                   </p>
                   <button
-                    onClick={() => navigate(`/clinic/${clinic.id}/review`)}
+                    onClick={() => navigate(`${getClinicUrl(clinic)}/review`)}
                     className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white text-sm font-semibold rounded-lg transition shadow-sm hover:shadow-md"
                   >
                     <PenLine className="w-4 h-4" />
@@ -756,8 +750,8 @@ export default function ClinicPage() {
                                 durationMinutes: slot.durationMinutes,
                               })}
                               className={`py-2 px-3 text-sm rounded-lg border-2 transition-all duration-200 ${selectedSlot?.slotId === slot.id
-                                  ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold shadow-sm'
-                                  : 'border-gray-200 hover:border-blue-300 text-gray-700 hover:bg-gray-50'
+                                ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold shadow-sm'
+                                : 'border-gray-200 hover:border-blue-300 text-gray-700 hover:bg-gray-50'
                                 }`}
                             >
                               {slot.time}

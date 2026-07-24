@@ -6,7 +6,7 @@ import { fetchGallery } from '@/utils/supabaseQueries';
 import ShareModal from '@/components/ShareModal';
 
 export default function ClinicPhotosPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const { clinics } = useClinics();
   const [galleryData, setGalleryData] = useState([]);
@@ -60,7 +60,7 @@ export default function ClinicPhotosPage() {
     setIsDragging(false);
   };
 
-  const clinic = clinics.find(c => c.id === parseInt(id));
+  const clinic = clinics.find(c => c.slug === slug) || clinics.find(c => String(c.id) === slug);
 
   // Derive allImages from fetched gallery data
   const allImages = galleryData.flatMap(ward =>
@@ -108,7 +108,7 @@ export default function ClinicPhotosPage() {
   const handlePrevImage = () => {
     setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : allImages.length - 1));
   };
-  
+
   const handleNextImage = () => {
     setCurrentImageIndex(prev => (prev < allImages.length - 1 ? prev + 1 : 0));
   };
@@ -167,7 +167,7 @@ export default function ClinicPhotosPage() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-8 space-y-12">
-          {[1,2,3].map(i => (
+          {[1, 2, 3].map(i => (
             <div key={i} className="space-y-4">
               <div className="h-8 w-48 bg-gray-200 rounded" />
               <div className="grid grid-cols-2 gap-3">
@@ -258,11 +258,10 @@ export default function ClinicPhotosPage() {
               onClick={() => scrollToSection(ward.id)}
               className="flex flex-col items-center gap-1.5 sm:gap-2 min-w-0 transition flex-shrink-0"
             >
-              <div className={`w-16 h-16 sm:w-32 sm:h-32 rounded-[1rem] sm:rounded-xl overflow-hidden transition-all ${
-                activeSection === ward.id
+              <div className={`w-16 h-16 sm:w-32 sm:h-32 rounded-[1rem] sm:rounded-xl overflow-hidden transition-all ${activeSection === ward.id
                   ? 'border-2 border-gray-900'
                   : 'border-2 border-transparent'
-              }`}>
+                }`}>
                 <img
                   src={ward.images[0]}
                   alt={ward.title}
@@ -271,9 +270,8 @@ export default function ClinicPhotosPage() {
                   decoding="async"
                 />
               </div>
-              <span className={`text-[11px] sm:text-xs font-medium sm:font-semibold text-center leading-tight max-w-[72px] sm:max-w-none transition-colors ${
-                activeSection === ward.id ? 'text-gray-900' : 'text-gray-500'
-              }`}>
+              <span className={`text-[11px] sm:text-xs font-medium sm:font-semibold text-center leading-tight max-w-[72px] sm:max-w-none transition-colors ${activeSection === ward.id ? 'text-gray-900' : 'text-gray-500'
+                }`}>
                 {ward.title}
               </span>
             </button>
@@ -309,9 +307,8 @@ export default function ClinicPhotosPage() {
                     <div
                       key={index}
                       onClick={() => handleImageClick(imgSrc)}
-                      className={`rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer group ${
-                        index === 0 ? 'col-span-2 aspect-[16/10] sm:aspect-[16/9]' : 'aspect-square'
-                      }`}
+                      className={`rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer group ${index === 0 ? 'col-span-2 aspect-[16/10] sm:aspect-[16/9]' : 'aspect-square'
+                        }`}
                     >
                       <img
                         src={imgSrc}
@@ -347,7 +344,7 @@ export default function ClinicPhotosPage() {
           </div>
 
           {/* Main Viewer Area */}
-          <div 
+          <div
             className={`flex-1 relative flex items-center justify-center overflow-hidden bg-white sm:bg-gray-50/50 p-4 sm:p-0 select-none${isDragging ? ' cursor-grabbing' : ' cursor-grab'}`}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
@@ -357,21 +354,21 @@ export default function ClinicPhotosPage() {
             onMouseLeave={onMouseLeave}
           >
             {/* Desktop Navigation */}
-            <button 
+            <button
               onClick={(e) => { e.stopPropagation(); handlePrevImage(); }}
               className="hidden sm:flex absolute left-4 lg:left-8 z-10 w-12 h-12 bg-white rounded-full items-center justify-center shadow-lg border border-gray-100 hover:bg-gray-50 transition"
             >
               <ChevronLeft className="w-6 h-6 text-gray-900" />
             </button>
-            
-            <img 
-              src={allImages[currentImageIndex].url} 
+
+            <img
+              src={allImages[currentImageIndex].url}
               alt={allImages[currentImageIndex].room}
               className="max-h-[80vh] max-w-[90vw] sm:max-h-[85vh] sm:max-w-[85vw] object-contain rounded-2xl shadow-2xl"
               draggable="false"
             />
 
-            <button 
+            <button
               onClick={(e) => { e.stopPropagation(); handleNextImage(); }}
               className="hidden sm:flex absolute right-4 lg:right-8 z-10 w-12 h-12 bg-white rounded-full items-center justify-center shadow-lg border border-gray-100 hover:bg-gray-50 transition"
             >

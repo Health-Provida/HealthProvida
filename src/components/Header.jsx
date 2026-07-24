@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Menu, X, Shield, HelpCircle, UserPlus, Stethoscope, Heart,
   User, Settings, Globe, LogOut, MessageSquare, CalendarCheck,
@@ -13,6 +13,8 @@ import logo from '../components/ui/logo.png';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isSearchPage = location.pathname === '/search';
   const { isAuthenticated, profile, isAdmin, isProvider, adminRole, signOut } = useAuth();
   const { favoritesCount } = useFavorites();
   const menuRef = useRef(null);
@@ -46,7 +48,9 @@ const Header = () => {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50"
+      className={`bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50 ${
+        isSearchPage ? 'relative' : 'sticky top-0'
+      }`}
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
@@ -55,7 +59,7 @@ const Header = () => {
               whileHover={{ scale: 1.05 }}
               className="flex items-center space-x-2"
             >
-              <img src={logo} style={{ width: '10rem' }} alt="logo" />
+              <img src={logo} className="w-28 sm:w-36 md:w-40 h-auto" alt="logo" />
             </motion.div>
           </Link>
 
@@ -182,7 +186,7 @@ const Header = () => {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -8 }}
                     transition={{ duration: 0.15, ease: 'easeOut' }}
-                    className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 max-h-[85vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full"
+                    className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 max-h-[85vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full"
                   >
                     {/* Mobile nav links (hidden on md+) */}
                     <div className="md:hidden px-4 pt-4 pb-2 flex flex-col gap-1">

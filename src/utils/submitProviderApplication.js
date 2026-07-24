@@ -11,20 +11,20 @@ import { supabase } from './supabase';
 // Maps the form's display labels → valid practitioner_type enum values in the DB
 const PRACTITIONER_TYPE_MAP = {
   'Multi-specialty Clinic / General Practice': 'Clinic',
-  'General Hospital / Specialist Care':        'Hospital',
+  'General Hospital / Specialist Care': 'Hospital',
   'Tertiary Care Hospital / National Referral Center': 'Hospital',
-  'Private Multi-specialty Clinic':            'Clinic',
-  'Fertility & Reproductive Health Clinic':    'Specialist Center',
+  'Private Multi-specialty Clinic': 'Clinic',
+  'Fertility & Reproductive Health Clinic': 'Specialist Center',
   'Reproductive Health & Family Planning Clinic': 'Specialist Center',
-  'General Private Hospital':                  'Hospital',
-  'Private General Hospital':                  'Hospital',
-  'Specialist Surgical Hospital':              'Specialist Center',
-  'Diagnostic Center':                         'Diagnostic Center',
-  'Pharmacy':                                  'Pharmacy',
-  'Dental Clinic':                             'Dental Clinic',
+  'General Private Hospital': 'Hospital',
+  'Private General Hospital': 'Hospital',
+  'Specialist Surgical Hospital': 'Specialist Center',
+  'Diagnostic Center': 'Diagnostic Center',
+  'Pharmacy': 'Pharmacy',
+  'Dental Clinic': 'Dental Clinic',
   // DB enum values pass through unchanged
-  'Hospital':          'Hospital',
-  'Clinic':            'Clinic',
+  'Hospital': 'Hospital',
+  'Clinic': 'Clinic',
   'Specialist Center': 'Specialist Center',
 };
 
@@ -101,6 +101,10 @@ export async function submitProviderApplication(formData) {
       facility_image_urls: facilityImageUrls,                  // all images
       operating_hours: formData.operatingHours || [],
       appointment_slot_duration: parseInt(formData.appointmentSlotDuration, 10) || 30,
+      latitude: formData.latitude ?? null,
+      longitude: formData.longitude ?? null,
+      city: formData.city?.trim() || null,
+      state: formData.state?.trim() || null,
       status: 'pending',
     };
 
@@ -112,21 +116,21 @@ export async function submitProviderApplication(formData) {
 
     if (error) {
       console.error('Application submission failed:', error);
-      return { 
-        success: false, 
-        error: error.message || 'Failed to submit application. Please try again.' 
+      return {
+        success: false,
+        error: error.message || 'Failed to submit application. Please try again.'
       };
     }
 
-    return { 
-      success: true, 
-      applicationId: data.id 
+    return {
+      success: true,
+      applicationId: data.id
     };
   } catch (err) {
     console.error('Application submission exception:', err);
-    return { 
-      success: false, 
-      error: 'An unexpected error occurred. Please try again.' 
+    return {
+      success: false,
+      error: 'An unexpected error occurred. Please try again.'
     };
   }
 }

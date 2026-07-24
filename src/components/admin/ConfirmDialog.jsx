@@ -4,6 +4,7 @@
  * Supports danger variant and optional textarea for notes/reasons.
  */
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 
@@ -30,6 +31,17 @@ export default function ConfirmDialog({
   // Reset textarea when dialog opens
   useEffect(() => {
     if (open) setTextValue('');
+  }, [open]);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (open) {
+      const originalStyle = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
   }, [open]);
 
   // Close on Escape key
@@ -60,20 +72,22 @@ export default function ConfirmDialog({
     }
   };
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <div
           ref={overlayRef}
           onClick={handleOverlayClick}
-          className="fixed inset-0 z-[80] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto"
         >
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
           />
 
           {/* Dialog */}
@@ -82,7 +96,7 @@ export default function ConfirmDialog({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2 }}
-            className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6"
+            className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-2xl p-6"
             role="dialog"
             aria-modal="true"
             aria-labelledby="confirm-dialog-title"
@@ -148,6 +162,7 @@ export default function ConfirmDialog({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

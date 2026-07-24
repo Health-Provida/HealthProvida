@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Star, MapPin, ArrowLeft } from 'lucide-react';
 import { useFavorites } from '@/context/FavoritesContext';
+import { getClinicUrl } from '@/utils/slugUtils';
 
 function FavoriteClinicCard({ clinic, onRemove, onClick }) {
   return (
@@ -25,7 +26,7 @@ function FavoriteClinicCard({ clinic, onRemove, onClick }) {
         />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
+
         {/* Heart remove button */}
         <button
           onClick={(e) => {
@@ -103,7 +104,7 @@ export default function FavoritesPage() {
                     key={clinic.id}
                     clinic={clinic}
                     onRemove={toggleFavorite}
-                    onClick={() => navigate(`/clinic/${clinic.id}`)}
+                    onClick={() => navigate(getClinicUrl(clinic))}
                   />
                 ))}
               </AnimatePresence>

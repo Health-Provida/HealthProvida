@@ -682,10 +682,11 @@
 
 // export default JoinProviderPage;
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Briefcase, Mail, MapPin, Phone, User, CheckCircle, ArrowRight, ArrowLeft, Stethoscope, Shield, Tag, Clock, Upload, Plus, Trash2, Image } from 'lucide-react';
 import { submitProviderApplication } from '@/utils/submitProviderApplication';
 import { availableHMOs } from '@/constants/hmos';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
 
 // availableHMOs imported from @/constants/hmos
 
@@ -719,15 +720,15 @@ const commonSpecialties = [
   "Emergency Medicine",
   "Radiology",
   "Neurology",
-"Nephrology",
-"Endocrinology",
-"Ear, Nose and Throat",
-"Cardiac/ Heart Surgery",
-"Neurosurgery",
-"Spine Surgery",
-"Orthopaedic Surgery",
-"Gastroenterology",
-"Pulmonology"
+  "Nephrology",
+  "Endocrinology",
+  "Ear, Nose and Throat",
+  "Cardiac/ Heart Surgery",
+  "Neurosurgery",
+  "Spine Surgery",
+  "Orthopaedic Surgery",
+  "Gastroenterology",
+  "Pulmonology"
 ];
 
 // Days of the week for operating hours
@@ -742,6 +743,10 @@ export default function MultiStepProviderForm() {
     email: '',
     phone: '',
     address: '',
+    latitude: null,
+    longitude: null,
+    city: '',
+    state: '',
     // Step 2
     equipment: [],
     tags: [],
@@ -766,6 +771,18 @@ export default function MultiStepProviderForm() {
       [name]: value
     }));
   };
+
+  // Called when a Google Places Autocomplete suggestion is selected
+  const handleAddressSelect = useCallback((address, lat, lng, city, state) => {
+    setFormData(prev => ({
+      ...prev,
+      address,
+      latitude: lat,
+      longitude: lng,
+      city: city || '',
+      state: state || '',
+    }));
+  }, []);
 
   const toggleArrayItem = (field, item) => {
     setFormData(prev => ({
@@ -825,16 +842,16 @@ export default function MultiStepProviderForm() {
   };
 
   const validateStep1 = () => {
-    return formData.practitionerName && 
-           formData.practitionerType && 
-           formData.email && 
-           formData.phone && 
-           formData.address;
+    return formData.practitionerName &&
+      formData.practitionerType &&
+      formData.email &&
+      formData.phone &&
+      formData.address;
   };
 
   const validateStep2 = () => {
-    return formData.equipment.length > 0 || 
-           formData.specialties.length > 0;
+    return formData.equipment.length > 0 ||
+      formData.specialties.length > 0;
   };
 
   const handleNext = () => {
@@ -890,11 +907,10 @@ export default function MultiStepProviderForm() {
               {[1, 2, 3, 4].map((step, index) => (
                 <React.Fragment key={step}>
                   <div className="flex flex-col items-center z-10">
-                    <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold ${
-                      currentStep >= step 
-                        ? 'bg-blue-600 text-white' 
+                    <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold ${currentStep >= step
+                        ? 'bg-blue-600 text-white'
                         : 'bg-gray-200 text-gray-500'
-                    }`}>
+                      }`}>
                       {currentStep > step ? <CheckCircle size={20} /> : step}
                     </div>
                     <span className="text-xs md:text-sm text-gray-600 mt-2 text-center whitespace-nowrap">
@@ -906,10 +922,9 @@ export default function MultiStepProviderForm() {
                   </div>
                   {index < 3 && (
                     <div className="flex-1 h-1 bg-gray-200 mx-2 md:mx-4 relative" style={{ top: '-14px' }}>
-                      <div 
-                        className={`h-full transition-all duration-300 ${
-                          currentStep > index + 1 ? 'bg-blue-600 w-full' : 'bg-gray-200 w-0'
-                        }`}
+                      <div
+                        className={`h-full transition-all duration-300 ${currentStep > index + 1 ? 'bg-blue-600 w-full' : 'bg-gray-200 w-0'
+                          }`}
                       />
                     </div>
                   )}
@@ -921,549 +936,541 @@ export default function MultiStepProviderForm() {
 
         {/* Form Card */}
         <div className="bg-white rounded-lg shadow-xl p-6 md:p-8">
-            {/* Step 1: Basic Information */}
-            {currentStep === 1 && (
-              <div className="space-y-6">
+          {/* Step 1: Basic Information */}
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <User className="w-6 h-6 text-blue-600" />
+                  Basic Information
+                </h2>
+                <p className="text-gray-600 text-sm">Tell us about your healthcare facility</p>
+              </div>
+
+              <div className="space-y-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                    <User className="w-6 h-6 text-blue-600" />
-                    Basic Information
-                  </h2>
-                  <p className="text-gray-600 text-sm">Tell us about your healthcare facility</p>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Practitioner Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="practitionerName"
+                    value={formData.practitionerName}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Dr. Sarah Johnson Medical Center"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
                 </div>
 
-                <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Practitioner Type <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="practitionerType"
+                    value={formData.practitionerType}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Select type</option>
+                    <option value="Multi-specialty Clinic / General Practice">Multi-specialty Clinic / General Practice</option>
+                    <option value="General Hospital / Specialist Care">General Hospital / Specialist Care</option>
+                    <option value="Tertiary Care Hospital / National Referral Center">Tertiary Care Hospital / National Referral Center</option>
+                    <option value="Private Multi-specialty Clinic">Private Multi-specialty Clinic</option>
+                    <option value="Fertility & Reproductive Health Clinic">Fertility & Reproductive Health Clinic</option>
+                    <option value="Reproductive Health & Family Planning Clinic">Reproductive Health & Family Planning Clinic</option>
+                    <option value="General Private Hospital">General Private Hospital</option>
+                    <option value="Private General Hospital">Private General Hospital</option>
+                    <option value="Specialist Surgical Hospital">Specialist Surgical Hospital</option>
+                    <option value="Diagnostic Center">Diagnostic Center</option>
+                    <option value="Pharmacy">Pharmacy</option>
+                    <option value="Dental Clinic">Dental Clinic</option>
+                  </select>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Practitioner Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="practitionerName"
-                      value={formData.practitionerName}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Dr. Sarah Johnson Medical Center"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Practitioner Type <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="practitionerType"
-                      value={formData.practitionerType}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Select type</option>
-                      <option value="Multi-specialty Clinic / General Practice">Multi-specialty Clinic / General Practice</option>
-                      <option value="General Hospital / Specialist Care">General Hospital / Specialist Care</option>
-                      <option value="Tertiary Care Hospital / National Referral Center">Tertiary Care Hospital / National Referral Center</option>
-                      <option value="Private Multi-specialty Clinic">Private Multi-specialty Clinic</option>
-                      <option value="Fertility & Reproductive Health Clinic">Fertility & Reproductive Health Clinic</option>
-                      <option value="Reproductive Health & Family Planning Clinic">Reproductive Health & Family Planning Clinic</option>
-                      <option value="General Private Hospital">General Private Hospital</option>
-                      <option value="Private General Hospital">Private General Hospital</option>
-                      <option value="Specialist Surgical Hospital">Specialist Surgical Hospital</option>
-                      <option value="Diagnostic Center">Diagnostic Center</option>
-                      <option value="Pharmacy">Pharmacy</option>
-                      <option value="Dental Clinic">Dental Clinic</option>
-                    </select>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email Address <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          placeholder="contact@clinic.com"
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone Number <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          placeholder="+234 123 456 7890"
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Physical Address <span className="text-red-500">*</span>
+                      Email Address <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-3 text-gray-400" size={18} />
-                      <textarea
-                        name="address"
-                        value={formData.address}
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
                         onChange={handleInputChange}
-                        placeholder="123 Health Street, Medical District, Lagos"
-                        rows="3"
+                        placeholder="contact@clinic.com"
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        placeholder="+234 123 456 7890"
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                       />
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Step 2: Services & Facilities */}
-            {currentStep === 2 && (
-              <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                    <Stethoscope className="w-6 h-6 text-blue-600" />
-                    Services & Facilities
-                  </h2>
-                  <p className="text-gray-600 text-sm">What services and equipment do you offer?</p>
-                </div>
-
-                {/* Equipment */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Available Equipment
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Physical Address <span className="text-red-500">*</span>
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
-                    {commonEquipment.map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => toggleArrayItem('equipment', item)}
-                        className={`px-3 py-2 text-sm rounded-lg border-2 transition ${
-                          formData.equipment.includes(item)
-                            ? 'border-blue-600 bg-blue-50 text-blue-700 font-medium'
-                            : 'border-gray-200 hover:border-blue-300 text-gray-700'
-                        }`}
-                      >
-                        {item}
-                      </button>
-                    ))}
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Add custom equipment (press Enter)"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addCustomItem('equipment', e.target.value);
-                        e.target.value = '';
-                      }
-                    }}
-                  />
-                  {formData.equipment.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {formData.equipment.map((item) => (
-                        <span
-                          key={item}
-                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm flex items-center gap-2"
-                        >
-                          {item}
-                          <button
-                            type="button"
-                            onClick={() => removeItem('equipment', item)}
-                            className="hover:text-red-600"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Specialties */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Specialties
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
-                    {commonSpecialties.map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => toggleArrayItem('specialties', item)}
-                        className={`px-3 py-2 text-sm rounded-lg border-2 transition ${
-                          formData.specialties.includes(item)
-                            ? 'border-green-600 bg-green-50 text-green-700 font-medium'
-                            : 'border-gray-200 hover:border-green-300 text-gray-700'
-                        }`}
-                      >
-                        {item}
-                      </button>
-                    ))}
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Add custom specialty (press Enter)"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addCustomItem('specialties', e.target.value);
-                        e.target.value = '';
-                      }
-                    }}
-                  />
-                  {formData.specialties.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {formData.specialties.map((item) => (
-                        <span
-                          key={item}
-                          className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm flex items-center gap-2"
-                        >
-                          {item}
-                          <button
-                            type="button"
-                            onClick={() => removeItem('specialties', item)}
-                            className="hover:text-red-600"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Tags */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Relevant Tags (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Add tags separated by commas or press Enter"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addCustomItem('tags', e.target.value);
-                        e.target.value = '';
-                      }
-                    }}
-                  />
-                  {formData.tags.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {formData.tags.map((item) => (
-                        <span
-                          key={item}
-                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm flex items-center gap-2"
-                        >
-                          <Tag size={14} />
-                          {item}
-                          <button
-                            type="button"
-                            onClick={() => removeItem('tags', item)}
-                            className="hover:text-red-600"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Insurance Coverage */}
-            {currentStep === 3 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                    <Shield className="w-6 h-6 text-blue-600" />
-                    Insurance Coverage
-                  </h2>
-                  <p className="text-gray-600 text-sm">Select the HMOs you accept</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Supported HMOs
-                  </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {availableHMOs.map((hmo) => (
-                      <button
-                        key={hmo}
-                        type="button"
-                        onClick={() => toggleArrayItem('supportedHMOs', hmo)}
-                        className={`px-4 py-3 text-left rounded-lg border-2 transition flex items-center gap-3 ${
-                          formData.supportedHMOs.includes(hmo)
-                            ? 'border-green-600 bg-green-50 text-green-700 font-medium'
-                            : 'border-gray-200 hover:border-green-300 text-gray-700'
-                        }`}
-                      >
-                        <Shield className={`w-5 h-5 ${
-                          formData.supportedHMOs.includes(hmo) ? 'text-green-600' : 'text-gray-400'
-                        }`} />
-                        <span>{hmo}</span>
-                        {formData.supportedHMOs.includes(hmo) && (
-                          <CheckCircle className="w-5 h-5 ml-auto text-green-600" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  {formData.supportedHMOs.length > 0 && (
-                    <div className="mt-4 p-4 bg-green-50 rounded-lg">
-                      <p className="text-sm font-medium text-green-900 mb-2">
-                        Selected HMOs ({formData.supportedHMOs.length})
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {formData.supportedHMOs.map((hmo) => (
-                          <span
-                            key={hmo}
-                            className="px-3 py-1 bg-white text-green-700 rounded-full text-sm font-medium"
-                          >
-                            {hmo}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Step 4: Operating Hours & Facility Image */}
-            {currentStep === 4 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                    <Clock className="w-6 h-6 text-blue-600" />
-                    Operating Hours & Facility Photos
-                  </h2>
-                  <p className="text-gray-600 text-sm">Set your availability and upload at least 4 facility photos</p>
-                </div>
-
-                {/* Facility Images Upload — min 4 */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm font-medium text-gray-700">
-                      <Image className="inline w-4 h-4 mr-1 mb-0.5" />
-                      Facility Photos
-                      <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      formData.facilityImages.length >= 4
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-orange-100 text-orange-700'
-                    }`}>
-                      {formData.facilityImages.length} / 4 minimum
-                    </span>
-                  </div>
-
-                  {/* Thumbnail grid */}
-                  {formData.facilityImages.length > 0 && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
-                      {formData.facilityImages.map((img, index) => (
-                        <div key={index} className="relative group rounded-lg overflow-hidden shadow border border-gray-200" style={{ aspectRatio: '4/3' }}>
-                          <img
-                            src={img.preview}
-                            alt={`Facility ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeFacilityImage(index)}
-                            className="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow"
-                            title="Remove photo"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                          <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">
-                            {index + 1}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Upload drop zone */}
-                  <label className="cursor-pointer block border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 hover:bg-blue-50/30 transition">
-                    <Upload className="mx-auto w-10 h-10 text-gray-400 mb-2" />
-                    <p className="text-gray-600 font-medium text-sm">
-                      {formData.facilityImages.length === 0
-                        ? 'Click to upload facility photos'
-                        : 'Click to add more photos'}
-                    </p>
-                    <p className="text-gray-400 text-xs mt-1">PNG, JPG, or WebP · Select multiple at once</p>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </label>
-
-                  {formData.facilityImages.length < 4 && (
-                    <p className="mt-2 text-xs text-orange-600 flex items-center gap-1">
-                      <span>⚠</span>
-                      At least 4 photos are required ({4 - formData.facilityImages.length} more needed)
-                    </p>
-                  )}
-                </div>
-
-                {/* Appointment Slot Duration */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Appointment Slot Duration
-                  </label>
-                  <select
-                    name="appointmentSlotDuration"
-                    value={formData.appointmentSlotDuration}
+                  <AddressAutocomplete
+                    name="address"
+                    value={formData.address}
                     onChange={handleInputChange}
-                    className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="15">15 minutes</option>
-                    <option value="30">30 minutes</option>
-                    <option value="45">45 minutes</option>
-                    <option value="60">1 hour</option>
-                    <option value="90">1.5 hours</option>
-                  </select>
+                    onAddressSelect={handleAddressSelect}
+                    placeholder="Start typing your clinic address..."
+                    required
+                  />
+                  {formData.latitude && formData.longitude && (
+                    <p className="mt-1.5 text-xs text-green-600 flex items-center gap-1">
+                      <CheckCircle size={12} />
+                      Location coordinates captured
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Services & Facilities */}
+          {currentStep === 2 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <Stethoscope className="w-6 h-6 text-blue-600" />
+                  Services & Facilities
+                </h2>
+                <p className="text-gray-600 text-sm">What services and equipment do you offer?</p>
+              </div>
+
+              {/* Equipment */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Available Equipment
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
+                  {commonEquipment.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => toggleArrayItem('equipment', item)}
+                      className={`px-3 py-2 text-sm rounded-lg border-2 transition ${formData.equipment.includes(item)
+                          ? 'border-blue-600 bg-blue-50 text-blue-700 font-medium'
+                          : 'border-gray-200 hover:border-blue-300 text-gray-700'
+                        }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Add custom equipment (press Enter)"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addCustomItem('equipment', e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
+                />
+                {formData.equipment.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {formData.equipment.map((item) => (
+                      <span
+                        key={item}
+                        className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm flex items-center gap-2"
+                      >
+                        {item}
+                        <button
+                          type="button"
+                          onClick={() => removeItem('equipment', item)}
+                          className="hover:text-red-600"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Specialties */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Specialties
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
+                  {commonSpecialties.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => toggleArrayItem('specialties', item)}
+                      className={`px-3 py-2 text-sm rounded-lg border-2 transition ${formData.specialties.includes(item)
+                          ? 'border-green-600 bg-green-50 text-green-700 font-medium'
+                          : 'border-gray-200 hover:border-green-300 text-gray-700'
+                        }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Add custom specialty (press Enter)"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addCustomItem('specialties', e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
+                />
+                {formData.specialties.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {formData.specialties.map((item) => (
+                      <span
+                        key={item}
+                        className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm flex items-center gap-2"
+                      >
+                        {item}
+                        <button
+                          type="button"
+                          onClick={() => removeItem('specialties', item)}
+                          className="hover:text-red-600"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Tags */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Relevant Tags (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Add tags separated by commas or press Enter"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addCustomItem('tags', e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
+                />
+                {formData.tags.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {formData.tags.map((item) => (
+                      <span
+                        key={item}
+                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm flex items-center gap-2"
+                      >
+                        <Tag size={14} />
+                        {item}
+                        <button
+                          type="button"
+                          onClick={() => removeItem('tags', item)}
+                          className="hover:text-red-600"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Insurance Coverage */}
+          {currentStep === 3 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <Shield className="w-6 h-6 text-blue-600" />
+                  Insurance Coverage
+                </h2>
+                <p className="text-gray-600 text-sm">Select the HMOs you accept</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Supported HMOs
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {availableHMOs.map((hmo) => (
+                    <button
+                      key={hmo}
+                      type="button"
+                      onClick={() => toggleArrayItem('supportedHMOs', hmo)}
+                      className={`px-4 py-3 text-left rounded-lg border-2 transition flex items-center gap-3 ${formData.supportedHMOs.includes(hmo)
+                          ? 'border-green-600 bg-green-50 text-green-700 font-medium'
+                          : 'border-gray-200 hover:border-green-300 text-gray-700'
+                        }`}
+                    >
+                      <Shield className={`w-5 h-5 ${formData.supportedHMOs.includes(hmo) ? 'text-green-600' : 'text-gray-400'
+                        }`} />
+                      <span>{hmo}</span>
+                      {formData.supportedHMOs.includes(hmo) && (
+                        <CheckCircle className="w-5 h-5 ml-auto text-green-600" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {formData.supportedHMOs.length > 0 && (
+                  <div className="mt-4 p-4 bg-green-50 rounded-lg">
+                    <p className="text-sm font-medium text-green-900 mb-2">
+                      Selected HMOs ({formData.supportedHMOs.length})
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.supportedHMOs.map((hmo) => (
+                        <span
+                          key={hmo}
+                          className="px-3 py-1 bg-white text-green-700 rounded-full text-sm font-medium"
+                        >
+                          {hmo}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Operating Hours & Facility Image */}
+          {currentStep === 4 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <Clock className="w-6 h-6 text-blue-600" />
+                  Operating Hours & Facility Photos
+                </h2>
+                <p className="text-gray-600 text-sm">Set your availability and upload at least 4 facility photos</p>
+              </div>
+
+              {/* Facility Images Upload — min 4 */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    <Image className="inline w-4 h-4 mr-1 mb-0.5" />
+                    Facility Photos
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${formData.facilityImages.length >= 4
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-orange-100 text-orange-700'
+                    }`}>
+                    {formData.facilityImages.length} / 4 minimum
+                  </span>
                 </div>
 
-                {/* Operating Hours */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    <Clock className="inline w-4 h-4 mr-1 mb-0.5" />
-                    Operating Hours
-                  </label>
-                  <div className="space-y-3">
-                    {formData.operatingHours.map((dayData, index) => (
-                      <div
-                        key={dayData.day}
-                        className={`flex flex-col md:flex-row items-start md:items-center gap-3 p-3 rounded-lg border-2 transition ${
-                          dayData.isOpen
-                            ? 'border-blue-200 bg-blue-50'
-                            : 'border-gray-200 bg-gray-50 opacity-60'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 min-w-[140px]">
-                          <button
-                            type="button"
-                            onClick={() => updateOperatingHours(index, 'isOpen', !dayData.isOpen)}
-                            className={`w-10 h-6 rounded-full transition-colors duration-200 relative ${
-                              dayData.isOpen ? 'bg-blue-600' : 'bg-gray-300'
-                            }`}
-                          >
-                            <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform duration-200 ${
-                              dayData.isOpen ? 'translate-x-5' : 'translate-x-1'
-                            }`} />
-                          </button>
-                          <span className={`font-medium text-sm ${
-                            dayData.isOpen ? 'text-gray-900' : 'text-gray-500'
-                          }`}>
-                            {dayData.day}
-                          </span>
+                {/* Thumbnail grid */}
+                {formData.facilityImages.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
+                    {formData.facilityImages.map((img, index) => (
+                      <div key={index} className="relative group rounded-lg overflow-hidden shadow border border-gray-200" style={{ aspectRatio: '4/3' }}>
+                        <img
+                          src={img.preview}
+                          alt={`Facility ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFacilityImage(index)}
+                          className="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                          title="Remove photo"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                        <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">
+                          {index + 1}
                         </div>
-
-                        {dayData.isOpen && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <input
-                              type="time"
-                              value={dayData.openTime}
-                              onChange={(e) => updateOperatingHours(index, 'openTime', e.target.value)}
-                              className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <span className="text-gray-500 font-medium">to</span>
-                            <input
-                              type="time"
-                              value={dayData.closeTime}
-                              onChange={(e) => updateOperatingHours(index, 'closeTime', e.target.value)}
-                              className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </div>
-                        )}
-
-                        {!dayData.isOpen && (
-                          <span className="text-sm text-gray-400 italic">Closed</span>
-                        )}
                       </div>
                     ))}
                   </div>
+                )}
+
+                {/* Upload drop zone */}
+                <label className="cursor-pointer block border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 hover:bg-blue-50/30 transition">
+                  <Upload className="mx-auto w-10 h-10 text-gray-400 mb-2" />
+                  <p className="text-gray-600 font-medium text-sm">
+                    {formData.facilityImages.length === 0
+                      ? 'Click to upload facility photos'
+                      : 'Click to add more photos'}
+                  </p>
+                  <p className="text-gray-400 text-xs mt-1">PNG, JPG, or WebP · Select multiple at once</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
+
+                {formData.facilityImages.length < 4 && (
+                  <p className="mt-2 text-xs text-orange-600 flex items-center gap-1">
+                    <span>⚠</span>
+                    At least 4 photos are required ({4 - formData.facilityImages.length} more needed)
+                  </p>
+                )}
+              </div>
+
+              {/* Appointment Slot Duration */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Appointment Slot Duration
+                </label>
+                <select
+                  name="appointmentSlotDuration"
+                  value={formData.appointmentSlotDuration}
+                  onChange={handleInputChange}
+                  className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="15">15 minutes</option>
+                  <option value="30">30 minutes</option>
+                  <option value="45">45 minutes</option>
+                  <option value="60">1 hour</option>
+                  <option value="90">1.5 hours</option>
+                </select>
+              </div>
+
+              {/* Operating Hours */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <Clock className="inline w-4 h-4 mr-1 mb-0.5" />
+                  Operating Hours
+                </label>
+                <div className="space-y-3">
+                  {formData.operatingHours.map((dayData, index) => (
+                    <div
+                      key={dayData.day}
+                      className={`flex flex-col md:flex-row items-start md:items-center gap-3 p-3 rounded-lg border-2 transition ${dayData.isOpen
+                          ? 'border-blue-200 bg-blue-50'
+                          : 'border-gray-200 bg-gray-50 opacity-60'
+                        }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-[140px]">
+                        <button
+                          type="button"
+                          onClick={() => updateOperatingHours(index, 'isOpen', !dayData.isOpen)}
+                          className={`w-10 h-6 rounded-full transition-colors duration-200 relative ${dayData.isOpen ? 'bg-blue-600' : 'bg-gray-300'
+                            }`}
+                        >
+                          <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform duration-200 ${dayData.isOpen ? 'translate-x-5' : 'translate-x-1'
+                            }`} />
+                        </button>
+                        <span className={`font-medium text-sm ${dayData.isOpen ? 'text-gray-900' : 'text-gray-500'
+                          }`}>
+                          {dayData.day}
+                        </span>
+                      </div>
+
+                      {dayData.isOpen && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <input
+                            type="time"
+                            value={dayData.openTime}
+                            onChange={(e) => updateOperatingHours(index, 'openTime', e.target.value)}
+                            className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <span className="text-gray-500 font-medium">to</span>
+                          <input
+                            type="time"
+                            value={dayData.closeTime}
+                            onChange={(e) => updateOperatingHours(index, 'closeTime', e.target.value)}
+                            className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      )}
+
+                      {!dayData.isOpen && (
+                        <span className="text-sm text-gray-400 italic">Closed</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
-            )}
-
-            {/* Navigation Buttons */}
-            <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
-              {currentStep > 1 && (
-                <button
-                  onClick={handlePrevious}
-                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition flex items-center gap-2"
-                >
-                  <ArrowLeft size={20} />
-                  Previous
-                </button>
-              )}
-              {currentStep < 4 ? (
-                <button
-                  onClick={handleNext}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 px-6 rounded-lg font-medium transition flex items-center justify-center gap-2"
-                >
-                  Next
-                  <ArrowRight size={20} />
-                </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 px-6 rounded-lg font-medium transition flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {submitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle size={20} />
-                      Submit Application
-                    </>
-                  )}
-                </button>
-              )}
             </div>
+          )}
 
-            {/* Submit result feedback */}
-            {submitResult && (
-              <div className={`mt-4 p-4 rounded-lg text-sm font-medium ${
-                submitResult.type === 'success'
-                  ? 'bg-green-50 text-green-700 border border-green-200'
-                  : 'bg-red-50 text-red-700 border border-red-200'
-              }`}>
-                {submitResult.message}
-              </div>
+          {/* Navigation Buttons */}
+          <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
+            {currentStep > 1 && (
+              <button
+                onClick={handlePrevious}
+                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition flex items-center gap-2"
+              >
+                <ArrowLeft size={20} />
+                Previous
+              </button>
             )}
+            {currentStep < 4 ? (
+              <button
+                onClick={handleNext}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 px-6 rounded-lg font-medium transition flex items-center justify-center gap-2"
+              >
+                Next
+                <ArrowRight size={20} />
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 px-6 rounded-lg font-medium transition flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={20} />
+                    Submit Application
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Submit result feedback */}
+          {submitResult && (
+            <div className={`mt-4 p-4 rounded-lg text-sm font-medium ${submitResult.type === 'success'
+                ? 'bg-green-50 text-green-700 border border-green-200'
+                : 'bg-red-50 text-red-700 border border-red-200'
+              }`}>
+              {submitResult.message}
+            </div>
+          )}
         </div>
 
         {/* Help Section */}

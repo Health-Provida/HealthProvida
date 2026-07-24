@@ -68,6 +68,7 @@ function resolveClinicImage(clinic) {
 function shapeClinic(row) {
   return {
     id: row.id,
+    slug: row.slug || null,
     image_src: resolveClinicImage(row),
     image_url: row.image_url,
     practitioner_name: row.practitioner_name,
@@ -83,6 +84,8 @@ function shapeClinic(row) {
     is_verified: row.is_verified ?? false,
     map_pin_x: row.map_pin_x != null ? parseFloat(row.map_pin_x) : null,
     map_pin_y: row.map_pin_y != null ? parseFloat(row.map_pin_y) : null,
+    latitude: row.latitude != null ? parseFloat(row.latitude) : null,
+    longitude: row.longitude != null ? parseFloat(row.longitude) : null,
 
     // Sub-table arrays → flat string arrays matching current UI expectations
     tags: (row.clinic_tags ?? []).map((t) => t.tag),
@@ -185,6 +188,36 @@ export async function fetchClinicById(id) {
   }
 
   return { data: shaped, error: null };
+}
+
+/**
+ * Fetch a single clinic by its URL slug.
+ * Falls back to numeric ID lookup if the slug looks like a number
+ * (backward compatibility for old bookmarked URLs).
+ *
+ * @param {string} slug - The clinic's URL slug or numeric ID
+ * @returns {{ data: Object|null, error: Error|null }}
+ */
+export async function fetchClinicBySlug(slug) {
+  if (noClient()) return { data: null, error: NO_CLIENT_ERROR };
+  if (!slug) return { data: null, error: { message: 'No clinic identifier provided' } };
+
+  // If the slug is purely numeric, fall back to ID-based lookup
+  // so old bookmarks like /clinic/5 still work.
+  const numericId = Number(slug);
+  if (!isNaN(numericId) && String(numericId) === slug) {
+    return fetchClinicById(numericId);
+  }
+
+  // Resolve slug → id via the database RPC
+  const { data: clinicId, error: rpcError } = await supabase
+    .rpc('get_clinic_id_by_slug', { p_slug: slug });
+
+  if (rpcError) return { data: null, error: rpcError };
+  if (!clinicId) return { data: null, error: { message: `No clinic found with slug "${slug}"` } };
+
+  // Now fetch the full clinic data by ID
+  return fetchClinicById(clinicId);
 }
 
 /**

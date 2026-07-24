@@ -3,6 +3,7 @@ import { Star, MapPin, Phone, Clock, Heart, X, Calendar, Shield, Stethoscope } f
 import { useNavigate } from 'react-router-dom';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useClinics } from '@/context/ClinicsContext';
+import { getClinicUrl } from '@/utils/slugUtils';
 
 
 // This component wraps around your existing ClinicGrid
@@ -504,10 +505,10 @@ function ClinicCard({ clinic, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-4 sm:p-6 cursor-pointer"
+      className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-3.5 sm:p-5 md:p-6 cursor-pointer border border-gray-100"
     >
       <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
-        <div className="w-full md:w-64 h-48 md:h-40 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-100 to-green-100">
+        <div className="w-full md:w-64 h-44 sm:h-48 md:h-40 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-100 to-green-100">
           <img
             className="w-full h-full object-cover"
             alt={`${clinic.practitioner_name} medical facility`}
@@ -517,18 +518,18 @@ function ClinicCard({ clinic, onClick }) {
           />
         </div>
 
-        <div className="flex-1 space-y-3 sm:space-y-4 min-w-0">
+        <div className="flex-1 space-y-2.5 sm:space-y-4 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 truncate">{clinic.practitioner_name}</h3>
-              <p className="text-sm sm:text-base text-blue-600 font-medium truncate">{clinic.practice_type}</p>
+              <h3 className="text-base sm:text-xl font-bold text-gray-900 mb-0.5 sm:mb-1 truncate">{clinic.practitioner_name}</h3>
+              <p className="text-xs sm:text-base text-blue-600 font-medium truncate">{clinic.practice_type}</p>
             </div>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 toggleFavorite(clinic.id);
               }}
-              className={`p-2 flex-shrink-0 -mt-2 -mr-2 sm:mt-0 sm:mr-0 transition-all duration-200 hover:scale-110 ${
+              className={`p-1.5 sm:p-2 flex-shrink-0 -mt-1 -mr-1 sm:mt-0 sm:mr-0 transition-all duration-200 hover:scale-110 ${
                 favorited ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
               }`}
               title={favorited ? 'Remove from favorites' : 'Add to favorites'}
@@ -539,28 +540,28 @@ function ClinicCard({ clinic, onClick }) {
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
             <div className="flex items-center">
-              <Star className="w-4 h-4 text-yellow-400 fill-current mr-1 flex-shrink-0" />
+              <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400 fill-current mr-1 flex-shrink-0" />
               <span className="font-medium">{clinic.rating}</span>
-              <span className="ml-1">({clinic.number_of_reviews} reviews)</span>
+              <span className="ml-1 text-gray-500">({clinic.number_of_reviews} reviews)</span>
             </div>
             <div className="flex items-center">
-              <MapPin className="w-4 h-4 text-gray-400 mr-1 flex-shrink-0" />
+              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 mr-1 flex-shrink-0" />
               <span className="truncate">{clinic.distance_from_location}</span>
             </div>
           </div>
 
-          <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-gray-600">
+          <div className="space-y-1.5 text-xs sm:text-sm text-gray-600">
             <div className="flex items-start">
-              <MapPin className="w-4 h-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
+              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
               <span className="line-clamp-2 break-words">{clinic.address}</span>
             </div>
             <div className="flex items-center">
-              <Phone className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+              <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 mr-2 flex-shrink-0" />
               <span className="truncate">{clinic.phone}</span>
             </div>
             <div className="flex items-start sm:items-center flex-col sm:flex-row">
               <div className="flex items-center">
-                <Clock className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 mr-2 flex-shrink-0" />
                 <span>Next available: </span>
               </div>
               <span className="text-green-600 font-medium sm:ml-1 mt-0.5 sm:mt-0">{clinic.nextAvailable}</span>
@@ -578,23 +579,24 @@ function ClinicCard({ clinic, onClick }) {
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 pt-2">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onClick();
               }}
-              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-2 px-4 rounded-lg font-medium transition flex justify-center items-center"
+              className="w-full sm:w-auto flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-2 px-4 rounded-lg text-xs sm:text-sm font-medium transition flex justify-center items-center"
             >
               Book Appointment
             </button>
-            <button
+            <a
+              href={`tel:${clinic.phone}`}
               onClick={(e) => e.stopPropagation()}
-              className="w-full sm:w-auto border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2"
+              className="w-full sm:w-auto border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2"
             >
-              <Phone className="w-4 h-4" />
+              <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Call Now
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -619,19 +621,19 @@ export default function ClinicCardsApp() {
     }
   }, [clinics]);
 
-  const navigateToClinic = (clinicId) => {
-    window.open(`/clinic/${clinicId}`, '_blank');
+  const navigateToClinic = (clinic) => {
+    window.open(getClinicUrl(clinic), '_blank');
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
+    <div className="min-h-0 sm:min-h-screen bg-transparent sm:bg-gray-50 p-0 sm:p-6 lg:p-8 rounded-none sm:rounded-xl">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6 sm:mb-8 px-2 sm:px-0">
-          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">Most Popular Clinics</h1>
-          <p className="text-sm sm:text-base text-gray-600">Verified providers across Sub-Saharan Africa — ranked by patient popularity</p>
+        <div className="mb-4 sm:mb-8 px-1 sm:px-0">
+          <h1 className="text-xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">Most Popular Clinics</h1>
+          <p className="text-xs sm:text-base text-gray-600">Verified providers across Sub-Saharan Africa — ranked by patient popularity</p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {loading ? (
             // Skeleton loading cards
             Array.from({ length: 3 }).map((_, i) => (
@@ -669,7 +671,7 @@ export default function ClinicCardsApp() {
               <ClinicCard
                 key={clinic.id}
                 clinic={clinic}
-                onClick={() => navigateToClinic(clinic.id)}
+                onClick={() => navigateToClinic(clinic)}
               />
             ))
           ) : error ? (

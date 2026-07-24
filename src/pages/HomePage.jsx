@@ -14,13 +14,13 @@ const HomePage = () => {
       </Helmet>
       <Hero />
       {/* <SearchSection /> */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
           <div className="lg:col-span-2">
             <ClinicGrid />
           </div>
           <div className="lg:col-span-1">
-            <MapSection/>
+            <MapSection />
           </div>
         </div>
       </div>

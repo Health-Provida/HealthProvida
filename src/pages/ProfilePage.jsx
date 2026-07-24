@@ -13,17 +13,18 @@ import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { supabase } from '@/utils/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { getClinicUrl } from '@/utils/slugUtils';
 import { fetchPatientAppointments, cancelAppointment } from '@/utils/supabaseQueries';
 import { validatePassword } from '@/utils/validationUtils';
 
 // ─── Sidebar Navigation Items ─────────────────────────────────────────────────
 const navItems = [
-  { id: 'about',         icon: User,          label: 'Personal Info',   description: 'Your profile details' },
-  { id: 'health',        icon: Activity,      label: 'Health Details',  description: 'Medical information' },
-  { id: 'appointments',  icon: CalendarCheck, label: 'Appointments',    description: 'Upcoming & past visits' },
-  { id: 'saved',         icon: Heart,         label: 'Saved Clinics',   description: 'Your wishlists' },
-  { id: 'security',      icon: Lock,          label: 'Security',        description: 'Account & privacy' },
-  { id: 'notifications', icon: Bell,          label: 'Notifications',   description: 'Alert preferences' },
+  { id: 'about', icon: User, label: 'Personal Info', description: 'Your profile details' },
+  { id: 'health', icon: Activity, label: 'Health Details', description: 'Medical information' },
+  { id: 'appointments', icon: CalendarCheck, label: 'Appointments', description: 'Upcoming & past visits' },
+  { id: 'saved', icon: Heart, label: 'Saved Clinics', description: 'Your wishlists' },
+  { id: 'security', icon: Lock, label: 'Security', description: 'Account & privacy' },
+  { id: 'notifications', icon: Bell, label: 'Notifications', description: 'Alert preferences' },
 ];
 
 // ─── Animated section wrapper ─────────────────────────────────────────────────
@@ -193,9 +194,9 @@ function CompleteProfileCard({ completionPct, onEdit }) {
 // ─── Health Badge ─────────────────────────────────────────────────────────────
 function HealthBadge({ label, value, icon: Icon, color }) {
   const colors = {
-    blue:  { bg: 'bg-blue-50',  text: 'text-blue-600',  border: 'border-blue-100' },
+    blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100' },
     green: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-100' },
-    red:   { bg: 'bg-red-50',   text: 'text-red-600',   border: 'border-red-100' },
+    red: { bg: 'bg-red-50', text: 'text-red-600', border: 'border-red-100' },
     amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-100' },
   };
   const c = colors[color] || colors.blue;
@@ -216,18 +217,18 @@ function HealthBadge({ label, value, icon: Icon, color }) {
 // ─── Appointment Card (real data) ─────────────────────────────────────────────
 function AppointmentCard({ appointment, onCancel, isCancelling }) {
   const STATUS_STYLES = {
-    pending:   { bg: 'bg-amber-50',  text: 'text-amber-700',  dot: 'bg-amber-400', label: 'Pending' },
-    confirmed: { bg: 'bg-blue-50',   text: 'text-blue-700',   dot: 'bg-blue-400',  label: 'Confirmed' },
-    completed: { bg: 'bg-green-50',  text: 'text-green-700',  dot: 'bg-green-500', label: 'Completed' },
-    cancelled: { bg: 'bg-red-50',    text: 'text-red-700',    dot: 'bg-red-400',   label: 'Cancelled' },
-    no_show:   { bg: 'bg-gray-50',   text: 'text-gray-600',   dot: 'bg-gray-400',  label: 'No Show' },
+    pending: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-400', label: 'Pending' },
+    confirmed: { bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-400', label: 'Confirmed' },
+    completed: { bg: 'bg-green-50', text: 'text-green-700', dot: 'bg-green-500', label: 'Completed' },
+    cancelled: { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-400', label: 'Cancelled' },
+    no_show: { bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-400', label: 'No Show' },
   };
   const s = STATUS_STYLES[appointment.status] || STATUS_STYLES.pending;
   const canCancel = ['pending', 'confirmed'].includes(appointment.status);
   const formattedDate = appointment.date
     ? new Date(appointment.date + 'T00:00:00').toLocaleDateString('en-US', {
-        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
-      })
+      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+    })
     : '';
 
   return (
@@ -377,9 +378,8 @@ function PasswordChangeForm() {
         </button>
       </div>
       {pwResult && (
-        <div className={`text-xs font-medium ${
-          pwResult.strength === 'weak' ? 'text-red-500' : pwResult.strength === 'fair' ? 'text-amber-500' : 'text-emerald-500'
-        }`}>
+        <div className={`text-xs font-medium ${pwResult.strength === 'weak' ? 'text-red-500' : pwResult.strength === 'fair' ? 'text-amber-500' : 'text-emerald-500'
+          }`}>
           {pwResult.strength === 'weak' ? 'Weak' : pwResult.strength === 'fair' ? 'Fair' : 'Strong'} password
         </div>
       )}
@@ -563,18 +563,18 @@ export default function ProfilePage() {
 
   // Derived display values
   const userInitial = profile?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U';
-  const userName    = profile?.full_name || 'Your Name';
-  const userEmail   = profile?.email || user?.email || '';
-  const userPhone   = profile?.phone || '';
-  const userDOB     = profile?.date_of_birth
+  const userName = profile?.full_name || 'Your Name';
+  const userEmail = profile?.email || user?.email || '';
+  const userPhone = profile?.phone || '';
+  const userDOB = profile?.date_of_birth
     ? new Date(profile.date_of_birth).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
     : '';
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
     : '';
-  const roleLabel   = profile?.role === 'provider' ? 'Healthcare Provider'
-                    : profile?.role === 'admin'    ? 'Administrator'
-                    : 'Patient';
+  const roleLabel = profile?.role === 'provider' ? 'Healthcare Provider'
+    : profile?.role === 'admin' ? 'Administrator'
+      : 'Patient';
 
   // Completion %
   const completionFields = [profile?.full_name, profile?.phone, profile?.date_of_birth, profile?.avatar_url];
@@ -721,9 +721,9 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <InfoRow icon={Mail}    label="Email Address" value={userEmail} placeholder="Not provided" />
-              <InfoRow icon={Phone}   label="Phone Number"  value={userPhone} placeholder="Add phone number" />
-              <InfoRow icon={Clock}   label="Date of Birth" value={userDOB}   placeholder="Add date of birth" />
+              <InfoRow icon={Mail} label="Email Address" value={userEmail} placeholder="Not provided" />
+              <InfoRow icon={Phone} label="Phone Number" value={userPhone} placeholder="Add phone number" />
+              <InfoRow icon={Clock} label="Date of Birth" value={userDOB} placeholder="Add date of birth" />
               {profile?.bio && (
                 <InfoRow icon={FileText} label="About Me" value={profile.bio} placeholder="" />
               )}
@@ -782,10 +782,10 @@ export default function ProfilePage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-              <HealthBadge icon={Activity}    label="Blood Type"        value={profile?.blood_type}        color="red" />
-              <HealthBadge icon={Globe}       label="NHS Number"         value={profile?.nhs_number}         color="blue" />
-              <HealthBadge icon={Syringe}     label="Allergies"          value={profile?.allergies}          color="amber" />
-              <HealthBadge icon={Shield}      label="Emergency Contact"  value={profile?.emergency_contact}  color="green" />
+              <HealthBadge icon={Activity} label="Blood Type" value={profile?.blood_type} color="red" />
+              <HealthBadge icon={Globe} label="NHS Number" value={profile?.nhs_number} color="blue" />
+              <HealthBadge icon={Syringe} label="Allergies" value={profile?.allergies} color="amber" />
+              <HealthBadge icon={Shield} label="Emergency Contact" value={profile?.emergency_contact} color="green" />
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
@@ -910,7 +910,7 @@ export default function ProfilePage() {
                 {favoriteClinics.slice(0, 4).map(clinic => (
                   <Link
                     key={clinic.id}
-                    to={`/clinic/${clinic.id}`}
+                    to={getClinicUrl(clinic)}
                     className="group flex gap-4 p-4 rounded-2xl border border-gray-100 hover:border-blue-100 hover:bg-blue-50/30 transition"
                   >
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
@@ -1020,10 +1020,10 @@ export default function ProfilePage() {
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-100">
-              <NotificationToggle label="Appointment Reminders"  desc="Get notified before your scheduled appointments"   icon={CalendarCheck} color="text-blue-500"  bg="bg-blue-50"  defaultOn={true} />
-              <NotificationToggle label="New Messages"           desc="Receive alerts when clinics send you a message"    icon={MessageSquare} color="text-green-500" bg="bg-green-50" defaultOn={true} />
-              <NotificationToggle label="Health Tips"            desc="Weekly health articles and wellness advice"        icon={Activity}      color="text-teal-500"  bg="bg-teal-50"  defaultOn={false} />
-              <NotificationToggle label="Promotions & Offers"    desc="Exclusive deals from partner healthcare providers" icon={Star}          color="text-amber-500" bg="bg-amber-50" defaultOn={false} />
+              <NotificationToggle label="Appointment Reminders" desc="Get notified before your scheduled appointments" icon={CalendarCheck} color="text-blue-500" bg="bg-blue-50" defaultOn={true} />
+              <NotificationToggle label="New Messages" desc="Receive alerts when clinics send you a message" icon={MessageSquare} color="text-green-500" bg="bg-green-50" defaultOn={true} />
+              <NotificationToggle label="Health Tips" desc="Weekly health articles and wellness advice" icon={Activity} color="text-teal-500" bg="bg-teal-50" defaultOn={false} />
+              <NotificationToggle label="Promotions & Offers" desc="Exclusive deals from partner healthcare providers" icon={Star} color="text-amber-500" bg="bg-amber-50" defaultOn={false} />
             </div>
           </SectionFade>
         );

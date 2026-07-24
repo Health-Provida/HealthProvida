@@ -37,7 +37,7 @@
     display: none; /* Chrome, Safari and Opera */
   }
   body {
-    @apply bg-gradient-to-br from-blue-50 via-green-50 to-teal-50 text-foreground;
+    @apply bg-gradient-to-br from-blue-50 via-green-50 to-teal-50 text-foreground overflow-x-hidden;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 }
@@ -65,15 +65,15 @@
    * layout shifts when a shorter or longer phrase appears.
    *
    * min-width is set to ch units matching the longest word ("private
-   * practitioners") so the surrounding heading text is never nudged.
+   * practitioners") on desktop, but bounded by 100% on small viewports.
    * ──────────────────────────────────────────────────────────────────────── */
   .rotating-text-wrapper {
     display: inline-grid;
     grid-template-areas: 'text';
-    /* Reserve width for the longest phrase at every viewport */
-    min-width: 18ch;          /* ~"private practitioners" */
-    vertical-align: bottom;   /* align nicely with baseline siblings */
-    overflow: hidden;         /* clip any vertical slide overshoot */
+    min-width: min(18ch, 100%);
+    max-width: 100%;
+    vertical-align: bottom;
+    overflow: hidden;
   }
 
   /* The sr-only child sits in the same grid cell but is visually hidden */

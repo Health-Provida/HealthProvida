@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useClinics } from '@/context/ClinicsContext';
+import { getClinicUrl } from '@/utils/slugUtils';
 import { availableHMOs } from '@/constants/hmos';
 
 // ── Helper: extract unique values from clinic array ──────────────────
@@ -89,7 +90,7 @@ function SearchResultCard({ clinic }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.3 }}
-      onClick={() => window.open(`/clinic/${clinic.id}`, '_blank')}
+      onClick={() => window.open(getClinicUrl(clinic), '_blank')}
       className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-4 sm:p-6 cursor-pointer"
     >
       <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
@@ -117,9 +118,8 @@ function SearchResultCard({ clinic }) {
                 e.stopPropagation();
                 toggleFavorite(clinic.id);
               }}
-              className={`p-2 flex-shrink-0 -mt-2 -mr-2 sm:mt-0 sm:mr-0 transition-all duration-200 hover:scale-110 ${
-                favorited ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
-              }`}
+              className={`p-2 flex-shrink-0 -mt-2 -mr-2 sm:mt-0 sm:mr-0 transition-all duration-200 hover:scale-110 ${favorited ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
+                }`}
               title={favorited ? 'Remove from favorites' : 'Add to favorites'}
             >
               <Heart className={`w-5 h-5 ${favorited ? 'fill-red-500' : ''}`} />
@@ -177,7 +177,7 @@ function SearchResultCard({ clinic }) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                window.open(`/clinic/${clinic.id}`, '_blank');
+                window.open(getClinicUrl(clinic), '_blank');
               }}
               className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-2 px-4 rounded-lg font-medium transition flex justify-center items-center"
             >
@@ -206,7 +206,9 @@ export default function SearchPage() {
   const { clinics, loading, error } = useClinics();
 
   // ── State ──────────────────────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const initialQuery = searchParams.get('q') || '';
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [searchInput, setSearchInput] = useState(initialQuery);
   const [selectedHMOs, setSelectedHMOs] = useState([]);
   const [selectedPracticeTypes, setSelectedPracticeTypes] = useState([]);
   const [selectedSpecialties, setSelectedSpecialties] = useState([]);
@@ -215,11 +217,17 @@ export default function SearchPage() {
   const [sortBy, setSortBy] = useState('relevance');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Sync searchQuery from URL on mount / back-navigation
+  // Sync searchQuery & searchInput from URL on mount / back-navigation
   useEffect(() => {
     const q = searchParams.get('q') || '';
     setSearchQuery(q);
+    setSearchInput(q);
   }, [searchParams]);
+
+  // Scroll to top on search query, filter, or sort change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [searchQuery, selectedHMOs, selectedPracticeTypes, selectedSpecialties, minRating, maxDistance, sortBy]);
 
   // ── Derived filter options ─────────────────────────────────────────
   const practiceTypes = useMemo(() => extractUnique(clinics, 'practice_type'), [clinics]);
@@ -351,7 +359,9 @@ export default function SearchPage() {
   // Handle search submit
   const handleSearchSubmit = (e) => {
     e?.preventDefault();
-    setSearchParams(searchQuery.trim() ? { q: searchQuery.trim() } : {});
+    const trimmed = searchInput.trim();
+    setSearchQuery(trimmed);
+    setSearchParams(trimmed ? { q: trimmed } : {});
   };
 
   // ── Count clinics per filter value ─────────────────────────────────
@@ -393,11 +403,17 @@ export default function SearchPage() {
           <input
             type="text"
             placeholder="Clinic name, specialty..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-700 placeholder-gray-400"
           />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <button
+            type="submit"
+            title="Search"
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-blue-600 transition-colors"
+          >
+            <Search className="w-4 h-4" />
+          </button>
         </div>
       </form>
 
@@ -447,11 +463,10 @@ export default function SearchPage() {
         {ratingOptions.map(opt => (
           <label
             key={opt.value}
-            className={`flex items-center gap-2.5 py-1.5 px-2 rounded-lg cursor-pointer transition-all duration-150 ${
-              minRating === opt.value
-                ? 'bg-blue-50 border border-blue-200'
-                : 'hover:bg-gray-50 border border-transparent'
-            }`}
+            className={`flex items-center gap-2.5 py-1.5 px-2 rounded-lg cursor-pointer transition-all duration-150 ${minRating === opt.value
+              ? 'bg-blue-50 border border-blue-200'
+              : 'hover:bg-gray-50 border border-transparent'
+              }`}
           >
             <input
               type="radio"
@@ -479,11 +494,10 @@ export default function SearchPage() {
         {distanceOptions.map(opt => (
           <label
             key={opt.value}
-            className={`flex items-center gap-2.5 py-1.5 px-2 rounded-lg cursor-pointer transition-all duration-150 ${
-              maxDistance === opt.value
-                ? 'bg-blue-50 border border-blue-200'
-                : 'hover:bg-gray-50 border border-transparent'
-            }`}
+            className={`flex items-center gap-2.5 py-1.5 px-2 rounded-lg cursor-pointer transition-all duration-150 ${maxDistance === opt.value
+              ? 'bg-blue-50 border border-blue-200'
+              : 'hover:bg-gray-50 border border-transparent'
+              }`}
           >
             <input
               type="radio"
@@ -526,24 +540,24 @@ export default function SearchPage() {
       <div className="min-h-screen bg-gray-50/70">
 
         {/* ── Top bar ────────────────────────────────────────────────── */}
-        <div className="bg-white border-b border-gray-200 sticky top-[73px] z-30">
+        <div className="bg-white border-b border-gray-200 relative z-30">
           <div className="container mx-auto px-4 py-3">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               {/* Search bar */}
-              <form onSubmit={handleSearchSubmit} className="flex-1">
+              <form onSubmit={handleSearchSubmit} className="flex-1 min-w-0">
                 <div className="relative flex items-center">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
                   <input
                     id="search-bar-input"
                     type="text"
-                    placeholder="Search clinics, specialties, doctors..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-28 py-3.5 border border-gray-200 rounded-xl text-base text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-colors"
+                    placeholder="Search clinics, specialties..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className="w-full min-w-0 pl-10 sm:pl-12 pr-20 sm:pr-28 py-2.5 sm:py-3.5 border border-gray-200 rounded-xl text-sm sm:text-base text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-colors"
                   />
                   <button
                     type="submit"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 active:scale-95"
+                    className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 active:scale-95"
                   >
                     Search
                   </button>
@@ -551,9 +565,9 @@ export default function SearchPage() {
               </form>
 
               {/* Right: result count + sort + mobile filter btn */}
-              <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-shrink-0">
                 {/* Result count */}
-                <span className="text-sm text-gray-500 hidden sm:block whitespace-nowrap">
+                <span className="text-xs sm:text-sm text-gray-500 hidden sm:block whitespace-nowrap">
                   {loading ? (
                     <span className="animate-pulse">Searching…</span>
                   ) : (
@@ -576,7 +590,7 @@ export default function SearchPage() {
                 {/* Mobile filter toggle */}
                 <button
                   onClick={() => setMobileFiltersOpen(true)}
-                  className="lg:hidden flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="lg:hidden flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   Filters
@@ -588,12 +602,12 @@ export default function SearchPage() {
                 </button>
 
                 {/* Sort dropdown */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-1 sm:flex-none">
                   <ArrowUpDown className="w-4 h-4 text-gray-400 hidden sm:block" />
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer min-w-[160px]"
+                    className="w-full sm:w-auto px-3 py-2 border border-gray-200 rounded-lg text-xs sm:text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer min-w-0 sm:min-w-[160px]"
                   >
                     <option value="relevance">Sort by: Relevance</option>
                     <option value="distance-asc">Distance: Nearest</option>
@@ -614,7 +628,7 @@ export default function SearchPage() {
           <div className="flex gap-6">
             {/* Desktop sidebar */}
             <aside className="hidden lg:block w-72 xl:w-80 flex-shrink-0">
-              <div className="sticky top-[140px] bg-white rounded-xl shadow-sm border border-gray-100 p-5 max-h-[calc(100vh-160px)] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full" style={{ scrollbarWidth: 'thin' }}>
+              <div className="sticky top-6 bg-white rounded-xl shadow-sm border border-gray-100 p-5 max-h-[calc(100vh-48px)] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full" style={{ scrollbarWidth: 'thin' }}>
                 {filterSidebarContent}
               </div>
             </aside>
@@ -765,7 +779,7 @@ export default function SearchPage() {
                       )}
                       {searchQuery && (
                         <button
-                          onClick={() => { setSearchQuery(''); setSearchParams({}); }}
+                          onClick={() => { setSearchInput(''); setSearchQuery(''); setSearchParams({}); }}
                           className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white rounded-lg font-medium transition"
                         >
                           Clear search

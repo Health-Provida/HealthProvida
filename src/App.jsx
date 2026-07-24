@@ -31,87 +31,87 @@ import { ClinicsProvider } from '@/context/ClinicsContext';
 function App() {
   return (
     <AuthProvider>
-    <ClinicsProvider>
-    <FavoritesProvider>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-teal-50 flex flex-col">
-        <ScrollToTop />
-        <Routes>
-          {/* Auth pages — no header/footer */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/auth/confirm" element={<AuthConfirmPage />} />
+      <ClinicsProvider>
+        <FavoritesProvider>
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-teal-50 flex flex-col">
+            <ScrollToTop />
+            <Routes>
+              {/* Auth pages — no header/footer */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/auth/confirm" element={<AuthConfirmPage />} />
 
-          {/* Redirects for removed pages */}
-          <Route path="/signup" element={<Navigate to="/login" replace />} />
-          <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
-          <Route path="/reset-password" element={<Navigate to="/login" replace />} />
-          <Route path="/verify-email" element={<Navigate to="/login" replace />} />
+              {/* Redirects for removed pages */}
+              <Route path="/signup" element={<Navigate to="/login" replace />} />
+              <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
+              <Route path="/reset-password" element={<Navigate to="/login" replace />} />
+              <Route path="/verify-email" element={<Navigate to="/login" replace />} />
 
-          {/* Admin panel — its own layout, protected */}
-          <Route
-            path="/admin/*"
-            element={
-              <ProtectedRoute requiredRole="admin">
-                <AdminRouter />
-              </ProtectedRoute>
-            }
-          />
+              {/* Admin panel — its own layout, protected */}
+              <Route
+                path="/admin/*"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminRouter />
+                  </ProtectedRoute>
+                }
+              />
 
-          {/* Provider dashboard — its own layout, protected */}
-          <Route
-            path="/provider/*"
-            element={
-              <ProtectedRoute requiredRole="provider">
-                <ProviderRouter />
-              </ProtectedRoute>
-            }
-          />
+              {/* Provider dashboard — its own layout, protected */}
+              <Route
+                path="/provider/*"
+                element={
+                  <ProtectedRoute requiredRole="provider">
+                    <ProviderRouter />
+                  </ProtectedRoute>
+                }
+              />
 
-          {/* Standalone pages (no header/footer) */}
-          <Route path="/clinic/:id/photos" element={<ClinicPhotosPage />} />
-          <Route path="/map" element={<MapPage />} />
+              {/* Standalone pages (no header/footer) */}
+              <Route path="/clinic/:slug/photos" element={<ClinicPhotosPage />} />
+              <Route path="/map" element={<MapPage />} />
 
-          {/* Public pages with header/footer */}
-          <Route path="*" element={
-            <>
-              <Header />
-              <main className="flex-grow">
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/search" element={<SearchPage />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/services" element={<ServicesPage />} />
-                  <Route path="/join-provider" element={
-                    <ProtectedRoute>
-                      <JoinProviderPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/clinic/:id" element={<ClinicPage />} />
-                  <Route path="/favorites" element={<FavoritesPage />} />
-                  <Route path="/help" element={<HelpCenterPage />} />
-                  <Route path="/clinic/:id/review" element={<WriteReviewPage />} />
-                  <Route path="/profile" element={
-                    <ProtectedRoute>
-                      <ProfilePage />
-                    </ProtectedRoute>
-                  } />
-                  {/* Legal placeholder routes */}
-                  <Route path="/terms" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Terms of Service</h1><p className="text-gray-500">Coming soon.</p></div>} />
-                  <Route path="/payment-terms" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Payment Terms of Service</h1><p className="text-gray-500">Coming soon.</p></div>} />
-                  <Route path="/non-discrimination" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Non-discrimination Policy</h1><p className="text-gray-500">Coming soon.</p></div>} />
-                  <Route path="/privacy" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Privacy Policy</h1><p className="text-gray-500">Coming soon.</p></div>} />
-                  {/* 404 catch-all */}
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </main>
-              <Footer />
-            </>
-          } />
-        </Routes>
-        <Toaster />
-      </div>
-    </FavoritesProvider>
-    </ClinicsProvider>
+              {/* Public pages with header/footer */}
+              <Route path="*" element={
+                <>
+                  <Header />
+                  <main className="flex-grow">
+                    <Routes>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/search" element={<SearchPage />} />
+                      <Route path="/about" element={<AboutPage />} />
+                      <Route path="/services" element={<ServicesPage />} />
+                      <Route path="/join-provider" element={
+                        <ProtectedRoute>
+                          <JoinProviderPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/contact" element={<ContactPage />} />
+                      <Route path="/clinic/:slug" element={<ClinicPage />} />
+                      <Route path="/favorites" element={<FavoritesPage />} />
+                      <Route path="/help" element={<HelpCenterPage />} />
+                      <Route path="/clinic/:slug/review" element={<WriteReviewPage />} />
+                      <Route path="/profile" element={
+                        <ProtectedRoute>
+                          <ProfilePage />
+                        </ProtectedRoute>
+                      } />
+                      {/* Legal placeholder routes */}
+                      <Route path="/terms" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Terms of Service</h1><p className="text-gray-500">Coming soon.</p></div>} />
+                      <Route path="/payment-terms" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Payment Terms of Service</h1><p className="text-gray-500">Coming soon.</p></div>} />
+                      <Route path="/non-discrimination" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Non-discrimination Policy</h1><p className="text-gray-500">Coming soon.</p></div>} />
+                      <Route path="/privacy" element={<div className="container mx-auto px-4 py-16 text-center"><h1 className="text-3xl font-bold text-gray-900 mb-4">Privacy Policy</h1><p className="text-gray-500">Coming soon.</p></div>} />
+                      {/* 404 catch-all */}
+                      <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                </>
+              } />
+            </Routes>
+            <Toaster />
+          </div>
+        </FavoritesProvider>
+      </ClinicsProvider>
     </AuthProvider>
   );
 }
