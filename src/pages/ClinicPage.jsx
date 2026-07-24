@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, Quote, X, Search, PenLine } from 'lucide-react';
+import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, Quote, X, Search, PenLine, Navigation, ClipboardCheck, Contact, CreditCard, FileText } from 'lucide-react';
 import { fetchClinicBySlug, fetchGallery, fetchAppointmentSlots, createAppointment } from '@/utils/supabaseQueries';
 import { getClinicUrl } from '@/utils/slugUtils';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -8,6 +8,40 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import BookingConfirmationModal from '@/components/BookingConfirmationModal';
 import ShareModal from '@/components/ShareModal';
+
+const REVIEW_CATEGORIES = [
+  { key: 'staff_friendliness_rating', label: 'Staff friendliness' },
+  { key: 'wait_time_rating', label: 'Wait time' },
+  { key: 'quality_of_care_rating', label: 'Quality of care' },
+  { key: 'facility_cleanliness_rating', label: 'Facility cleanliness' },
+];
+
+function getReviewCategorySummaries(reviews = []) {
+  return REVIEW_CATEGORIES.map((category) => {
+    const ratings = reviews
+      .map((review) => Number(review[category.key]))
+      .filter((rating) => Number.isFinite(rating) && rating >= 1 && rating <= 5);
+
+    return {
+      ...category,
+      average: ratings.length ? ratings.reduce((total, rating) => total + rating, 0) / ratings.length : null,
+      count: ratings.length,
+    };
+  });
+}
+
+function RatingStars({ rating, className = 'w-4 h-4' }) {
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`${rating.toFixed(1)} out of 5 stars`}>
+      {Array.from({ length: 5 }, (_, index) => (
+        <Star
+          key={index}
+          className={`${className} ${index < Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`}
+        />
+      ))}
+    </div>
+  );
+}
 
 function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -290,6 +324,14 @@ export default function ClinicPage() {
       </div>
     );
   }
+
+  const reviewCategorySummaries = getReviewCategorySummaries(clinic.reviewHighlights);
+  const hasCategoryRatings = reviewCategorySummaries.some(({ count }) => count > 0);
+  const mapQuery = clinic.latitude != null && clinic.longitude != null
+    ? `${clinic.latitude},${clinic.longitude}`
+    : clinic.address || clinic.practitioner_name;
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapQuery)}`;
+  const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`;
 
   const handleBookAppointment = () => {
     if (!selectedSlot) {
@@ -721,6 +763,114 @@ export default function ClinicPage() {
                 </div>
               )}
             </div>
+
+            {/* Review Categories */}
+            <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-start justify-between gap-4 mb-5">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <Star className="w-6 h-6 text-amber-400 fill-amber-400" />
+                    Review categories
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    The details patients share about their visits.
+                  </p>
+                </div>
+                {hasCategoryRatings && (
+                  <span className="text-xs font-medium text-gray-500 whitespace-nowrap pt-1">
+                    Out of 5
+                  </span>
+                )}
+              </div>
+
+              {hasCategoryRatings ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {reviewCategorySummaries.map(({ key, label, average, count }) => (
+                    <div key={key} className="rounded-xl bg-gray-50 border border-gray-100 p-4">
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <span className="text-sm font-semibold text-gray-800">{label}</span>
+                        {average && <span className="text-sm font-bold text-gray-900">{average.toFixed(1)}</span>}
+                      </div>
+                      {average ? (
+                        <>
+                          <RatingStars rating={average} />
+                          <p className="text-xs text-gray-500 mt-2">Based on {count} patient {count === 1 ? 'rating' : 'ratings'}</p>
+                        </>
+                      ) : (
+                        <p className="text-xs text-gray-400">No ratings yet</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-5 text-sm text-blue-800">
+                  Category ratings will appear here as patients share details about their visits.
+                </div>
+              )}
+            </section>
+
+            {/* Where we are */}
+            <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6 pb-4">
+                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <MapPin className="w-6 h-6 text-blue-600" />
+                  Where we are
+                </h2>
+              </div>
+              <div className="h-52 sm:h-64 bg-blue-50 border-y border-gray-100">
+                <iframe
+                  title={`Map showing ${clinic.practitioner_name}`}
+                  src={mapEmbedUrl}
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+              <div className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <p className="text-sm text-gray-600 leading-relaxed pt-1">{clinic.address}</p>
+                </div>
+                <a
+                  href={directionsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition whitespace-nowrap"
+                >
+                  <Navigation className="w-4 h-4" />
+                  Get directions
+                </a>
+              </div>
+            </section>
+
+            {/* What to bring */}
+            <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-2">
+                <ClipboardCheck className="w-6 h-6 text-green-600" />
+                What to bring
+              </h2>
+              <p className="text-sm text-gray-500 mb-5">A few things that can help your visit go smoothly.</p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <li className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
+                  <Calendar className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-gray-700">Your appointment confirmation or booking details</span>
+                </li>
+                <li className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
+                  <Contact className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-gray-700">A valid photo ID</span>
+                </li>
+                <li className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
+                  <CreditCard className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-gray-700">Your HMO or insurance card, if you are using one</span>
+                </li>
+                <li className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
+                  <FileText className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-gray-700">Relevant referrals, test results, and a current medication list</span>
+                </li>
+              </ul>
+            </section>
           </div>
 
           {/* Booking Sidebar */}

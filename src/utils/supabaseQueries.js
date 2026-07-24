@@ -99,6 +99,10 @@ function shapeClinic(row) {
       patient_id: r.patient_id,
       author: r.author_name,
       rating: r.rating,
+      staff_friendliness_rating: r.staff_friendliness_rating,
+      wait_time_rating: r.wait_time_rating,
+      quality_of_care_rating: r.quality_of_care_rating,
+      facility_cleanliness_rating: r.facility_cleanliness_rating,
       date: r.review_date ?? '',
       text: r.review_text,
       is_verified: r.is_verified ?? false,
@@ -119,7 +123,19 @@ const CLINIC_SELECT = `
   clinic_specialties ( specialty ),
   clinic_equipment ( equipment_name ),
   clinic_hmos ( hmos ( name ) ),
-  reviews ( id, patient_id, author_name, rating, review_text, review_date, is_verified )
+  reviews (
+    id,
+    patient_id,
+    author_name,
+    rating,
+    staff_friendliness_rating,
+    wait_time_rating,
+    quality_of_care_rating,
+    facility_cleanliness_rating,
+    review_text,
+    review_date,
+    is_verified
+  )
 `;
 
 // ═════════════════════════════════════════════════════════════
@@ -234,7 +250,20 @@ export async function fetchUserReviewForClinic(clinicId, userId) {
 
   const { data, error } = await supabase
     .from('reviews')
-    .select('id, clinic_id, patient_id, author_name, rating, review_text, review_date, is_verified')
+    .select(`
+      id,
+      clinic_id,
+      patient_id,
+      author_name,
+      rating,
+      staff_friendliness_rating,
+      wait_time_rating,
+      quality_of_care_rating,
+      facility_cleanliness_rating,
+      review_text,
+      review_date,
+      is_verified
+    `)
     .eq('clinic_id', Number(clinicId))
     .eq('patient_id', userId)
     .maybeSingle();

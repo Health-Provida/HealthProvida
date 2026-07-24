@@ -19,10 +19,10 @@ function getHumanReviewDate() {
 /**
  * Submit a new review for a clinic.
  *
- * @param {{ clinicId: number, patientId: string, authorName: string, rating: number, reviewText: string }} params
+ * @param {{ clinicId: number, patientId: string, authorName: string, rating: number, categoryRatings: object, reviewText: string }} params
  * @returns {{ data: object|null, error: object|null }}
  */
-export async function submitReview({ clinicId, patientId, authorName, rating, reviewText }) {
+export async function submitReview({ clinicId, patientId, authorName, rating, categoryRatings, reviewText }) {
   if (!supabase) return { data: null, error: NO_CLIENT_ERROR };
 
   const { data, error } = await supabase
@@ -32,6 +32,10 @@ export async function submitReview({ clinicId, patientId, authorName, rating, re
       patient_id: patientId,
       author_name: authorName,
       rating,
+      staff_friendliness_rating: categoryRatings?.staff_friendliness_rating || null,
+      wait_time_rating: categoryRatings?.wait_time_rating || null,
+      quality_of_care_rating: categoryRatings?.quality_of_care_rating || null,
+      facility_cleanliness_rating: categoryRatings?.facility_cleanliness_rating || null,
       review_text: reviewText,
       review_date: getHumanReviewDate(),
       is_verified: true,
@@ -45,16 +49,20 @@ export async function submitReview({ clinicId, patientId, authorName, rating, re
 /**
  * Update an existing review.
  *
- * @param {{ reviewId: number, rating: number, reviewText: string }} params
+ * @param {{ reviewId: number, rating: number, categoryRatings: object, reviewText: string }} params
  * @returns {{ data: object|null, error: object|null }}
  */
-export async function updateReview({ reviewId, rating, reviewText }) {
+export async function updateReview({ reviewId, rating, categoryRatings, reviewText }) {
   if (!supabase) return { data: null, error: NO_CLIENT_ERROR };
 
   const { data, error } = await supabase
     .from('reviews')
     .update({
       rating,
+      staff_friendliness_rating: categoryRatings?.staff_friendliness_rating || null,
+      wait_time_rating: categoryRatings?.wait_time_rating || null,
+      quality_of_care_rating: categoryRatings?.quality_of_care_rating || null,
+      facility_cleanliness_rating: categoryRatings?.facility_cleanliness_rating || null,
       review_text: reviewText,
       review_date: getHumanReviewDate(),
     })

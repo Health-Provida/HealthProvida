@@ -10,6 +10,16 @@ import { toast } from '@/components/ui/use-toast';
 const RATING_LABELS = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
 const MIN_CHARS = 20;
 const MAX_CHARS = 1000;
+const REVIEW_CATEGORIES = [
+  { key: 'staff_friendliness_rating', label: 'Staff friendliness' },
+  { key: 'wait_time_rating', label: 'Wait time' },
+  { key: 'quality_of_care_rating', label: 'Quality of care' },
+  { key: 'facility_cleanliness_rating', label: 'Facility cleanliness' },
+];
+
+const createEmptyCategoryRatings = () => Object.fromEntries(
+  REVIEW_CATEGORIES.map(({ key }) => [key, 0])
+);
 
 function StarRating({ rating, onRate, hoverRating, onHover, onLeave, size = 'lg' }) {
   const starSize = size === 'lg' ? 'w-10 h-10 md:w-12 md:h-12' : 'w-8 h-8';
@@ -46,6 +56,26 @@ function StarRating({ rating, onRate, hoverRating, onHover, onLeave, size = 'lg'
   );
 }
 
+function CategoryStarRating({ label, rating, onRate }) {
+  return (
+    <div className="flex items-center gap-1" role="radiogroup" aria-label={`${label} rating`}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onRate(star)}
+          className={`p-0.5 transition-transform hover:scale-110 ${star <= rating ? 'text-amber-400' : 'text-gray-200 hover:text-amber-300'}`}
+          aria-label={`Rate ${label} ${star} star${star === 1 ? '' : 's'}`}
+          aria-checked={star === rating}
+          role="radio"
+        >
+          <Star className={`w-5 h-5 ${star <= rating ? 'fill-current' : ''}`} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function WriteReviewPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -60,6 +90,7 @@ export default function WriteReviewPage() {
   // Form state
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [categoryRatings, setCategoryRatings] = useState(createEmptyCategoryRatings);
   const [reviewText, setReviewText] = useState('');
   const [formError, setFormError] = useState('');
 
@@ -91,6 +122,10 @@ export default function WriteReviewPage() {
       if (reviewResult.data) {
         setExistingReview(reviewResult.data);
         setRating(reviewResult.data.rating);
+        setCategoryRatings(REVIEW_CATEGORIES.reduce((ratings, { key }) => {
+          ratings[key] = Number(reviewResult.data[key]) || 0;
+          return ratings;
+        }, {}));
         setReviewText(reviewResult.data.review_text);
       }
     }
@@ -115,6 +150,10 @@ export default function WriteReviewPage() {
       setFormError('Please select a star rating.');
       return;
     }
+    if (REVIEW_CATEGORIES.some(({ key }) => categoryRatings[key] === 0)) {
+      setFormError('Please rate each review category.');
+      return;
+    }
     if (reviewText.trim().length < MIN_CHARS) {
       setFormError(`Please write at least ${MIN_CHARS} characters.`);
       return;
@@ -127,6 +166,7 @@ export default function WriteReviewPage() {
       result = await updateReview({
         reviewId: existingReview.id,
         rating,
+        categoryRatings,
         reviewText: reviewText.trim(),
       });
     } else {
@@ -135,6 +175,7 @@ export default function WriteReviewPage() {
         patientId: user.id,
         authorName: profile?.full_name || user.email?.split('@')[0] || 'Patient',
         rating,
+        categoryRatings,
         reviewText: reviewText.trim(),
       });
     }
@@ -322,6 +363,27 @@ export default function WriteReviewPage() {
             </div>
           </div>
 
+          {/* Review Categories */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Rate your visit</h3>
+            <p className="text-sm text-gray-500 mb-5">
+              Your category ratings help patients know what to expect.
+            </p>
+
+            <div className="divide-y divide-gray-100">
+              {REVIEW_CATEGORIES.map(({ key, label }) => (
+                <div key={key} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                  <span className="text-sm font-medium text-gray-700">{label}</span>
+                  <CategoryStarRating
+                    label={label}
+                    rating={categoryRatings[key]}
+                    onRate={(value) => setCategoryRatings((ratings) => ({ ...ratings, [key]: value }))}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Review Text */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
             <h3 className="text-lg font-bold text-gray-900 mb-1">
@@ -364,10 +426,10 @@ export default function WriteReviewPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={submitting || rating === 0 || reviewText.trim().length < MIN_CHARS}
+            disabled={submitting || rating === 0 || REVIEW_CATEGORIES.some(({ key }) => categoryRatings[key] === 0) || reviewText.trim().length < MIN_CHARS}
             className={`
               w-full py-3.5 px-6 rounded-xl text-base font-semibold transition-all duration-200 flex items-center justify-center gap-2
-              ${submitting || rating === 0 || reviewText.trim().length < MIN_CHARS
+              ${submitting || rating === 0 || REVIEW_CATEGORIES.some(({ key }) => categoryRatings[key] === 0) || reviewText.trim().length < MIN_CHARS
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 : 'bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white shadow-md hover:shadow-lg active:scale-[0.98]'
               }
