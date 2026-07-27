@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft, Loader2, PenLine, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -6,6 +6,7 @@ import { fetchClinicBySlug, fetchUserReviewForClinic } from '@/utils/supabaseQue
 import { getClinicUrl } from '@/utils/slugUtils';
 import { submitReview, updateReview } from '@/utils/submitReview';
 import { toast } from '@/components/ui/use-toast';
+import { runAntiSpamChecks, createTimestampTracker, HONEYPOT_FIELD_NAME, HONEYPOT_STYLES } from '@/utils/antiSpam';
 
 const RATING_LABELS = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
 const MIN_CHARS = 20;
@@ -93,6 +94,8 @@ export default function WriteReviewPage() {
   const [categoryRatings, setCategoryRatings] = useState(createEmptyCategoryRatings);
   const [reviewText, setReviewText] = useState('');
   const [formError, setFormError] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+  const timestampTracker = useMemo(() => createTimestampTracker(), []);
 
   const isEditing = !!existingReview;
 
@@ -140,11 +143,23 @@ export default function WriteReviewPage() {
   // Scroll to top
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    timestampTracker.getLoadTime();
+  }, [timestampTracker]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
+
+    // Anti-spam checks
+    const spamResult = runAntiSpamChecks({
+      honeypotValue: honeypot,
+      action: 'submit-review',
+      rateLimit: { maxAttempts: 3, windowMs: 300000 },
+      timestampTracker,
+      minSubmitTimeMs: 5000,
+    });
+    if (spamResult === '__silent_drop__') return;
+    if (spamResult) { setFormError(spamResult); return; }
 
     if (rating === 0) {
       setFormError('Please select a star rating.');
@@ -326,6 +341,19 @@ export default function WriteReviewPage() {
 
         {/* Review Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Honeypot — invisible to humans, bots auto-fill it */}
+          <div style={HONEYPOT_STYLES} aria-hidden="true">
+            <label htmlFor={HONEYPOT_FIELD_NAME}>Leave this empty</label>
+            <input
+              id={`review-${HONEYPOT_FIELD_NAME}`}
+              name={HONEYPOT_FIELD_NAME}
+              type="text"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              autoComplete="off"
+              tabIndex={-1}
+            />
+          </div>
           {/* Star Rating */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 text-center">
             <h3 className="text-lg font-bold text-gray-900 mb-1">

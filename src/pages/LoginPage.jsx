@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, ArrowRight, ArrowLeft, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { validateEmail, mapSupabaseError } from '@/utils/validationUtils';
+import { runAntiSpamChecks, createTimestampTracker, HONEYPOT_FIELD_NAME, HONEYPOT_STYLES } from '@/utils/antiSpam';
 import logo from '../components/ui/logo.png';
 
 const OTP_LENGTH = 6;
@@ -19,6 +20,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resending, setResending] = useState(false);
+  const [honeypot, setHoneypot] = useState('');
+  const timestampTracker = useMemo(() => createTimestampTracker(), []);
 
   const inputRefs = useRef([]);
 
@@ -27,6 +30,11 @@ export default function LoginPage() {
   const location = useLocation();
 
   // If already authenticated, redirect
+  // Initialize timestamp tracker on mount
+  useEffect(() => {
+    timestampTracker.getLoadTime();
+  }, [timestampTracker]);
+
   useEffect(() => {
     if (isAuthenticated) {
       const from = location.state?.from?.pathname;
@@ -64,6 +72,17 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setFieldError('');
+
+    // Anti-spam checks
+    const spamResult = runAntiSpamChecks({
+      honeypotValue: honeypot,
+      action: 'login-otp',
+      rateLimit: { maxAttempts: 5, windowMs: 60000 },
+      timestampTracker,
+      minSubmitTimeMs: 3000,
+    });
+    if (spamResult === '__silent_drop__') return; // silently ignore bots
+    if (spamResult) { setError(spamResult); return; }
 
     const emailErr = validateEmail(email);
     if (emailErr) {
@@ -262,6 +281,19 @@ export default function LoginPage() {
                       )}
 
                       <form onSubmit={handleSendOtp} className="space-y-5">
+                        {/* Honeypot — invisible to humans, bots auto-fill it */}
+                        <div style={HONEYPOT_STYLES} aria-hidden="true">
+                          <label htmlFor={HONEYPOT_FIELD_NAME}>Leave this empty</label>
+                          <input
+                            id={HONEYPOT_FIELD_NAME}
+                            name={HONEYPOT_FIELD_NAME}
+                            type="text"
+                            value={honeypot}
+                            onChange={(e) => setHoneypot(e.target.value)}
+                            autoComplete="off"
+                            tabIndex={-1}
+                          />
+                        </div>
                         {/* Email */}
                         <div>
                           <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1.5">

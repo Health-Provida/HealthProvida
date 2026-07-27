@@ -3,11 +3,10 @@ import { Helmet } from 'react-helmet';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  User, Heart, CalendarCheck, MessageSquare, Settings,
-  Shield, HelpCircle, LogOut, ChevronRight, Edit2, Camera,
-  Phone, Mail, Clock, Star, Activity, FileText,
-  Stethoscope, AlertCircle, CheckCircle2, Bell, Lock,
-  Globe, Syringe, PlusCircle, ArrowRight, BadgeCheck, Eye, EyeOff
+  User, Heart, CalendarCheck, HelpCircle, LogOut, ChevronRight,
+  Edit2, Camera, Phone, Mail, Clock, Star, FileText,
+  Stethoscope, CheckCircle2, Lock, PlusCircle, ArrowRight,
+  BadgeCheck, Eye, EyeOff
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -20,11 +19,9 @@ import { validatePassword } from '@/utils/validationUtils';
 // ─── Sidebar Navigation Items ─────────────────────────────────────────────────
 const navItems = [
   { id: 'about', icon: User, label: 'Personal Info', description: 'Your profile details' },
-  { id: 'health', icon: Activity, label: 'Health Details', description: 'Medical information' },
   { id: 'appointments', icon: CalendarCheck, label: 'Appointments', description: 'Upcoming & past visits' },
   { id: 'saved', icon: Heart, label: 'Saved Clinics', description: 'Your wishlists' },
   { id: 'security', icon: Lock, label: 'Security', description: 'Account & privacy' },
-  { id: 'notifications', icon: Bell, label: 'Notifications', description: 'Alert preferences' },
 ];
 
 // ─── Animated section wrapper ─────────────────────────────────────────────────
@@ -191,27 +188,7 @@ function CompleteProfileCard({ completionPct, onEdit }) {
   );
 }
 
-// ─── Health Badge ─────────────────────────────────────────────────────────────
-function HealthBadge({ label, value, icon: Icon, color }) {
-  const colors = {
-    blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100' },
-    green: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-100' },
-    red: { bg: 'bg-red-50', text: 'text-red-600', border: 'border-red-100' },
-    amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-100' },
-  };
-  const c = colors[color] || colors.blue;
-  return (
-    <div className={`flex items-center gap-3 p-4 rounded-xl border ${c.bg} ${c.border}`}>
-      <div className={`w-9 h-9 rounded-lg ${c.bg} ${c.text} flex items-center justify-center`}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <div>
-        <p className="text-xs text-gray-500 font-medium">{label}</p>
-        <p className={`text-sm font-bold ${c.text}`}>{value || 'Not set'}</p>
-      </div>
-    </div>
-  );
-}
+
 
 // ─── Appointment Stub ─────────────────────────────────────────────────────────
 // ─── Appointment Card (real data) ─────────────────────────────────────────────
@@ -279,28 +256,6 @@ function AppointmentCard({ appointment, onCancel, isCancelling }) {
   );
 }
 
-// ─── Toggle Row ───────────────────────────────────────────────────────────────
-function NotificationToggle({ label, desc, icon: Icon, color, bg, defaultOn }) {
-  const [on, setOn] = useState(defaultOn);
-  return (
-    <div className="flex items-center gap-4 p-5">
-      <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}>
-        <Icon className={`w-5 h-5 ${color}`} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-gray-900 text-sm">{label}</p>
-        <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{desc}</p>
-      </div>
-      <button
-        onClick={() => setOn(v => !v)}
-        className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${on ? 'bg-blue-600' : 'bg-gray-200'}`}
-        aria-label={`Toggle ${label}`}
-      >
-        <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${on ? 'left-[22px]' : 'left-0.5'}`} />
-      </button>
-    </div>
-  );
-}
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -760,48 +715,6 @@ export default function ProfilePage() {
           </SectionFade>
         );
 
-      // ── Health Details ─────────────────────────────────────────────────────
-      case 'health':
-        return (
-          <SectionFade tabKey="health">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Health Details</h2>
-                <p className="text-gray-500 text-sm mt-0.5">Information shared with your healthcare providers</p>
-              </div>
-              <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-blue-200 hover:text-blue-600 transition">
-                <Edit2 className="w-4 h-4" /> Edit
-              </button>
-            </div>
-
-            <div className="flex items-start gap-3 p-4 rounded-2xl bg-blue-50 border border-blue-100 mb-6">
-              <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-blue-700 leading-relaxed">
-                Health information is kept private and only shared with clinicians you choose to see. It helps providers give you better, personalised care.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-              <HealthBadge icon={Activity} label="Blood Type" value={profile?.blood_type} color="red" />
-              <HealthBadge icon={Globe} label="NHS Number" value={profile?.nhs_number} color="blue" />
-              <HealthBadge icon={Syringe} label="Allergies" value={profile?.allergies} color="amber" />
-              <HealthBadge icon={Shield} label="Emergency Contact" value={profile?.emergency_contact} color="green" />
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-8 h-8 text-blue-400" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Medical Records</h3>
-              <p className="text-sm text-gray-500 mb-5 max-w-xs mx-auto leading-relaxed">
-                Upload and manage your medical documents, prescriptions, and test results securely.
-              </p>
-              <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-green-700 transition shadow-md">
-                <PlusCircle className="w-4 h-4" /> Add Document
-              </button>
-            </div>
-          </SectionFade>
-        );
 
       // ── Appointments ───────────────────────────────────────────────────────
       case 'appointments':
@@ -986,47 +899,10 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 text-sm">Two-Factor Authentication</p>
-                      <p className="text-xs text-gray-400 mt-0.5">Add an extra layer of security to your account</p>
-                    </div>
-                  </div>
-                  <button className="text-sm font-semibold text-blue-600 hover:text-blue-700 underline-offset-2 hover:underline transition">Enable</button>
-                </div>
-              </div>
-
-              <div className="bg-red-50 rounded-2xl border border-red-100 p-5">
-                <h4 className="font-bold text-red-700 mb-1 text-sm">Danger Zone</h4>
-                <p className="text-xs text-red-600 mb-4">Once deleted, your account and all associated data will be permanently removed and cannot be recovered.</p>
-                <button className="text-sm font-semibold text-red-600 hover:text-red-700 underline-offset-2 hover:underline transition">Delete Account</button>
-              </div>
             </div>
           </SectionFade>
         );
 
-      // ── Notifications ──────────────────────────────────────────────────────
-      case 'notifications':
-        return (
-          <SectionFade tabKey="notifications">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Notifications</h2>
-              <p className="text-gray-500 text-sm mt-0.5">Choose what alerts you receive</p>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-100">
-              <NotificationToggle label="Appointment Reminders" desc="Get notified before your scheduled appointments" icon={CalendarCheck} color="text-blue-500" bg="bg-blue-50" defaultOn={true} />
-              <NotificationToggle label="New Messages" desc="Receive alerts when clinics send you a message" icon={MessageSquare} color="text-green-500" bg="bg-green-50" defaultOn={true} />
-              <NotificationToggle label="Health Tips" desc="Weekly health articles and wellness advice" icon={Activity} color="text-teal-500" bg="bg-teal-50" defaultOn={false} />
-              <NotificationToggle label="Promotions & Offers" desc="Exclusive deals from partner healthcare providers" icon={Star} color="text-amber-500" bg="bg-amber-50" defaultOn={false} />
-            </div>
-          </SectionFade>
-        );
 
       default:
         return null;

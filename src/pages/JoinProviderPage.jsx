@@ -682,11 +682,12 @@
 
 // export default JoinProviderPage;
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Briefcase, Mail, MapPin, Phone, User, CheckCircle, ArrowRight, ArrowLeft, Stethoscope, Shield, Tag, Clock, Upload, Plus, Trash2, Image } from 'lucide-react';
 import { submitProviderApplication } from '@/utils/submitProviderApplication';
 import { availableHMOs } from '@/constants/hmos';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
+import { runAntiSpamChecks, createTimestampTracker, HONEYPOT_FIELD_NAME, HONEYPOT_STYLES } from '@/utils/antiSpam';
 
 // availableHMOs imported from @/constants/hmos
 
@@ -763,6 +764,13 @@ export default function MultiStepProviderForm() {
     })),
     appointmentSlotDuration: '30'
   });
+  const [honeypot, setHoneypot] = useState('');
+  const timestampTracker = useMemo(() => createTimestampTracker(), []);
+
+  // Initialize timestamp tracker on mount
+  useEffect(() => {
+    timestampTracker.getLoadTime();
+  }, [timestampTracker]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -874,6 +882,20 @@ export default function MultiStepProviderForm() {
   const [submitResult, setSubmitResult] = useState(null);
 
   const handleSubmit = async () => {
+    // Anti-spam checks
+    const spamResult = runAntiSpamChecks({
+      honeypotValue: honeypot,
+      action: 'provider-application',
+      rateLimit: { maxAttempts: 3, windowMs: 600000 },
+      timestampTracker,
+      minSubmitTimeMs: 10000,
+    });
+    if (spamResult === '__silent_drop__') return;
+    if (spamResult) {
+      setSubmitResult({ type: 'error', message: spamResult });
+      return;
+    }
+
     if (formData.facilityImages.length < 4) {
       setSubmitResult({ type: 'error', message: 'Please upload at least 4 facility photos before submitting.' });
       return;
@@ -936,6 +958,19 @@ export default function MultiStepProviderForm() {
 
         {/* Form Card */}
         <div className="bg-white rounded-lg shadow-xl p-6 md:p-8">
+          {/* Honeypot — invisible to humans, bots auto-fill it */}
+          <div style={HONEYPOT_STYLES} aria-hidden="true">
+            <label htmlFor={`provider-${HONEYPOT_FIELD_NAME}`}>Leave this empty</label>
+            <input
+              id={`provider-${HONEYPOT_FIELD_NAME}`}
+              name={HONEYPOT_FIELD_NAME}
+              type="text"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              autoComplete="off"
+              tabIndex={-1}
+            />
+          </div>
           {/* Step 1: Basic Information */}
           {currentStep === 1 && (
             <div className="space-y-6">

@@ -215,6 +215,55 @@ INSERT INTO reviews (clinic_id, author_name, rating, review_text, review_date, i
   (9, 'Comfort A.', 5, 'The urology department at Gwarimpa branch is very professional. Endoscopy was quick and painless. The post-operative rehab program was very helpful.', 'March 2026', true),
   (9, 'Daniel U.', 4, 'Good specialist surgical hospital. Critical care unit is well-equipped. The only downside is the distance from the city center — 15km away.', 'February 2026', true);
 
+-- ==================== REVIEW CATEGORY FEEDBACK ====================
+-- Structured category ratings for every seeded reviewer. These are deliberately
+-- varied to match the tone and overall rating of the written review.
+UPDATE reviews AS r
+SET
+  staff_friendliness_rating = ratings.staff_friendliness_rating,
+  wait_time_rating = ratings.wait_time_rating,
+  quality_of_care_rating = ratings.quality_of_care_rating,
+  facility_cleanliness_rating = ratings.facility_cleanliness_rating
+FROM (
+  VALUES
+    (1, 'Amina O.', 5, 5, 5, 5),
+    (1, 'Chidi N.', 5, 5, 5, 5),
+    (1, 'Fatima B.', 5, 4, 4, 5),
+    (2, 'Emeka A.', 5, 5, 5, 5),
+    (2, 'Grace I.', 5, 5, 5, 5),
+    (2, 'Yusuf M.', 4, 4, 5, 4),
+    (3, 'Dr. Okonkwo R.', 5, 4, 5, 4),
+    (3, 'Blessing U.', 5, 4, 5, 5),
+    (3, 'Suleiman D.', 4, 2, 5, 4),
+    (4, 'Ngozi K.', 5, 5, 5, 5),
+    (4, 'Tunde S.', 5, 5, 5, 5),
+    (4, 'Halima J.', 5, 4, 5, 5),
+    (5, 'Chioma E.', 5, 4, 5, 5),
+    (5, 'Ibrahim T.', 5, 5, 5, 5),
+    (5, 'Aisha W.', 4, 3, 5, 4),
+    (6, 'Funke A.', 5, 4, 5, 5),
+    (6, 'Maryam L.', 5, 5, 5, 5),
+    (6, 'Joy P.', 5, 4, 4, 4),
+    (7, 'Obinna C.', 5, 5, 5, 4),
+    (7, 'Zainab H.', 5, 4, 5, 4),
+    (7, 'Kenneth O.', 4, 4, 4, 4),
+    (8, 'Adaeze M.', 5, 5, 5, 5),
+    (8, 'Rasheed B.', 5, 5, 5, 5),
+    (8, 'Patricia N.', 4, 4, 5, 5),
+    (9, 'Victor E.', 5, 5, 5, 5),
+    (9, 'Comfort A.', 5, 5, 5, 4),
+    (9, 'Daniel U.', 4, 4, 4, 4)
+) AS ratings (
+  clinic_id,
+  author_name,
+  staff_friendliness_rating,
+  wait_time_rating,
+  quality_of_care_rating,
+  facility_cleanliness_rating
+)
+WHERE r.clinic_id = ratings.clinic_id
+  AND r.author_name = ratings.author_name;
+
 -- ==================== OPERATING HOURS (Default for all clinics) ====================
 -- All clinics: Mon-Fri 8am-5pm, Sat 9am-2pm, Sun closed
 INSERT INTO clinic_operating_hours (clinic_id, day, is_open, open_time, close_time)

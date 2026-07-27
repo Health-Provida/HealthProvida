@@ -165,6 +165,10 @@ CREATE TABLE reviews (
   patient_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   author_name TEXT NOT NULL,
   rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  staff_friendliness_rating SMALLINT CHECK (staff_friendliness_rating BETWEEN 1 AND 5),
+  wait_time_rating SMALLINT CHECK (wait_time_rating BETWEEN 1 AND 5),
+  quality_of_care_rating SMALLINT CHECK (quality_of_care_rating BETWEEN 1 AND 5),
+  facility_cleanliness_rating SMALLINT CHECK (facility_cleanliness_rating BETWEEN 1 AND 5),
   review_text TEXT NOT NULL,
   review_date TEXT, -- e.g. "April 2026" as displayed in the app
   is_verified BOOLEAN NOT NULL DEFAULT false,
