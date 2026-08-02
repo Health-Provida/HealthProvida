@@ -43,13 +43,15 @@ const Header = () => {
   // Get user initial for avatar
   const userInitial = profile?.full_name?.charAt(0)?.toUpperCase() || (isAuthenticated ? 'U' : 'G');
 
+  const isClinicPage = location.pathname.startsWith('/clinic/') && !location.pathname.endsWith('/review');
+
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
       className={`bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50 ${
-        isSearchPage ? 'relative' : 'sticky top-0'
+        isSearchPage || isClinicPage ? 'relative' : 'sticky top-0'
       }`}
     >
       <div className="container mx-auto px-4 py-4">
@@ -247,7 +249,7 @@ const Header = () => {
 
                     {/* ── Main account links ── */}
                     <div className="px-3 pt-3 pb-1 flex flex-col gap-0.5 border-t border-gray-100 md:border-t-0 md:pt-3">
-                      {/* Wishlists — visible to all users */}
+                      {/* Favorites — visible to all users */}
                       <NavLink
                         to="/favorites"
                         onClick={() => setIsMenuOpen(false)}
@@ -258,7 +260,7 @@ const Header = () => {
                         }
                       >
                         <Heart className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">Wishlists</span>
+                        <span className="flex-1">Favorites</span>
                         {favoritesCount > 0 && (
                           <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-600 text-white min-w-[18px] text-center leading-none">
                             {favoritesCount}

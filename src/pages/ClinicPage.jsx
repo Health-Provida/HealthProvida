@@ -250,6 +250,54 @@ export default function ClinicPage() {
   // Share modal state
   const [showShareModal, setShowShareModal] = useState(false);
 
+  // Secondary sticky nav state
+  const [isSecondaryNavVisible, setIsSecondaryNavVisible] = useState(false);
+  const [showBookInNav, setShowBookInNav] = useState(false);
+
+  useEffect(() => {
+    const handleWindowScroll = () => {
+      const heroEl = document.getElementById('photos');
+      const reviewsEl = document.getElementById('reviews');
+
+      if (heroEl) {
+        const heroRect = heroEl.getBoundingClientRect();
+        setIsSecondaryNavVisible(heroRect.bottom <= 100);
+      } else {
+        setIsSecondaryNavVisible(window.scrollY > 400);
+      }
+
+      if (reviewsEl) {
+        const reviewsRect = reviewsEl.getBoundingClientRect();
+        setShowBookInNav(reviewsRect.top <= 120);
+      } else {
+        setShowBookInNav(window.scrollY > 1200);
+      }
+    };
+
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    handleWindowScroll();
+    return () => window.removeEventListener('scroll', handleWindowScroll);
+  }, [clinic]);
+
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const yOffset = -70;
+      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
+  const handleSecondaryBookClick = () => {
+    if (selectedSlot) {
+      handleBookAppointment();
+    } else if (clinic?.phone) {
+      window.location.href = `tel:${clinic.phone}`;
+    } else {
+      handleBookAppointment();
+    }
+  };
+
   const handleShowMore = (index) => {
     setTargetReviewIndex(index);
     setShowAllReviews(true);
@@ -424,7 +472,7 @@ export default function ClinicPage() {
     });
 
     // Refresh slots so the booked slot disappears
-    const slotsResult = await fetchAppointmentSlots(id);
+    const slotsResult = await fetchAppointmentSlots(clinic.id);
     if (slotsResult.data) {
       setClinic((prev) => ({ ...prev, timeSlots: slotsResult.data }));
     }
@@ -492,8 +540,67 @@ export default function ClinicPage() {
         </div>
       </div>
 
+      {/* Secondary Sticky Navbar (Airbnb Style) */}
+      {isSecondaryNavVisible && (
+        <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm transition-all duration-300">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              {/* Navigation tabs */}
+              <nav className="flex items-center space-x-6 sm:space-x-8 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <button
+                  onClick={() => scrollToSection('photos')}
+                  className="text-gray-700 hover:text-gray-900 font-semibold text-sm py-4 border-b-2 border-transparent hover:border-gray-900 whitespace-nowrap transition-colors"
+                >
+                  Photos
+                </button>
+                <button
+                  onClick={() => scrollToSection('specialties')}
+                  className="text-gray-700 hover:text-gray-900 font-semibold text-sm py-4 border-b-2 border-transparent hover:border-gray-900 whitespace-nowrap transition-colors"
+                >
+                  Specialties
+                </button>
+                <button
+                  onClick={() => scrollToSection('reviews')}
+                  className="text-gray-700 hover:text-gray-900 font-semibold text-sm py-4 border-b-2 border-transparent hover:border-gray-900 whitespace-nowrap transition-colors"
+                >
+                  Reviews
+                </button>
+                <button
+                  onClick={() => scrollToSection('location')}
+                  className="text-gray-700 hover:text-gray-900 font-semibold text-sm py-4 border-b-2 border-transparent hover:border-gray-900 whitespace-nowrap transition-colors"
+                >
+                  Location
+                </button>
+              </nav>
+
+              {/* Right action area: Rating + Book button (appears when crossed into reviews section) */}
+              {showBookInNav && (
+                <div className="flex items-center gap-4 flex-shrink-0 animate-in fade-in duration-300">
+                  <div className="hidden md:flex flex-col items-end">
+                    <div className="flex items-center gap-1 font-bold text-gray-900 text-sm">
+                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      <span>{clinic.rating}</span>
+                      <span className="text-gray-500 font-normal text-xs">({clinic.number_of_reviews} reviews)</span>
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium truncate max-w-[180px]">{clinic.practitioner_name}</span>
+                  </div>
+
+                  <button
+                    onClick={handleSecondaryBookClick}
+                    className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition shadow-sm hover:shadow flex items-center gap-2"
+                  >
+                    <Calendar className="w-4 h-4 hidden sm:block" />
+                    <span>Book appointment</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Desktop Hero Section */}
-      <div className="hidden md:block bg-white border-b border-gray-200">
+      <div id="photos" className="hidden md:block bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
           {/* Clinic Header Info (Desktop) */}
@@ -647,7 +754,7 @@ export default function ClinicPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div id="specialties" className="lg:col-span-2 space-y-8">
             {/* Specialties */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -664,6 +771,7 @@ export default function ClinicPage() {
                   </span>
                 ))}
               </div>
+            </div>
             {/* Equipment */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -704,7 +812,7 @@ export default function ClinicPage() {
           </div>
 
           {/* The booking card shares only this upper grid, then lower content uses the full page width. */}
-          <section className="order-3 lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-10">
+          <section id="reviews" className="order-3 lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-10">
             {/* Airbnb-style Emblem Header */}
             <div className="flex flex-col items-center justify-center text-center pb-8 border-b border-gray-100 mb-8">
               <div className="flex items-center justify-center gap-3 sm:gap-6">
@@ -829,14 +937,14 @@ export default function ClinicPage() {
           </section>
 
           {/* Where we are */}
-          <section className="order-4 lg:col-span-3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <section id="location" className="order-4 lg:col-span-3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 pb-4">
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <MapPin className="w-6 h-6 text-blue-600" />
                 Where we are
               </h2>
             </div>
-            <div className="h-52 sm:h-64 bg-blue-50 border-y border-gray-100">
+            <div className="h-52 sm:h-64 md:h-[calc(100vh-4rem)] bg-blue-50 border-y border-gray-100">
               <iframe
                 title={`Map showing ${clinic.practitioner_name}`}
                 src={mapEmbedUrl}
@@ -893,7 +1001,7 @@ export default function ClinicPage() {
 
           {/* Booking Sidebar */}
           <div className="order-2 lg:col-span-1 space-y-6">
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 lg:sticky lg:top-24">
+            <div id="booking" className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 lg:sticky lg:top-24">
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <Calendar className="w-6 h-6 text-blue-600" />
                 Book an Appointment

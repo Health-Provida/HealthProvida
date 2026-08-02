@@ -20,7 +20,7 @@ import { validatePassword } from '@/utils/validationUtils';
 const navItems = [
   { id: 'about', icon: User, label: 'Personal Info', description: 'Your profile details' },
   { id: 'appointments', icon: CalendarCheck, label: 'Appointments', description: 'Upcoming & past visits' },
-  { id: 'saved', icon: Heart, label: 'Saved Clinics', description: 'Your wishlists' },
+  { id: 'saved', icon: Heart, label: 'Saved Clinics', description: 'Your favorites' },
   { id: 'security', icon: Lock, label: 'Security', description: 'Account & privacy' },
 ];
 
@@ -807,7 +807,7 @@ export default function ProfilePage() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Saved Clinics</h2>
                 <p className="text-gray-500 text-sm mt-0.5">
-                  {favoritesCount > 0 ? `${favoritesCount} saved ${favoritesCount === 1 ? 'clinic' : 'clinics'}` : 'Your wishlist is empty'}
+                  {favoritesCount > 0 ? `${favoritesCount} saved ${favoritesCount === 1 ? 'clinic' : 'clinics'}` : 'Your favorites is empty'}
                 </p>
               </div>
               <Link

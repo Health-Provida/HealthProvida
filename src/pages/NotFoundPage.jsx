@@ -368,7 +368,7 @@ export default function NotFoundPage() {
             <Link to="/services" className="nf-link-chip">Services</Link>
             <Link to="/about" className="nf-link-chip">About</Link>
             <Link to="/contact" className="nf-link-chip">Contact</Link>
-            <Link to="/favorites" className="nf-link-chip">Wishlist</Link>
+            <Link to="/favorites" className="nf-link-chip">Favorites</Link>
             <Link to="/join-provider" className="nf-link-chip">Become a Provider</Link>
           </nav>
         </div>

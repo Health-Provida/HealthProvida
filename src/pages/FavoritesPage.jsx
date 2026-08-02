@@ -69,7 +69,7 @@ export default function FavoritesPage() {
   return (
     <>
       <Helmet>
-        <title>Wishlists — HealthProvida</title>
+        <title>Favorites — HealthProvida</title>
         <meta name="description" content="View your saved hospitals and clinics on HealthProvida." />
       </Helmet>
 
@@ -84,7 +84,7 @@ export default function FavoritesPage() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </button>
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Wishlists</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Favorites</h1>
             {favoritesCount > 0 && (
               <p className="text-gray-500 mt-2 text-sm">
                 {favoritesCount} saved {favoritesCount === 1 ? 'hospital' : 'hospitals'}
@@ -119,9 +119,9 @@ export default function FavoritesPage() {
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center mb-6 shadow-inner">
                 <Heart className="w-10 h-10 text-gray-300" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">No wishlists yet</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">No favorites yet</h2>
               <p className="text-gray-500 max-w-md mb-8 leading-relaxed">
-                As you search, tap the heart icon to save your favourite hospitals and clinics to a wishlist.
+                As you search, tap the heart icon to save your favourite hospitals and clinics to your favorites.
               </p>
               <button
                 onClick={() => navigate('/')}

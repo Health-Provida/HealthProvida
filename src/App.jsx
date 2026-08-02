@@ -71,6 +71,7 @@ function App() {
               {/* Standalone pages (no header/footer) */}
               <Route path="/clinic/:slug/photos" element={<ClinicPhotosPage />} />
               <Route path="/map" element={<MapPage />} />
+              <Route path="/join-provider" element={<JoinProviderPage />} />
 
               {/* Public pages with header/footer */}
               <Route path="*" element={
@@ -82,11 +83,6 @@ function App() {
                       <Route path="/search" element={<SearchPage />} />
                       <Route path="/about" element={<AboutPage />} />
                       <Route path="/services" element={<ServicesPage />} />
-                      <Route path="/join-provider" element={
-                        <ProtectedRoute>
-                          <JoinProviderPage />
-                        </ProtectedRoute>
-                      } />
                       <Route path="/contact" element={<ContactPage />} />
                       <Route path="/clinic/:slug" element={<ClinicPage />} />
                       <Route path="/favorites" element={<FavoritesPage />} />

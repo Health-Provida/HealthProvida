@@ -13,7 +13,7 @@ const menuItems = [
   {
     section: 'main',
     items: [
-      { icon: Heart, label: 'Wishlists', to: '/favorites', highlight: true },
+      { icon: Heart, label: 'Favorites', to: '/favorites', highlight: true },
       { icon: CalendarCheck, label: 'Appointments', to: '#' },
       { icon: MessageSquare, label: 'Messages', to: '#' },
       { icon: User, label: 'Profile', to: '#' },
@@ -119,7 +119,7 @@ export default function ProfileSidebar({ isOpen, onClose }) {
                   <nav className="px-3">
                     {section.items.map((item) => {
                       const Icon = item.icon;
-                      const isWishlist = item.label === 'Wishlists';
+                      const isFavorite = item.label === 'Wishlists';
                       return (
                         <Link
                           key={item.label}
@@ -140,7 +140,7 @@ export default function ProfileSidebar({ isOpen, onClose }) {
                             <Icon className="w-[18px] h-[18px]" />
                           </div>
                           <span className="flex-1">{item.label}</span>
-                          {isWishlist && favoritesCount > 0 && (
+                          {isFavorite && favoritesCount > 0 && (
                             <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-blue-600 text-white min-w-[20px] text-center">
                               {favoritesCount}
                             </span>
