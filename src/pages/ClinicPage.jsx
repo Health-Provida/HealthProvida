@@ -146,32 +146,45 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
         {/* Scrollable content */}
         <div className="overflow-y-auto flex-1 p-6">
           {/* Overall Rating */}
-          <div className="text-center mb-6">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Star className="w-7 h-7 text-yellow-400 fill-yellow-400" />
-              <span className="text-5xl font-bold text-gray-900">{clinic.rating}</span>
-            </div>
-            <p className="text-gray-500 text-sm">Overall rating</p>
-          </div>
-
-          {/* Rating Breakdown Bars */}
-          <div className="space-y-2 mb-8 max-w-xs mx-auto">
-            {[5, 4, 3, 2, 1].map((star) => {
-              const count = ratingCounts[star - 1];
-              const pct = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
-              return (
-                <div key={star} className="flex items-center gap-3 text-sm">
-                  <span className="w-4 text-right text-gray-600 font-medium">{star}</span>
-                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gray-900 rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
+          {(clinic.number_of_reviews ?? 0) >= 3 ? (
+            <>
+              <div className="text-center mb-6">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Star className="w-7 h-7 text-yellow-400 fill-yellow-400" />
+                  <span className="text-5xl font-bold text-gray-900">{clinic.rating}</span>
                 </div>
-              );
-            })}
-          </div>
+                <p className="text-gray-500 text-sm">Overall rating</p>
+              </div>
+
+              {/* Rating Breakdown Bars */}
+              <div className="space-y-2 mb-8 max-w-xs mx-auto">
+                {[5, 4, 3, 2, 1].map((star) => {
+                  const count = ratingCounts[star - 1];
+                  const pct = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+                  return (
+                    <div key={star} className="flex items-center gap-3 text-sm">
+                      <span className="w-4 text-right text-gray-600 font-medium">{star}</span>
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gray-900 rounded-full transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="text-center mb-6 py-6 px-4 bg-gray-50 rounded-2xl border border-gray-100 max-w-md mx-auto">
+              <p className="text-base font-semibold text-gray-900 mb-1">
+                Average rating will appear after 3 reviews
+              </p>
+              <p className="text-xs text-gray-500">
+                This provider currently has {totalReviews === 1 ? '1 review' : `${totalReviews} reviews`}.
+              </p>
+            </div>
+          )}
 
           {/* Search */}
           <div className="relative mb-6">
@@ -228,6 +241,48 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
   );
 }
 
+function HowReviewsWorkModal({ isOpen, onClose }) {
+  if (!isOpen) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <MessageSquare className="w-5 h-5" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900">How reviews work</h3>
+        </div>
+        <div className="space-y-3 text-gray-600 text-sm leading-relaxed mb-6">
+          <p>
+            Reviews are written by verified patients who have booked and completed an appointment with this provider.
+          </p>
+          <p>
+            To maintain statistical accuracy and protect provider reputations, an overall average rating and category ratings are only computed and displayed once a clinic has received <strong>3 or more reviews</strong>.
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl text-sm transition shadow-sm"
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function ClinicPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -249,6 +304,7 @@ export default function ClinicPage() {
 
   // Share modal state
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showHowReviewsWorkModal, setShowHowReviewsWorkModal] = useState(false);
 
   // Secondary sticky nav state
   const [isSecondaryNavVisible, setIsSecondaryNavVisible] = useState(false);
@@ -578,9 +634,17 @@ export default function ClinicPage() {
                 <div className="flex items-center gap-4 flex-shrink-0 animate-in fade-in duration-300">
                   <div className="hidden md:flex flex-col items-end">
                     <div className="flex items-center gap-1 font-bold text-gray-900 text-sm">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      <span>{clinic.rating}</span>
-                      <span className="text-gray-500 font-normal text-xs">({clinic.number_of_reviews} reviews)</span>
+                      {(clinic.number_of_reviews ?? 0) >= 3 ? (
+                        <>
+                          <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                          <span>{clinic.rating}</span>
+                          <span className="text-gray-500 font-normal text-xs">({clinic.number_of_reviews} reviews)</span>
+                        </>
+                      ) : (
+                        <span className="text-gray-500 font-normal text-xs">
+                          {clinic.number_of_reviews === 1 ? '1 review' : clinic.number_of_reviews === 2 ? '2 reviews' : 'No reviews'}
+                        </span>
+                      )}
                     </div>
                     <span className="text-xs text-gray-500 font-medium truncate max-w-[180px]">{clinic.practitioner_name}</span>
                   </div>
@@ -610,11 +674,19 @@ export default function ClinicPage() {
               <p className="text-xl text-blue-600 font-medium mb-3">{clinic.practice_type}</p>
 
               <div className="flex flex-wrap items-center gap-4 text-sm">
-                <div className="flex items-center">
-                  <Star className="w-5 h-5 text-yellow-500 fill-current mr-1" />
-                  <span className="font-bold text-gray-900">{clinic.rating}</span>
-                  <span className="ml-1 text-gray-600 underline cursor-pointer hover:text-gray-900">({clinic.number_of_reviews} reviews)</span>
-                </div>
+                {(clinic.number_of_reviews ?? 0) >= 3 ? (
+                  <div className="flex items-center">
+                    <Star className="w-5 h-5 text-yellow-500 fill-current mr-1" />
+                    <span className="font-bold text-gray-900">{clinic.rating}</span>
+                    <span className="ml-1 text-gray-600 underline cursor-pointer hover:text-gray-900">({clinic.number_of_reviews} reviews)</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center text-gray-600">
+                    <span className="font-medium underline cursor-pointer hover:text-gray-900">
+                      {clinic.number_of_reviews === 1 ? '1 review' : clinic.number_of_reviews > 0 ? `${clinic.number_of_reviews} reviews` : 'No reviews'}
+                    </span>
+                  </div>
+                )}
                 <span className="text-gray-300">•</span>
                 <div className="flex items-center text-gray-600">
                   <MapPin className="w-4 h-4 mr-1" />
@@ -736,11 +808,24 @@ export default function ClinicPage() {
 
           <div className="flex items-center justify-center sm:justify-start gap-4 text-sm divide-x divide-gray-200 border-y border-gray-100 py-3">
             <div className="flex flex-col items-center px-4">
-              <div className="flex items-center font-bold text-gray-900">
-                <Star className="w-4 h-4 text-yellow-500 fill-current mr-1" />
-                {clinic.rating}
-              </div>
-              <span className="text-xs text-gray-500 mt-1">{clinic.number_of_reviews} reviews</span>
+              {(clinic.number_of_reviews ?? 0) >= 3 ? (
+                <>
+                  <div className="flex items-center font-bold text-gray-900">
+                    <Star className="w-4 h-4 text-yellow-500 fill-current mr-1" />
+                    {clinic.rating}
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1">{clinic.number_of_reviews} reviews</span>
+                </>
+              ) : (
+                <>
+                  <div className="font-bold text-gray-900">
+                    {clinic.number_of_reviews === 1 ? '1 review' : clinic.number_of_reviews > 0 ? `${clinic.number_of_reviews} reviews` : 'No reviews'}
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1">
+                    {clinic.number_of_reviews > 0 ? 'New provider' : 'No reviews'}
+                  </span>
+                </>
+              )}
             </div>
             <div className="flex flex-col items-center px-4">
               <div className="flex items-center font-bold text-gray-900">
@@ -813,36 +898,61 @@ export default function ClinicPage() {
 
           {/* The booking card shares only this upper grid, then lower content uses the full page width. */}
           <section id="reviews" className="order-3 lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-10">
-            {/* Airbnb-style Emblem Header */}
-            <div className="flex flex-col items-center justify-center text-center pb-8 border-b border-gray-100 mb-8">
-              <div className="flex items-center justify-center gap-3 sm:gap-6">
-                <LaurelWreathLeft />
-                <div className="text-6xl sm:text-7xl font-extrabold tracking-tighter text-gray-900 font-serif leading-none">
-                  {clinic.rating ? Number(clinic.rating).toFixed(2) : '4.91'}
-                </div>
-                <LaurelWreathRight />
-              </div>
-
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mt-3 tracking-tight">
-                Patient favourite
-              </h3>
-              <p className="text-sm sm:text-base text-gray-500 max-w-md mt-1 font-normal leading-relaxed">
-                One of the most loved healthcare providers on HealthProvida, according to patient ratings & reviews
-              </p>
-            </div>
-
-            {/* 6 Category Rating Breakdown Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 divide-y sm:divide-y-0 md:divide-x divide-gray-200 border-b border-gray-200 pb-8 mb-10">
-              {reviewCategorySummaries.map(({ key, label, icon: Icon, average }) => (
-                <div key={key} className="flex flex-col justify-between px-3 sm:px-4 py-3 sm:py-0 first:pl-0 last:pr-0">
-                  <span className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{label}</span>
-                  <span className="text-xl sm:text-2xl font-bold text-gray-900 my-1">{average ? average.toFixed(1) : '4.9'}</span>
-                  <div className="text-gray-700">
-                    <Icon className="w-5 h-5" />
+            {(clinic.number_of_reviews ?? 0) >= 3 ? (
+              <>
+                {/* Airbnb-style Emblem Header */}
+                <div className="flex flex-col items-center justify-center text-center pb-8 border-b border-gray-100 mb-8">
+                  <div className="flex items-center justify-center gap-3 sm:gap-6">
+                    <LaurelWreathLeft />
+                    <div className="text-6xl sm:text-7xl font-extrabold tracking-tighter text-gray-900 font-serif leading-none">
+                      {clinic.rating ? Number(clinic.rating).toFixed(2) : '4.91'}
+                    </div>
+                    <LaurelWreathRight />
                   </div>
+
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mt-3 tracking-tight">
+                    Patient favourite
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-500 max-w-md mt-1 font-normal leading-relaxed">
+                    One of the most loved healthcare providers on HealthProvida, according to patient ratings & reviews
+                  </p>
                 </div>
-              ))}
-            </div>
+
+                {/* 6 Category Rating Breakdown Row */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 divide-y sm:divide-y-0 md:divide-x divide-gray-200 border-b border-gray-200 pb-8 mb-10">
+                  {reviewCategorySummaries.map(({ key, label, icon: Icon, average }) => (
+                    <div key={key} className="flex flex-col justify-between px-3 sm:px-4 py-3 sm:py-0 first:pl-0 last:pr-0">
+                      <span className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{label}</span>
+                      <span className="text-xl sm:text-2xl font-bold text-gray-900 my-1">{average ? average.toFixed(1) : '4.9'}</span>
+                      <div className="text-gray-700">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="pb-8 border-b border-gray-200 mb-8">
+                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  {clinic.number_of_reviews === 1
+                    ? '1 review'
+                    : clinic.number_of_reviews === 2
+                    ? '2 reviews'
+                    : 'No reviews yet'}
+                </h3>
+                {clinic.number_of_reviews > 0 && (
+                  <p className="text-base text-gray-600 mt-1.5 font-normal">
+                    Average rating will appear after 3 reviews
+                  </p>
+                )}
+                <button
+                  onClick={() => setShowHowReviewsWorkModal(true)}
+                  className="text-sm font-semibold text-gray-900 underline underline-offset-2 mt-2 hover:text-gray-700 transition-colors inline-block"
+                >
+                  How reviews work
+                </button>
+              </div>
+            )}
 
             {/* Patient Experiences / 2-Column Review Grid */}
             {clinic.reviewHighlights && clinic.reviewHighlights.length > 0 ? (
@@ -1119,10 +1229,16 @@ export default function ClinicPage() {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         title="Share this clinic"
-        subtitle={`${clinic.practitioner_name} · ★${clinic.rating} · ${clinic.practice_type}`}
+        subtitle={`${clinic.practitioner_name} ${clinic.number_of_reviews >= 3 ? `· ★${clinic.rating}` : ''} · ${clinic.practice_type}`}
         imageUrl={clinic.image_src}
         shareUrl={window.location.href}
         shareText={`Check out ${clinic.practitioner_name} on HealthProvida`}
+      />
+
+      {/* How Reviews Work Modal */}
+      <HowReviewsWorkModal
+        isOpen={showHowReviewsWorkModal}
+        onClose={() => setShowHowReviewsWorkModal(false)}
       />
     </div>
   );

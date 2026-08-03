@@ -505,99 +505,79 @@ function ClinicCard({ clinic, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-3.5 sm:p-5 md:p-6 cursor-pointer border border-gray-100"
+      className="bg-white rounded-2xl sm:rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 p-3.5 sm:p-4 md:p-5 cursor-pointer border border-gray-100 flex flex-row gap-3.5 sm:gap-5 md:gap-6 items-center"
     >
-      <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
-        <div className="w-full md:w-64 h-44 sm:h-48 md:h-40 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-100 to-green-100">
-          <img
-            className="w-full h-full object-cover"
-            alt={`${clinic.practitioner_name} medical facility`}
-            src={clinic.image_src}
-            loading="lazy"
-            decoding="async"
-          />
+      <div className="relative w-32 h-32 sm:w-44 sm:h-44 md:w-52 md:h-52 lg:w-56 lg:h-56 aspect-square rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-100 to-green-100">
+        <img
+          className="w-full h-full object-cover"
+          alt={`${clinic.practitioner_name} medical facility`}
+          src={clinic.image_src}
+          loading="lazy"
+          decoding="async"
+        />
+        {clinic.tags && clinic.tags[0] && (
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-blue-50/90 backdrop-blur-sm text-blue-700 text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-xs truncate max-w-[85%]">
+            {clinic.tags[0]}
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 space-y-1.5 sm:space-y-2.5 min-w-0 py-1">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-xl font-bold text-gray-900 truncate">{clinic.practitioner_name}</h3>
+            <p className="text-xs sm:text-sm text-blue-600 font-medium truncate mt-0.5">{clinic.practice_type}</p>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite(clinic.id);
+            }}
+            className={`p-2 rounded-full flex-shrink-0 transition-all duration-200 hover:bg-gray-100 ${
+              favorited ? 'text-red-500' : 'text-gray-700 hover:text-red-500'
+            }`}
+            title={favorited ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <Heart className={`w-5 h-5 ${favorited ? 'fill-red-500 text-red-500' : ''}`} />
+          </button>
         </div>
 
-        <div className="flex-1 space-y-2.5 sm:space-y-4 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <h3 className="text-base sm:text-xl font-bold text-gray-900 mb-0.5 sm:mb-1 truncate">{clinic.practitioner_name}</h3>
-              <p className="text-xs sm:text-base text-blue-600 font-medium truncate">{clinic.practice_type}</p>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleFavorite(clinic.id);
-              }}
-              className={`p-1.5 sm:p-2 flex-shrink-0 -mt-1 -mr-1 sm:mt-0 sm:mr-0 transition-all duration-200 hover:scale-110 ${
-                favorited ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
-              }`}
-              title={favorited ? 'Remove from favorites' : 'Add to favorites'}
+        <div className="flex items-center text-xs sm:text-sm text-gray-500 min-w-0">
+          <MapPin className="w-3.5 h-3.5 text-gray-400 mr-1.5 flex-shrink-0" />
+          <span className="truncate">{clinic.address}</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-600">
+          <div className="flex items-center">
+            <Phone className="w-3.5 h-3.5 text-gray-400 mr-1.5 flex-shrink-0" />
+            <span className="truncate">{clinic.phone}</span>
+          </div>
+          <span className="hidden sm:inline text-gray-300">•</span>
+          <div className="flex items-center">
+            <Clock className="w-3.5 h-3.5 text-gray-400 mr-1.5 flex-shrink-0" />
+            <span>Next: <span className="text-green-600 font-medium">{clinic.nextAvailable}</span></span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm pt-0.5 sm:pt-1">
+          <div className="flex items-center text-gray-900 font-semibold">
+            <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400 fill-current mr-1 flex-shrink-0" />
+            <span>{clinic.rating}</span>
+            <span className="ml-1 text-gray-500 font-normal">({clinic.number_of_reviews} reviews)</span>
+          </div>
+          <span className="text-gray-300">•</span>
+          <span className="text-gray-500">{clinic.distance_from_location}</span>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {clinic.tags.slice(0, 3).map((tag, index) => (
+            <span
+              key={index}
+              className="px-2 sm:px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap"
             >
-              <Heart className={`w-5 h-5 ${favorited ? 'fill-red-500' : ''}`} />
-            </button>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
-            <div className="flex items-center">
-              <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400 fill-current mr-1 flex-shrink-0" />
-              <span className="font-medium">{clinic.rating}</span>
-              <span className="ml-1 text-gray-500">({clinic.number_of_reviews} reviews)</span>
-            </div>
-            <div className="flex items-center">
-              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 mr-1 flex-shrink-0" />
-              <span className="truncate">{clinic.distance_from_location}</span>
-            </div>
-          </div>
-
-          <div className="space-y-1.5 text-xs sm:text-sm text-gray-600">
-            <div className="flex items-start">
-              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
-              <span className="line-clamp-2 break-words">{clinic.address}</span>
-            </div>
-            <div className="flex items-center">
-              <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 mr-2 flex-shrink-0" />
-              <span className="truncate">{clinic.phone}</span>
-            </div>
-            <div className="flex items-start sm:items-center flex-col sm:flex-row">
-              <div className="flex items-center">
-                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 mr-2 flex-shrink-0" />
-                <span>Next available: </span>
-              </div>
-              <span className="text-green-600 font-medium sm:ml-1 mt-0.5 sm:mt-0">{clinic.nextAvailable}</span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-1.5 sm:gap-2">
-            {clinic.tags.slice(0, 3).map((tag, index) => (
-              <span
-                key={index}
-                className="px-2 sm:px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 pt-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onClick();
-              }}
-              className="w-full sm:w-auto flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-2 px-4 rounded-lg text-xs sm:text-sm font-medium transition flex justify-center items-center"
-            >
-              Book Appointment
-            </button>
-            <a
-              href={`tel:${clinic.phone}`}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full sm:w-auto border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2"
-            >
-              <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              Call Now
-            </a>
-          </div>
+              {tag}
+            </span>
+          ))}
         </div>
       </div>
     </div>
@@ -637,31 +617,17 @@ export default function ClinicCardsApp() {
           {loading ? (
             // Skeleton loading cards
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-lg shadow-md p-4 sm:p-6 animate-pulse">
-                <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
-                  <div className="w-full md:w-64 h-48 md:h-40 rounded-lg bg-gradient-to-br from-gray-200 to-gray-300 flex-shrink-0" />
-                  <div className="flex-1 space-y-4">
-                    <div className="space-y-2">
-                      <div className="h-6 bg-gray-200 rounded-md w-3/4" />
-                      <div className="h-4 bg-gray-200 rounded-md w-1/2" />
-                    </div>
-                    <div className="flex gap-4">
-                      <div className="h-4 bg-gray-200 rounded-md w-24" />
-                      <div className="h-4 bg-gray-200 rounded-md w-16" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="h-4 bg-gray-200 rounded-md w-full" />
-                      <div className="h-4 bg-gray-200 rounded-md w-2/3" />
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="h-6 bg-blue-100 rounded-full w-24" />
-                      <div className="h-6 bg-blue-100 rounded-full w-20" />
-                      <div className="h-6 bg-blue-100 rounded-full w-28" />
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                      <div className="h-10 bg-gradient-to-r from-blue-200 to-green-200 rounded-lg w-40" />
-                      <div className="h-10 bg-gray-200 rounded-lg w-32" />
-                    </div>
+              <div key={i} className="bg-white rounded-2xl sm:rounded-3xl shadow-sm p-3.5 sm:p-4 border border-gray-100 animate-pulse flex flex-row gap-3.5 sm:gap-5 md:gap-6 items-center">
+                <div className="w-32 h-32 sm:w-44 sm:h-44 md:w-52 md:h-52 lg:w-56 lg:h-56 aspect-square rounded-xl sm:rounded-2xl md:rounded-3xl bg-gradient-to-br from-gray-200 to-gray-300 flex-shrink-0" />
+                <div className="flex-1 space-y-3 min-w-0 py-1">
+                  <div className="space-y-2">
+                    <div className="h-5 bg-gray-200 rounded-md w-3/4" />
+                    <div className="h-4 bg-gray-200 rounded-md w-1/2" />
+                  </div>
+                  <div className="h-4 bg-gray-200 rounded-md w-full" />
+                  <div className="flex gap-3">
+                    <div className="h-4 bg-gray-200 rounded-md w-24" />
+                    <div className="h-4 bg-gray-200 rounded-md w-20" />
                   </div>
                 </div>
               </div>

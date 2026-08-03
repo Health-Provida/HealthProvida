@@ -60,21 +60,25 @@ const Hero = () => {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="mt-6 sm:mt-10 max-w-2xl mx-auto w-full px-1 sm:px-0"
           >
-            <div className="flex items-center bg-white/15 backdrop-blur-md border border-white/30 rounded-2xl px-3 sm:px-4 py-2 sm:py-3 shadow-2xl focus-within:border-green-300 transition-all duration-300">
-              <Search className="w-4 h-4 sm:w-5 sm:h-5 text-green-300 flex-shrink-0 mr-2 sm:mr-3" />
-              <input
-                type="text"
-                placeholder="Search clinics, hospitals, pharmacies..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="flex-1 min-w-0 bg-transparent text-white placeholder-blue-200 outline-none text-sm sm:text-base font-medium"
-              />
+            {/* Search container obeys the Law of Internal Radius:
+                Outer Radius (24px / rounded-3xl) = Inner Radius (16px / rounded-2xl) + Container Padding (8px / p-2) */}
+            <div className="flex items-center bg-white/15 backdrop-blur-md border border-white/30 rounded-3xl p-2 shadow-2xl focus-within:border-green-300 transition-all duration-300">
+              <div className="flex items-center flex-1 min-w-0 pl-3 sm:pl-4 pr-2">
+                <Search className="w-5 h-5 sm:w-6 sm:h-6 text-green-300 flex-shrink-0 mr-2.5 sm:mr-3" />
+                <input
+                  type="text"
+                  placeholder="Search clinics, hospitals, pharmacies..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full bg-transparent text-white placeholder-blue-200 outline-none text-base sm:text-lg font-medium"
+                />
+              </div>
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handleSearch}
-                className="ml-2 sm:ml-3 bg-green-400 hover:bg-green-300 text-white hover:text-gray-900 font-semibold px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-xl text-sm sm:text-base transition-colors duration-200 flex-shrink-0"
+                className="bg-green-400 hover:bg-green-300 text-gray-950 font-bold px-6 sm:px-8 py-3 sm:py-3.5 rounded-2xl text-base sm:text-lg transition-all duration-200 flex-shrink-0 shadow-md hover:shadow-green-400/20 cursor-pointer flex items-center justify-center"
               >
                 Search
               </motion.button>
