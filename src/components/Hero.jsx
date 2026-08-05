@@ -44,9 +44,7 @@ const Hero = () => {
             <RotatingText
               words={ROTATING_WORDS}
               interval={2800}
-              initialDelay={3000}
-              // className="text-green-300"
-              className="inline"
+              initialDelay={5000}
             />
             <span className="block text-green-300">Near You</span>
           </h1>

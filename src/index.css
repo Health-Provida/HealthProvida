@@ -61,19 +61,19 @@
 
   /* ── Rotating Text ─────────────────────────────────────────────────────────
    * The wrapper uses inline-grid with a single named grid area so every
-   * animated word is stacked in exactly the same cell.  This eliminates all
-   * layout shifts when a shorter or longer phrase appears.
-   *
-   * min-width is set to ch units matching the longest word ("private
-   * practitioners") on desktop, but bounded by 100% on small viewports.
+   * animated word is stacked in exactly the same cell.
+   * Container width is set dynamically to the average width of all variable
+   * words so the surrounding text ("Find Quality") remains completely fixed.
    * ──────────────────────────────────────────────────────────────────────── */
   .rotating-text-wrapper {
     display: inline-grid;
     grid-template-areas: 'text';
-    min-width: min(18ch, 100%);
-    max-width: 100%;
+    justify-items: start;
+    align-items: center;
     vertical-align: bottom;
-    overflow: hidden;
+    max-width: 100%;
+    position: relative;
+    box-sizing: border-box;
   }
 
   /* The sr-only child sits in the same grid cell but is visually hidden */
@@ -95,6 +95,7 @@
     grid-area: text;
     display: inline-block;
     white-space: nowrap;
+    text-align: left;
   }
 
   /* Honour the user's motion preference at the CSS layer as a safety net */

@@ -78,6 +78,7 @@ function RatingStars({ rating, className = 'w-4 h-4' }) {
 
 function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isOpen && initialScrollTarget !== null) {
@@ -127,9 +128,9 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
             <button
               onClick={() => {
                 onClose();
-                window.location.href = `${getClinicUrl(clinic)}/review`;
+                navigate(`${getClinicUrl(clinic)}/review`);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 rounded-full transition-all shadow-sm"
             >
               <PenLine className="w-4 h-4" />
               Write a review
@@ -206,7 +207,7 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
                 return (
                   <div key={index} id={`dialog-review-${originalIndex}`} className="pb-6 border-b border-gray-100 last:border-0 last:pb-0 rounded-lg p-2 -mx-2">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
                         {review.author.charAt(0)}
                       </div>
                       <div>
@@ -962,7 +963,7 @@ export default function ClinicPage() {
                     <div key={index} className="flex flex-col space-y-3">
                       {/* User Info */}
                       <div className="flex items-center gap-3.5">
-                        <div className="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-base flex-shrink-0 shadow-sm">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-green-500 text-white flex items-center justify-center font-bold text-base flex-shrink-0 shadow-sm">
                           {review.author ? review.author.charAt(0) : 'P'}
                         </div>
                         <div>
@@ -1038,7 +1039,7 @@ export default function ClinicPage() {
 
               <button
                 onClick={() => navigate(`${getClinicUrl(clinic)}/review`)}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold text-sm rounded-xl transition shadow-sm"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold text-sm rounded-xl transition shadow-sm hover:shadow-md"
               >
                 <PenLine className="w-4 h-4" />
                 Write a Review

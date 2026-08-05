@@ -12,8 +12,41 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
  */
 const RotatingText = ({ words = [], interval = 2800, initialDelay = 0, className = '' }) => {
   const [index, setIndex] = useState(0);
+  const [averageWidth, setAverageWidth] = useState(null);
   const prefersReducedMotion = useReducedMotion();
   const timerRef = useRef(null);
+  const measureRef = useRef(null);
+
+  // Measure the average width of all words to lock container width and keep surrounding text fixed.
+  useEffect(() => {
+    if (!words || words.length === 0) return;
+
+    const measure = () => {
+      if (!measureRef.current) return;
+      const wordElements = measureRef.current.children;
+      if (wordElements.length === 0) return;
+
+      let totalWidth = 0;
+      for (let i = 0; i < wordElements.length; i++) {
+        totalWidth += wordElements[i].getBoundingClientRect().width;
+      }
+      const avg = totalWidth / wordElements.length;
+      if (avg > 0) {
+        setAverageWidth(avg);
+      }
+    };
+
+    measure();
+
+    window.addEventListener('resize', measure);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(measure);
+    }
+
+    return () => {
+      window.removeEventListener('resize', measure);
+    };
+  }, [words]);
 
   // Advance to the next word on every tick.
   useEffect(() => {
@@ -58,18 +91,41 @@ const RotatingText = ({ words = [], interval = 2800, initialDelay = 0, className
     },
   };
 
+  const avgCharCount = words.length
+    ? words.reduce((sum, w) => sum + w.length, 0) / words.length
+    : 0;
+
+  const wrapperStyle = averageWidth
+    ? { width: `${averageWidth}px`, minWidth: `${averageWidth}px` }
+    : { minWidth: `${avgCharCount}ch` };
+
   return (
-    /*
-     * Wrapper uses inline-grid with a single grid area so all words
-     * occupy the same space — this prevents the heading from reflowing
-     * when a longer word appears. The min-width is set to the longest
-     * word so the surrounding text never shifts.
-     */
     <span
       className={`rotating-text-wrapper ${className}`}
+      style={wrapperStyle}
       aria-live="off"
       aria-atomic="true"
     >
+      {/* Offscreen measurement container for measuring exact rendered word widths */}
+      <span
+        ref={measureRef}
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          visibility: 'hidden',
+          height: 0,
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+        }}
+      >
+        {words.map((word, i) => (
+          <span key={i} className="rotating-text-word" style={{ position: 'static' }}>
+            {word}
+          </span>
+        ))}
+      </span>
+
       {/* Hidden element that holds the current word for assistive tech */}
       <span className="sr-only">{words[index]}</span>
 
