@@ -4,12 +4,13 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Star, MapPin, Phone, Clock, Heart, Shield, Stethoscope,
-  SlidersHorizontal, X, ChevronDown, ChevronUp, ArrowUpDown
+  SlidersHorizontal, X, ChevronDown, ChevronUp, ArrowUpDown, Info
 } from 'lucide-react';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useClinics } from '@/context/ClinicsContext';
 import { getClinicUrl } from '@/utils/slugUtils';
 import { availableHMOs } from '@/constants/hmos';
+import { searchProviders } from '@/utils/searchEngine';
 
 // ── Helper: extract unique values from clinic array ──────────────────
 function extractUnique(clinics, key) {
@@ -207,8 +208,11 @@ export default function SearchPage() {
 
   // ── State ──────────────────────────────────────────────────────────
   const initialQuery = searchParams.get('q') || '';
+  const initialLocation = searchParams.get('location') || '';
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [searchInput, setSearchInput] = useState(initialQuery);
+  const [locationQuery, setLocationQuery] = useState(initialLocation);
+  const [locationInput, setLocationInput] = useState(initialLocation);
   const [selectedHMOs, setSelectedHMOs] = useState([]);
   const [selectedPracticeTypes, setSelectedPracticeTypes] = useState([]);
   const [selectedSpecialties, setSelectedSpecialties] = useState([]);
@@ -217,17 +221,20 @@ export default function SearchPage() {
   const [sortBy, setSortBy] = useState('relevance');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Sync searchQuery & searchInput from URL on mount / back-navigation
+  // Sync searchQuery, searchInput, and location from URL on mount / back-navigation
   useEffect(() => {
     const q = searchParams.get('q') || '';
+    const loc = searchParams.get('location') || '';
     setSearchQuery(q);
     setSearchInput(q);
+    setLocationQuery(loc);
+    setLocationInput(loc);
   }, [searchParams]);
 
   // Scroll to top on search query, filter, or sort change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [searchQuery, selectedHMOs, selectedPracticeTypes, selectedSpecialties, minRating, maxDistance, sortBy]);
+  }, [searchQuery, locationQuery, selectedHMOs, selectedPracticeTypes, selectedSpecialties, minRating, maxDistance, sortBy]);
 
   // ── Derived filter options ─────────────────────────────────────────
   const practiceTypes = useMemo(() => extractUnique(clinics, 'practice_type'), [clinics]);
@@ -249,22 +256,20 @@ export default function SearchPage() {
     { label: '3.0+', value: 3 },
   ];
 
-  // ── Filtering & sorting logic ──────────────────────────────────────
-  const filteredClinics = useMemo(() => {
-    let results = [...clinics];
+  // ── Intelligent search with synonym understanding & proximity ──────
+  const { smartResults, searchMeta } = useMemo(() => {
+    // Run the intelligent search engine (handles synonyms + proximity)
+    const { results: searched, searchMeta: meta } = searchProviders(
+      clinics,
+      searchQuery,
+      locationQuery
+    );
+    return { smartResults: searched, searchMeta: meta };
+  }, [clinics, searchQuery, locationQuery]);
 
-    // Text search
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      results = results.filter(c => {
-        const nameMatch = c.practitioner_name?.toLowerCase().includes(q);
-        const specialtyMatch = c.specialties?.some(s => s.toLowerCase().includes(q));
-        const tagsMatch = c.tags?.some(t => t.toLowerCase().includes(q));
-        const practiceTypeMatch = c.practice_type?.toLowerCase().includes(q);
-        const addressMatch = c.address?.toLowerCase().includes(q);
-        return nameMatch || specialtyMatch || tagsMatch || practiceTypeMatch || addressMatch;
-      });
-    }
+  // ── Apply sidebar filters & sorting on top of search results ───────
+  const filteredClinics = useMemo(() => {
+    let results = [...smartResults];
 
     // HMO filter (multi-select: clinic must support ALL selected HMOs)
     if (selectedHMOs.length > 0) {
@@ -292,9 +297,14 @@ export default function SearchPage() {
       results = results.filter(c => (c.rating || 0) >= minRating);
     }
 
-    // Distance filter
+    // Distance filter (uses computed distance when available)
     if (maxDistance > 0) {
       results = results.filter(c => {
+        // Prefer the computed distance from search engine
+        if (c._distanceKm != null && c._distanceKm !== Infinity) {
+          return c._distanceKm <= maxDistance;
+        }
+        // Fall back to the static distance_from_location field
         const d = parseFloat(c.distance_from_location) || 999;
         return d <= maxDistance;
       });
@@ -304,13 +314,13 @@ export default function SearchPage() {
     results.sort((a, b) => {
       switch (sortBy) {
         case 'distance-asc': {
-          const dA = parseFloat(a.distance_from_location) || 0;
-          const dB = parseFloat(b.distance_from_location) || 0;
+          const dA = a._distanceKm != null ? a._distanceKm : (parseFloat(a.distance_from_location) || 999);
+          const dB = b._distanceKm != null ? b._distanceKm : (parseFloat(b.distance_from_location) || 999);
           return dA - dB;
         }
         case 'distance-desc': {
-          const dA = parseFloat(a.distance_from_location) || 0;
-          const dB = parseFloat(b.distance_from_location) || 0;
+          const dA = a._distanceKm != null ? a._distanceKm : (parseFloat(a.distance_from_location) || 0);
+          const dB = b._distanceKm != null ? b._distanceKm : (parseFloat(b.distance_from_location) || 0);
           return dB - dA;
         }
         case 'rating-desc':
@@ -321,13 +331,13 @@ export default function SearchPage() {
           return (a.practitioner_name || '').localeCompare(b.practitioner_name || '');
         case 'name-desc':
           return (b.practitioner_name || '').localeCompare(a.practitioner_name || '');
-        default: // relevance — keep original order from search
-          return 0;
+        default: // relevance — use search engine score
+          return (b._searchScore || 0) - (a._searchScore || 0);
       }
     });
 
     return results;
-  }, [clinics, searchQuery, selectedHMOs, selectedPracticeTypes, selectedSpecialties, minRating, maxDistance, sortBy]);
+  }, [smartResults, selectedHMOs, selectedPracticeTypes, selectedSpecialties, minRating, maxDistance, sortBy]);
 
   // ── Active filter count ────────────────────────────────────────────
   const activeFilterCount =
@@ -361,7 +371,10 @@ export default function SearchPage() {
     e?.preventDefault();
     const trimmed = searchInput.trim();
     setSearchQuery(trimmed);
-    setSearchParams(trimmed ? { q: trimmed } : {});
+    const params = {};
+    if (trimmed) params.q = trimmed;
+    if (locationInput.trim()) params.location = locationInput.trim();
+    setSearchParams(params);
   };
 
   // ── Count clinics per filter value ─────────────────────────────────
@@ -545,19 +558,36 @@ export default function SearchPage() {
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               {/* Search bar */}
               <form onSubmit={handleSearchSubmit} className="flex-1 min-w-0">
-                <div className="relative flex items-center">
-                  <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
-                  <input
-                    id="search-bar-input"
-                    type="text"
-                    placeholder="Search clinics, specialties..."
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-full min-w-0 pl-10 sm:pl-12 pr-20 sm:pr-28 py-2.5 sm:py-3.5 border border-gray-200 rounded-xl text-sm sm:text-base text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-colors"
-                  />
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:items-center sm:border sm:border-gray-200 sm:rounded-xl sm:bg-gray-50 sm:focus-within:ring-2 sm:focus-within:ring-blue-500 sm:focus-within:border-transparent sm:focus-within:bg-white sm:transition-colors">
+                  {/* What field */}
+                  <div className="relative flex items-center flex-1 min-w-0">
+                    <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
+                    <input
+                      id="search-bar-input"
+                      type="text"
+                      placeholder="Search clinics, specialties..."
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      className="w-full min-w-0 pl-10 sm:pl-12 pr-3 py-2.5 sm:py-3.5 border border-gray-200 sm:border-0 rounded-xl sm:rounded-none text-sm sm:text-base text-gray-700 placeholder-gray-400 bg-gray-50 sm:bg-transparent focus:outline-none focus:ring-2 sm:focus:ring-0 focus:ring-blue-500 focus:border-transparent focus:bg-white sm:focus:bg-transparent transition-colors"
+                    />
+                  </div>
+                  {/* Divider */}
+                  <div className="hidden sm:block w-px h-7 bg-gray-200 flex-shrink-0" />
+                  {/* Where field */}
+                  <div className="relative flex items-center flex-1 min-w-0 sm:max-w-[240px]">
+                    <MapPin className="absolute left-3.5 sm:left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Location..."
+                      value={locationInput}
+                      onChange={(e) => setLocationInput(e.target.value)}
+                      className="w-full min-w-0 pl-10 sm:pl-9 pr-3 py-2.5 sm:py-3.5 border border-gray-200 sm:border-0 rounded-xl sm:rounded-none text-sm sm:text-base text-gray-700 placeholder-gray-400 bg-gray-50 sm:bg-transparent focus:outline-none focus:ring-2 sm:focus:ring-0 focus:ring-blue-500 focus:border-transparent focus:bg-white sm:focus:bg-transparent transition-colors"
+                    />
+                  </div>
+                  {/* Search button */}
                   <button
                     type="submit"
-                    className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 active:scale-95"
+                    className="sm:mr-1.5 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-4 sm:px-4 py-2.5 sm:py-2 rounded-xl sm:rounded-lg text-sm font-medium transition-all duration-200 active:scale-95 flex-shrink-0"
                   >
                     Search
                   </button>
@@ -752,21 +782,45 @@ export default function SearchPage() {
                     </button>
                   </div>
                 ) : filteredClinics.length > 0 ? (
-                  <AnimatePresence mode="popLayout">
-                    {filteredClinics.map(clinic => (
-                      <SearchResultCard key={clinic.id} clinic={clinic} />
-                    ))}
-                  </AnimatePresence>
+                  <>
+                    {/* Contextual search feedback */}
+                    {searchMeta.expandedToNearby && locationQuery && (
+                      <div className="flex items-center gap-2 px-4 py-3 bg-blue-50 border border-blue-100 rounded-lg mb-4 text-sm text-blue-700">
+                        <Info className="w-4 h-4 flex-shrink-0" />
+                        <span>
+                          {searchMeta.resolvedSpecialty
+                            ? `Showing ${searchMeta.resolvedSpecialty.toLowerCase()} providers near ${searchMeta.locationName || locationQuery}`
+                            : `Showing providers near ${searchMeta.locationName || locationQuery}`
+                          }
+                        </span>
+                      </div>
+                    )}
+                    {searchMeta.resolvedSpecialty && searchQuery && searchMeta.resolvedSpecialty.toLowerCase() !== searchQuery.toLowerCase() && !searchMeta.expandedToNearby && (
+                      <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg mb-4 text-sm text-gray-600">
+                        <Info className="w-4 h-4 flex-shrink-0" />
+                        <span>
+                          Showing results for <span className="font-medium text-gray-800">{searchMeta.resolvedSpecialty.toLowerCase()}</span> specialists
+                        </span>
+                      </div>
+                    )}
+                    <AnimatePresence mode="popLayout">
+                      {filteredClinics.map(clinic => (
+                        <SearchResultCard key={clinic.id} clinic={clinic} />
+                      ))}
+                    </AnimatePresence>
+                  </>
                 ) : (
                   <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-100">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
                       <Search className="w-7 h-7 text-gray-400" />
                     </div>
-                    <p className="text-gray-900 text-lg font-semibold mb-2">No clinics found</p>
+                    <p className="text-gray-900 text-lg font-semibold mb-2">No healthcare providers found</p>
                     <p className="text-gray-500 mb-4 max-w-md mx-auto">
-                      {searchQuery
-                        ? `No results for "${searchQuery}" with the current filters.`
-                        : 'No clinics match the current filters.'}
+                      {searchQuery && locationQuery
+                        ? `No results for "${searchQuery}" near ${locationQuery}. Try a different search or location.`
+                        : searchQuery
+                          ? `No results for "${searchQuery}" with the current filters.`
+                          : 'No healthcare providers match the current filters.'}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       {activeFilterCount > 0 && (
@@ -779,7 +833,7 @@ export default function SearchPage() {
                       )}
                       {searchQuery && (
                         <button
-                          onClick={() => { setSearchInput(''); setSearchQuery(''); setSearchParams({}); }}
+                          onClick={() => { setSearchInput(''); setSearchQuery(''); setLocationInput(''); setLocationQuery(''); setSearchParams({}); }}
                           className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white rounded-lg font-medium transition"
                         >
                           Clear search

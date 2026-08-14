@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, X, Search, PenLine, Navigation, Clock, CheckCircle2, Sparkles, Quote, Award } from 'lucide-react';
-import { fetchClinicBySlug, fetchGallery, fetchAppointmentSlots, createAppointment } from '@/utils/supabaseQueries';
+import { fetchClinicBySlug, fetchGallery } from '@/utils/supabaseQueries';
 import { getClinicUrl } from '@/utils/slugUtils';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import BookingConfirmationModal from '@/components/BookingConfirmationModal';
+
 import ShareModal from '@/components/ShareModal';
 
 
@@ -307,16 +307,9 @@ export default function ClinicPage() {
   const [galleryData, setGalleryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedSlot, setSelectedSlot] = useState(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [targetReviewIndex, setTargetReviewIndex] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  // Booking modal state
-  const [showBookingModal, setShowBookingModal] = useState(false);
-  const [isBooking, setIsBooking] = useState(false);
-  const [bookingSuccess, setBookingSuccess] = useState(false);
-  const [bookingError, setBookingError] = useState(null);
 
   // Share modal state
   const [showShareModal, setShowShareModal] = useState(false);
@@ -325,11 +318,14 @@ export default function ClinicPage() {
   // Secondary sticky nav state
   const [isSecondaryNavVisible, setIsSecondaryNavVisible] = useState(false);
   const [showBookInNav, setShowBookInNav] = useState(false);
+  const [activeSection, setActiveSection] = useState('photos');
 
   useEffect(() => {
     const handleWindowScroll = () => {
       const heroEl = document.getElementById('photos');
+      const specialtiesEl = document.getElementById('specialties');
       const reviewsEl = document.getElementById('reviews');
+      const locationEl = document.getElementById('location');
 
       if (heroEl) {
         const heroRect = heroEl.getBoundingClientRect();
@@ -344,6 +340,18 @@ export default function ClinicPage() {
       } else {
         setShowBookInNav(window.scrollY > 1200);
       }
+
+      // Track active section for secondary nav tabs
+      const scrollPos = window.scrollY + 100;
+      if (locationEl && locationEl.offsetTop <= scrollPos) {
+        setActiveSection('location');
+      } else if (reviewsEl && reviewsEl.offsetTop <= scrollPos) {
+        setActiveSection('reviews');
+      } else if (specialtiesEl && specialtiesEl.offsetTop <= scrollPos) {
+        setActiveSection('specialties');
+      } else {
+        setActiveSection('photos');
+      }
     };
 
     window.addEventListener('scroll', handleWindowScroll, { passive: true });
@@ -352,21 +360,18 @@ export default function ClinicPage() {
   }, [clinic]);
 
   const scrollToSection = (id) => {
+    setActiveSection(id);
     const el = document.getElementById(id);
     if (el) {
-      const yOffset = -70;
+      const yOffset = -80;
       const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
   };
 
   const handleSecondaryBookClick = () => {
-    if (selectedSlot) {
-      handleBookAppointment();
-    } else if (clinic?.phone) {
+    if (clinic?.phone) {
       window.location.href = `tel:${clinic.phone}`;
-    } else {
-      handleBookAppointment();
     }
   };
 
@@ -490,72 +495,7 @@ export default function ClinicPage() {
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapQuery)}`;
   const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`;
 
-  const handleBookAppointment = () => {
-    if (!selectedSlot) {
-      toast({
-        title: 'No slot selected',
-        description: 'Please select a time slot before booking.',
-        variant: 'destructive',
-      });
-      return;
-    }
 
-    // Auth gate: redirect to login if not authenticated
-    if (!isAuthenticated) {
-      navigate('/login', { state: { from: location } });
-      return;
-    }
-
-    // Open booking confirmation modal
-    setBookingError(null);
-    setBookingSuccess(false);
-    setShowBookingModal(true);
-  };
-
-  const handleConfirmBooking = async (notes) => {
-    if (!selectedSlot || !user?.id) return;
-
-    setIsBooking(true);
-    setBookingError(null);
-
-    const { data, error: bookErr } = await createAppointment(
-      clinic.id,
-      user.id,
-      selectedSlot.date,
-      selectedSlot.rawTime,
-      selectedSlot.slotId,
-      notes
-    );
-
-    if (bookErr) {
-      setBookingError(bookErr.message || 'Failed to book appointment. Please try again.');
-      setIsBooking(false);
-      return;
-    }
-
-    // Success: show success state in modal
-    setIsBooking(false);
-    setBookingSuccess(true);
-    setSelectedSlot(null);
-
-    toast({
-      title: 'Appointment booked!',
-      description: `Your appointment has been submitted for ${selectedSlot.day} at ${selectedSlot.time}.`,
-    });
-
-    // Refresh slots so the booked slot disappears
-    const slotsResult = await fetchAppointmentSlots(clinic.id);
-    if (slotsResult.data) {
-      setClinic((prev) => ({ ...prev, timeSlots: slotsResult.data }));
-    }
-  };
-
-  const handleCloseBookingModal = () => {
-    setShowBookingModal(false);
-    setBookingError(null);
-    // Only reset success if it was showing — let the auto-close handle it
-    setTimeout(() => setBookingSuccess(false), 300);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 md:pb-16">
@@ -612,34 +552,50 @@ export default function ClinicPage() {
         </div>
       </div>
 
-      {/* Secondary Sticky Navbar (Airbnb Style) */}
+      {/* Secondary Sticky Navbar (Consistent with Primary Header in height, font, and padding) */}
       {isSecondaryNavVisible && (
-        <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm transition-all duration-300">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
+        <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-xs transition-all duration-300">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
               {/* Navigation tabs */}
               <nav className="flex items-center space-x-6 sm:space-x-8 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <button
                   onClick={() => scrollToSection('photos')}
-                  className="text-gray-700 hover:text-gray-900 font-semibold text-sm py-4 border-b-2 border-transparent hover:border-gray-900 whitespace-nowrap transition-colors"
+                  className={`text-base transition-colors whitespace-nowrap ${
+                    activeSection === 'photos'
+                      ? 'text-blue-600 font-medium'
+                      : 'text-gray-700 hover:text-blue-600 font-medium'
+                  }`}
                 >
                   Photos
                 </button>
                 <button
                   onClick={() => scrollToSection('specialties')}
-                  className="text-gray-700 hover:text-gray-900 font-semibold text-sm py-4 border-b-2 border-transparent hover:border-gray-900 whitespace-nowrap transition-colors"
+                  className={`text-base transition-colors whitespace-nowrap ${
+                    activeSection === 'specialties'
+                      ? 'text-blue-600 font-medium'
+                      : 'text-gray-700 hover:text-blue-600 font-medium'
+                  }`}
                 >
                   Specialties
                 </button>
                 <button
                   onClick={() => scrollToSection('reviews')}
-                  className="text-gray-700 hover:text-gray-900 font-semibold text-sm py-4 border-b-2 border-transparent hover:border-gray-900 whitespace-nowrap transition-colors"
+                  className={`text-base transition-colors whitespace-nowrap ${
+                    activeSection === 'reviews'
+                      ? 'text-blue-600 font-medium'
+                      : 'text-gray-700 hover:text-blue-600 font-medium'
+                  }`}
                 >
                   Reviews
                 </button>
                 <button
                   onClick={() => scrollToSection('location')}
-                  className="text-gray-700 hover:text-gray-900 font-semibold text-sm py-4 border-b-2 border-transparent hover:border-gray-900 whitespace-nowrap transition-colors"
+                  className={`text-base transition-colors whitespace-nowrap ${
+                    activeSection === 'location'
+                      ? 'text-blue-600 font-medium'
+                      : 'text-gray-700 hover:text-blue-600 font-medium'
+                  }`}
                 >
                   Location
                 </button>
@@ -1215,57 +1171,7 @@ export default function ClinicPage() {
                 Book an Appointment
               </h2>
 
-              {clinic.timeSlots && clinic.timeSlots.length > 0 ? (
-                <>
-                  <div className="space-y-6 mb-8">
-                    {clinic.timeSlots.map((daySlot, dayIndex) => (
-                      <div key={dayIndex}>
-                        <p className="font-semibold text-gray-800 mb-3 border-b pb-2">{daySlot.day}</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {daySlot.slots.map((slot) => (
-                            <button
-                              key={slot.id}
-                              onClick={() => setSelectedSlot({
-                                day: daySlot.day,
-                                date: daySlot.date,
-                                time: slot.time,
-                                rawTime: slot.rawTime,
-                                slotId: slot.id,
-                                durationMinutes: slot.durationMinutes,
-                              })}
-                              className={`py-2 px-3 text-sm rounded-lg border-2 transition-all duration-200 ${selectedSlot?.slotId === slot.id
-                                ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold shadow-sm'
-                                : 'border-gray-200 hover:border-blue-300 text-gray-700 hover:bg-gray-50'
-                                }`}
-                            >
-                              {slot.time}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-200">
-                    {selectedSlot && (
-                      <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-                        <span className="block font-semibold mb-1">Selected Time:</span>
-                        {selectedSlot.day} at {selectedSlot.time}
-                      </div>
-                    )}
-                    <button
-                      onClick={handleBookAppointment}
-                      className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 px-6 rounded-lg text-lg font-semibold transition shadow-md hover:shadow-lg"
-                    >
-                      Confirm Booking
-                    </button>
-                    <p className="text-center text-gray-500 text-xs mt-3">
-                      No payment required to book
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center text-center py-6 px-2">
+              <div className="flex flex-col items-center text-center py-6 px-2">
                   <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
                     <Calendar className="w-8 h-8 text-blue-400" />
                   </div>
@@ -1292,24 +1198,13 @@ export default function ClinicPage() {
                     </a>
                   )}
                 </div>
-              )}
             </div>
 
           </div>
         </div>
       </div>
 
-      {/* Booking Confirmation Modal */}
-      <BookingConfirmationModal
-        isOpen={showBookingModal}
-        onClose={handleCloseBookingModal}
-        onConfirm={handleConfirmBooking}
-        clinic={clinic}
-        slot={selectedSlot}
-        isBooking={isBooking}
-        isSuccess={bookingSuccess}
-        bookingError={bookingError}
-      />
+
 
       {/* Reviews Dialog */}
       <ReviewsDialog
