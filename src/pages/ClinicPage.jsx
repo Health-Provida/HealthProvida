@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, Quote, X, Search, PenLine, Navigation, ClipboardCheck, Contact, CreditCard, FileText, Clock, Sparkles } from 'lucide-react';
+import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, X, Search, PenLine, Navigation, Clock, CheckCircle2, Sparkles, Quote, Award } from 'lucide-react';
 import { fetchClinicBySlug, fetchGallery, fetchAppointmentSlots, createAppointment } from '@/utils/supabaseQueries';
 import { getClinicUrl } from '@/utils/slugUtils';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -9,39 +9,15 @@ import { useToast } from '@/components/ui/use-toast';
 import BookingConfirmationModal from '@/components/BookingConfirmationModal';
 import ShareModal from '@/components/ShareModal';
 
-function LaurelWreathLeft() {
-  return (
-    <svg className="w-10 h-16 sm:w-14 sm:h-24 text-gray-900 flex-shrink-0" viewBox="0 0 40 80" fill="currentColor">
-      <path d="M30 75 C 25 50, 25 30, 35 5" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-      <path d="M32 65 C 20 60, 10 65, 12 72 C 18 73, 26 70, 32 65 Z" />
-      <path d="M28 52 C 15 45, 5 50, 8 58 C 15 58, 23 55, 28 52 Z" />
-      <path d="M27 38 C 12 30, 3 35, 6 43 C 14 42, 21 39, 27 38 Z" />
-      <path d="M29 24 C 15 15, 6 20, 10 28 C 18 26, 24 24, 29 24 Z" />
-      <path d="M33 10 C 22 2, 14 6, 18 14 C 25 12, 30 11, 33 10 Z" />
-    </svg>
-  );
-}
 
-function LaurelWreathRight() {
-  return (
-    <svg className="w-10 h-16 sm:w-14 sm:h-24 text-gray-900 flex-shrink-0 transform scale-x-[-1]" viewBox="0 0 40 80" fill="currentColor">
-      <path d="M30 75 C 25 50, 25 30, 35 5" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-      <path d="M32 65 C 20 60, 10 65, 12 72 C 18 73, 26 70, 32 65 Z" />
-      <path d="M28 52 C 15 45, 5 50, 8 58 C 15 58, 23 55, 28 52 Z" />
-      <path d="M27 38 C 12 30, 3 35, 6 43 C 14 42, 21 39, 27 38 Z" />
-      <path d="M29 24 C 15 15, 6 20, 10 28 C 18 26, 24 24, 29 24 Z" />
-      <path d="M33 10 C 22 2, 14 6, 18 14 C 25 12, 30 11, 33 10 Z" />
-    </svg>
-  );
-}
 
 const REVIEW_CATEGORIES = [
-  { key: 'facility_cleanliness_rating', label: 'Cleanliness', icon: Shield },
-  { key: 'quality_of_care_rating', label: 'Care quality', icon: Stethoscope },
-  { key: 'wait_time_rating', label: 'Punctuality', icon: Clock },
-  { key: 'staff_friendliness_rating', label: 'Staff friendliness', icon: Heart },
-  { key: 'location_rating', label: 'Location', icon: MapPin },
-  { key: 'value_rating', label: 'Value', icon: ThumbsUp },
+  { key: 'facility_cleanliness_rating', label: 'Cleanliness', icon: Shield, bg: 'bg-blue-50', text: 'text-blue-600' },
+  { key: 'quality_of_care_rating', label: 'Care quality', icon: Stethoscope, bg: 'bg-emerald-50', text: 'text-emerald-600' },
+  { key: 'wait_time_rating', label: 'Punctuality', icon: Clock, bg: 'bg-teal-50', text: 'text-teal-600' },
+  { key: 'staff_friendliness_rating', label: 'Staff friendliness', icon: Heart, bg: 'bg-green-50', text: 'text-green-600' },
+  { key: 'location_rating', label: 'Location', icon: MapPin, bg: 'bg-sky-50', text: 'text-sky-600' },
+  { key: 'value_rating', label: 'Value', icon: ThumbsUp, bg: 'bg-emerald-50', text: 'text-emerald-600' },
 ];
 
 function getReviewCategorySummaries(reviews = [], clinicRating = 4.9) {
@@ -86,8 +62,8 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
         const el = document.getElementById(`dialog-review-${initialScrollTarget}`);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          el.classList.add('bg-blue-50', 'transition-colors', 'duration-1000');
-          setTimeout(() => el.classList.remove('bg-blue-50'), 2000);
+          el.classList.add('bg-blue-50/80', 'border-blue-200', 'transition-colors', 'duration-1000');
+          setTimeout(() => el.classList.remove('bg-blue-50/80', 'border-blue-200'), 2000);
         }
       }, 100);
     }
@@ -111,73 +87,84 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in"
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-slate-100 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
-        style={{ animation: 'fadeInUp 0.3s ease-out' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-xl font-bold text-gray-900">
-            {clinic.number_of_reviews} reviews
-          </h2>
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 via-emerald-50/30 to-white flex-shrink-0">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-gray-900">
+                Verified Patient Reviews
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                {clinic.number_of_reviews} total
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">{clinic.practitioner_name}</p>
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
                 onClose();
                 navigate(`${getClinicUrl(clinic)}/review`);
               }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 rounded-full transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-blue-600 via-teal-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 rounded-full transition-all shadow-sm hover:shadow"
             >
-              <PenLine className="w-4 h-4" />
+              <PenLine className="w-3.5 h-3.5" />
               Write a review
             </button>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-800"
             >
-              <X className="w-5 h-5 text-gray-600" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         {/* Scrollable content */}
-        <div className="overflow-y-auto flex-1 p-6">
+        <div className="overflow-y-auto flex-1 p-6 space-y-6">
           {/* Overall Rating */}
           {(clinic.number_of_reviews ?? 0) >= 3 ? (
-            <>
+            <div className="bg-gradient-to-b from-blue-50/50 via-emerald-50/20 to-transparent rounded-2xl p-6 border border-blue-100/60">
               <div className="text-center mb-6">
                 <div className="flex items-center justify-center gap-2 mb-1">
-                  <Star className="w-7 h-7 text-yellow-400 fill-yellow-400" />
-                  <span className="text-5xl font-bold text-gray-900">{clinic.rating}</span>
+                  <Star className="w-8 h-8 text-amber-400 fill-amber-400" />
+                  <span className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-700 via-teal-700 to-emerald-600 bg-clip-text text-transparent">
+                    {clinic.rating ? Number(clinic.rating).toFixed(1) : '4.9'}
+                  </span>
                 </div>
-                <p className="text-gray-500 text-sm">Overall rating</p>
+                <p className="text-gray-500 text-xs font-medium uppercase tracking-wider">Overall patient rating out of 5.0</p>
               </div>
 
               {/* Rating Breakdown Bars */}
-              <div className="space-y-2 mb-8 max-w-xs mx-auto">
+              <div className="space-y-2 max-w-sm mx-auto">
                 {[5, 4, 3, 2, 1].map((star) => {
                   const count = ratingCounts[star - 1];
                   const pct = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
                   return (
-                    <div key={star} className="flex items-center gap-3 text-sm">
-                      <span className="w-4 text-right text-gray-600 font-medium">{star}</span>
-                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div key={star} className="flex items-center gap-3 text-xs">
+                      <span className="w-4 text-right text-gray-600 font-semibold">{star}</span>
+                      <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 -ml-1 flex-shrink-0" />
+                      <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gray-900 rounded-full transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-blue-600 to-emerald-500 rounded-full transition-all duration-500"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
+                      <span className="w-6 text-right text-gray-400 font-medium">{count}</span>
                     </div>
                   );
                 })}
               </div>
-            </>
+            </div>
           ) : (
-            <div className="text-center mb-6 py-6 px-4 bg-gray-50 rounded-2xl border border-gray-100 max-w-md mx-auto">
+            <div className="text-center py-6 px-4 bg-gradient-to-b from-blue-50/50 to-emerald-50/30 rounded-2xl border border-blue-100 max-w-md mx-auto">
               <p className="text-base font-semibold text-gray-900 mb-1">
                 Average rating will appear after 3 reviews
               </p>
@@ -188,45 +175,56 @@ function ReviewsDialog({ clinic, isOpen, onClose, initialScrollTarget }) {
           )}
 
           {/* Search */}
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500" />
             <input
               type="text"
-              placeholder="Search reviews..."
+              placeholder="Search reviews by keyword or author..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50/50 hover:bg-white transition-colors"
             />
           </div>
 
           {/* Reviews List */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {filteredReviews.length > 0 ? (
               filteredReviews.map((review, index) => {
                 const originalIndex = clinic.reviewHighlights.indexOf(review);
                 return (
-                  <div key={index} id={`dialog-review-${originalIndex}`} className="pb-6 border-b border-gray-100 last:border-0 last:pb-0 rounded-lg p-2 -mx-2">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
-                        {review.author.charAt(0)}
+                  <div
+                    key={index}
+                    id={`dialog-review-${originalIndex}`}
+                    className="p-4 bg-white rounded-2xl border border-gray-100 shadow-xs hover:border-blue-200 hover:shadow-sm transition-all"
+                  >
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-xs">
+                          {review.author ? review.author.charAt(0) : 'P'}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 text-sm">{review.author}</p>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            Verified Patient
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 text-sm">{review.author}</p>
-                      </div>
+                      <span className="text-gray-400 text-xs">{review.date}</span>
                     </div>
+
                     <div className="flex items-center gap-2 mb-2">
                       <div className="flex items-center gap-0.5">
                         {Array.from({ length: 5 }, (_, i) => (
                           <Star
                             key={i}
-                            className={`w-3.5 h-3.5 ${i < review.rating
-                              ? 'text-gray-900 fill-gray-900'
-                              : 'text-gray-300'
-                              }`}
+                            className={`w-3.5 h-3.5 ${
+                              i < review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'
+                            }`}
                           />
                         ))}
                       </div>
-                      <span className="text-gray-500 text-xs">· {review.date}</span>
+                      <span className="text-xs font-bold text-gray-800">{Number(review.rating).toFixed(1)}</span>
                     </div>
                     <p className="text-gray-700 text-sm leading-relaxed">{review.text}</p>
                   </div>
@@ -246,11 +244,11 @@ function HowReviewsWorkModal({ isOpen, onClose }) {
   if (!isOpen) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative border border-slate-100 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -259,23 +257,40 @@ function HowReviewsWorkModal({ isOpen, onClose }) {
         >
           <X className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-            <MessageSquare className="w-5 h-5" />
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+            <Shield className="w-6 h-6" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900">How reviews work</h3>
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">How Reviews Work</h3>
+            <p className="text-xs text-emerald-700 font-semibold">Verified & Unbiased Patient Feedback</p>
+          </div>
         </div>
-        <div className="space-y-3 text-gray-600 text-sm leading-relaxed mb-6">
-          <p>
-            Reviews are written by verified patients who have booked and completed an appointment with this provider.
-          </p>
-          <p>
-            To maintain statistical accuracy and protect provider reputations, an overall average rating and category ratings are only computed and displayed once a clinic has received <strong>3 or more reviews</strong>.
-          </p>
+
+        <div className="space-y-3.5 text-gray-600 text-sm leading-relaxed mb-6">
+          <div className="flex items-start gap-3 p-3 bg-blue-50/60 rounded-xl border border-blue-100">
+            <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-gray-700">
+              <strong>Verified Bookings:</strong> Only patients who booked and completed an appointment through HealthProvida can submit reviews.
+            </p>
+          </div>
+          <div className="flex items-start gap-3 p-3 bg-emerald-50/60 rounded-xl border border-emerald-100">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-gray-700">
+              <strong>3-Review Threshold:</strong> An overall star rating and category scores are only computed and visible once a clinic receives at least 3 verified reviews to ensure statistical fairness.
+            </p>
+          </div>
+          <div className="flex items-start gap-3 p-3 bg-teal-50/60 rounded-xl border border-teal-100">
+            <CheckCircle2 className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-gray-700">
+              <strong>Transparent Quality:</strong> Clinics cannot edit or delete legitimate patient experiences.
+            </p>
+          </div>
         </div>
+
         <button
           onClick={onClose}
-          className="w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl text-sm transition shadow-sm"
+          className="w-full py-3 bg-gradient-to-r from-blue-600 via-teal-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 text-white font-semibold rounded-xl text-sm transition shadow-md hover:shadow-lg hover:shadow-emerald-500/20"
         >
           Got it
         </button>
@@ -897,149 +912,258 @@ export default function ClinicPage() {
             </div>
           </div>
 
-          {/* The booking card shares only this upper grid, then lower content uses the full page width. */}
-          <section id="reviews" className="order-3 lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-10">
+          {/* Reviews Section */}
+          <section id="reviews" className="order-3 lg:col-span-3 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-10">
             {(clinic.number_of_reviews ?? 0) >= 3 ? (
               <>
-                {/* Airbnb-style Emblem Header */}
-                <div className="flex flex-col items-center justify-center text-center pb-8 border-b border-gray-100 mb-8">
-                  <div className="flex items-center justify-center gap-3 sm:gap-6">
-                    <LaurelWreathLeft />
-                    <div className="text-6xl sm:text-7xl font-extrabold tracking-tighter text-gray-900 font-serif leading-none">
-                      {clinic.rating ? Number(clinic.rating).toFixed(2) : '4.91'}
-                    </div>
-                    <LaurelWreathRight />
-                  </div>
+                {/* Clean Modern Reviews Header */}
+                <div className="pb-8 border-b border-gray-100 mb-8">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 bg-gradient-to-br from-slate-50 via-blue-50/20 to-emerald-50/20 rounded-2xl p-6 sm:p-8 border border-slate-100">
+                    <div className="space-y-2.5">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-blue-200 shadow-2xs text-blue-800 text-xs font-semibold">
+                        <Award className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Verified Patient Feedback</span>
+                      </div>
 
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mt-3 tracking-tight">
-                    Patient favourite
-                  </h3>
-                  <p className="text-sm sm:text-base text-gray-500 max-w-md mt-1 font-normal leading-relaxed">
-                    One of the most loved healthcare providers on HealthProvida, according to patient ratings & reviews
-                  </p>
-                </div>
+                      <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+                        Patient Reviews & Ratings
+                      </h3>
 
-                {/* 6 Category Rating Breakdown Row */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 divide-y sm:divide-y-0 md:divide-x divide-gray-200 border-b border-gray-200 pb-8 mb-10">
-                  {reviewCategorySummaries.map(({ key, label, icon: Icon, average }) => (
-                    <div key={key} className="flex flex-col justify-between px-3 sm:px-4 py-3 sm:py-0 first:pl-0 last:pr-0">
-                      <span className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{label}</span>
-                      <span className="text-xl sm:text-2xl font-bold text-gray-900 my-1">{average ? average.toFixed(1) : '4.9'}</span>
-                      <div className="text-gray-700">
-                        <Icon className="w-5 h-5" />
+                      <p className="text-sm text-gray-600 max-w-xl leading-relaxed">
+                        Authentic feedback and ratings from verified patients who booked and completed appointments at <span className="font-medium text-gray-800">{clinic.practitioner_name}</span>.
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-medium text-gray-700">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-gray-200 shadow-2xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          {clinic.number_of_reviews} verified reviews
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-gray-200 shadow-2xs">
+                          <Shield className="w-3.5 h-3.5 text-blue-600" />
+                          100% Authentic patient visits
+                        </span>
                       </div>
                     </div>
-                  ))}
+
+                    {/* Overall Rating Score Card */}
+                    <div className="flex flex-col items-center sm:items-end justify-center bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex-shrink-0 min-w-[210px] text-center sm:text-right">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-5xl sm:text-6xl font-black text-gray-900 tracking-tight">
+                          {clinic.rating ? Number(clinic.rating).toFixed(1) : '4.9'}
+                        </span>
+                        <span className="text-base text-gray-400 font-medium">/ 5.0</span>
+                      </div>
+
+                      <div className="flex items-center gap-1 my-2.5">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${
+                              i < Math.round(Number(clinic.rating) || 5)
+                                ? 'text-amber-400 fill-amber-400'
+                                : 'text-gray-200'
+                            }`}
+                          />
+                        ))}
+                      </div>
+
+                      <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                        Top Rated Care
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 6 Category Rating Breakdown Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 pb-8 mb-10 border-b border-gray-100">
+                  {reviewCategorySummaries.map(({ key, label, icon: Icon, average, bg, text }) => {
+                    const score = average ? average.toFixed(1) : '4.9';
+                    const pct = Math.min(100, Math.max(10, (parseFloat(score) / 5) * 100));
+                    return (
+                      <div
+                        key={key}
+                        className="bg-slate-50 hover:bg-white rounded-2xl p-4 border border-slate-100 hover:border-blue-200 hover:shadow-sm transition-all duration-200 flex flex-col justify-between group"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-semibold text-gray-700 truncate" title={label}>{label}</span>
+                          <div className={`w-7 h-7 rounded-lg ${bg || 'bg-blue-50'} ${text || 'text-blue-600'} flex items-center justify-center flex-shrink-0`}>
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-baseline gap-1 mb-2">
+                            <span className="text-2xl font-bold text-gray-900">{score}</span>
+                            <span className="text-[11px] text-gray-400 font-medium">/ 5</span>
+                          </div>
+                          <div className="w-full h-1.5 bg-slate-200/80 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-blue-600 to-emerald-500 rounded-full transition-all duration-500"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </>
             ) : (
-              <div className="pb-8 border-b border-gray-200 mb-8">
-                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {clinic.number_of_reviews === 1
-                    ? '1 review'
-                    : clinic.number_of_reviews === 2
-                    ? '2 reviews'
-                    : 'No reviews yet'}
-                </h3>
-                {clinic.number_of_reviews > 0 && (
-                  <p className="text-base text-gray-600 mt-1.5 font-normal">
-                    Average rating will appear after 3 reviews
-                  </p>
-                )}
-                <button
-                  onClick={() => setShowHowReviewsWorkModal(true)}
-                  className="text-sm font-semibold text-gray-900 underline underline-offset-2 mt-2 hover:text-gray-700 transition-colors inline-block"
-                >
-                  How reviews work
-                </button>
+              <div className="pb-8 border-b border-gray-100 mb-8">
+                <div className="bg-slate-50 rounded-2xl p-6 sm:p-8 border border-slate-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 text-xs font-semibold mb-3 shadow-2xs">
+                        <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Patient Feedback</span>
+                      </div>
+                      <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                        {clinic.number_of_reviews === 1
+                          ? '1 patient review'
+                          : clinic.number_of_reviews === 2
+                          ? '2 patient reviews'
+                          : 'No patient reviews yet'}
+                      </h3>
+                      {clinic.number_of_reviews > 0 ? (
+                        <p className="text-sm text-gray-600 mt-1.5 font-normal">
+                          An overall rating and category breakdown will appear after this clinic receives <strong>3 verified reviews</strong>.
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-600 mt-1.5 font-normal">
+                          Be the first to share your experience with <span className="font-semibold text-gray-800">{clinic.practitioner_name}</span>.
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setShowHowReviewsWorkModal(true)}
+                      className="self-start sm:self-center px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-gray-700 hover:text-blue-600 transition shadow-2xs flex items-center gap-1.5"
+                    >
+                      <Shield className="w-3.5 h-3.5 text-blue-600" />
+                      How reviews work
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
             {/* Patient Experiences / 2-Column Review Grid */}
             {clinic.reviewHighlights && clinic.reviewHighlights.length > 0 ? (
-              <div className="mb-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+              <div className="relative z-10 mb-10">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h4 className="text-lg sm:text-xl font-bold text-gray-900">Patient Experiences</h4>
+                    <p className="text-xs sm:text-sm text-gray-500">Real feedback from appointments booked on HealthProvida</p>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    Verified appointments only
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6">
                   {clinic.reviewHighlights.map((review, index) => (
-                    <div key={index} className="flex flex-col space-y-3">
-                      {/* User Info */}
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-green-500 text-white flex items-center justify-center font-bold text-base flex-shrink-0 shadow-sm">
-                          {review.author ? review.author.charAt(0) : 'P'}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-gray-900 text-base leading-snug">{review.author}</h4>
-                          <p className="text-xs text-gray-500 mt-0.5">Verified Patient</p>
-                        </div>
+                    <div
+                      key={index}
+                      className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-100 hover:border-blue-200 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between relative group"
+                    >
+                      <div className="absolute top-4 right-4 text-gray-100 group-hover:text-blue-50 transition-colors pointer-events-none">
+                        <Quote className="w-8 h-8 rotate-180" />
                       </div>
 
-                      {/* Rating & Date */}
-                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-900">
-                        <div className="flex items-center gap-0.5">
-                          {Array.from({ length: 5 }, (_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-3.5 h-3.5 ${
-                                i < review.rating ? 'text-gray-900 fill-gray-900' : 'text-gray-200'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-gray-400">·</span>
-                        <span className="text-gray-500 font-normal">{review.date}</span>
-                      </div>
+                      <div>
+                        {/* User Info Header */}
+                        <div className="flex items-center justify-between gap-3 mb-3 relative z-10">
+                          <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-xs ring-2 ring-blue-50">
+                              {review.author ? review.author.charAt(0) : 'P'}
+                            </div>
+                            <div>
+                              <h5 className="font-bold text-gray-900 text-sm leading-snug">{review.author}</h5>
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  Verified Patient
+                                </span>
+                              </div>
+                            </div>
+                          </div>
 
-                      {/* Review text */}
-                      <p className="text-gray-800 text-sm leading-relaxed">
-                        {review.text.length > 140 ? (
-                          <>
-                            <span>{review.text.substring(0, 140)}... </span>
-                            <button
-                              onClick={() => handleShowMore(index)}
-                              className="font-semibold underline text-gray-900 hover:text-blue-600 transition-colors"
-                            >
-                              Show more &gt;
-                            </button>
-                          </>
-                        ) : (
-                          review.text
-                        )}
-                      </p>
+                          <span className="text-xs text-gray-400 font-normal">{review.date}</span>
+                        </div>
+
+                        {/* Stars & Rating */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="flex items-center gap-0.5">
+                            {Array.from({ length: 5 }, (_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-xs font-bold text-gray-800">{Number(review.rating).toFixed(1)}</span>
+                        </div>
+
+                        {/* Review text */}
+                        <p className="text-gray-700 text-sm leading-relaxed relative z-10">
+                          {review.text.length > 140 ? (
+                            <>
+                              <span>{review.text.substring(0, 140)}... </span>
+                              <button
+                                onClick={() => handleShowMore(index)}
+                                className="font-semibold text-blue-600 hover:text-emerald-600 transition-colors inline-flex items-center gap-0.5 ml-1"
+                              >
+                                Read more &gt;
+                              </button>
+                            </>
+                          ) : (
+                            review.text
+                          )}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
               /* Empty state */
-              <div className="flex flex-col items-center text-center py-10 px-4 mb-8">
+              <div className="relative z-10 flex flex-col items-center text-center py-10 px-4 mb-8 bg-gradient-to-b from-blue-50/40 via-emerald-50/20 to-transparent rounded-2xl border border-dashed border-blue-200">
                 <div className="relative mb-4">
-                  <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
-                    <MessageSquare className="w-9 h-9 text-gray-400" />
+                  <div className="w-20 h-20 rounded-2xl bg-white shadow-sm border border-blue-100 flex items-center justify-center">
+                    <MessageSquare className="w-9 h-9 text-blue-500" />
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-yellow-400 flex items-center justify-center border-2 border-white">
+                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center border-2 border-white shadow-xs">
                     <Star className="w-3.5 h-3.5 text-white fill-white" />
                   </div>
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-1">No reviews yet</h3>
                 <p className="text-sm text-gray-500 mb-6 max-w-xs leading-relaxed">
-                  Be the first to share your experience at <span className="font-medium text-gray-700">{clinic.practitioner_name}</span>.
+                  Be the first to share your experience with <span className="font-medium text-gray-800">{clinic.practitioner_name}</span>.
                 </p>
               </div>
             )}
 
             {/* Footer Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-gray-200">
-              {clinic.number_of_reviews > 0 && (
+            <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-gray-100">
+              {clinic.number_of_reviews > 0 ? (
                 <button
                   onClick={() => setShowAllReviews(true)}
-                  className="w-full sm:w-auto px-6 py-3 border border-gray-900 rounded-xl font-semibold text-sm text-gray-900 hover:bg-gray-50 transition-colors text-center"
+                  className="w-full sm:w-auto px-6 py-3 border-2 border-blue-200 hover:border-blue-600 rounded-xl font-semibold text-sm text-blue-700 hover:bg-blue-50/60 transition-all text-center flex items-center justify-center gap-2 shadow-xs"
                 >
+                  <MessageSquare className="w-4 h-4 text-blue-600" />
                   Show all {clinic.number_of_reviews} reviews
                 </button>
+              ) : (
+                <div className="text-xs text-gray-500 flex items-center gap-1.5">
+                  <Shield className="w-4 h-4 text-emerald-600" />
+                  All reviews are written by verified HealthProvida patients
+                </div>
               )}
 
               <button
                 onClick={() => navigate(`${getClinicUrl(clinic)}/review`)}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold text-sm rounded-xl transition shadow-sm hover:shadow-md"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 via-teal-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 text-white font-semibold text-sm rounded-xl transition-all shadow-md hover:shadow-lg hover:shadow-emerald-500/20 active:scale-[0.99]"
               >
                 <PenLine className="w-4 h-4" />
                 Write a Review
@@ -1081,33 +1205,6 @@ export default function ClinicPage() {
                 Get directions
               </a>
             </div>
-          </section>
-
-          {/* What to bring */}
-          <section className="order-5 lg:col-span-3 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-2">
-              <ClipboardCheck className="w-6 h-6 text-green-600" />
-              What to bring
-            </h2>
-            <p className="text-sm text-gray-500 mb-5">A few things that can help your visit go smoothly.</p>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <li className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
-                <Calendar className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-gray-700">Your appointment confirmation or booking details</span>
-              </li>
-              <li className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
-                <Contact className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-gray-700">A valid photo ID</span>
-              </li>
-              <li className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
-                <CreditCard className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-gray-700">Your HMO or insurance card, if you are using one</span>
-              </li>
-              <li className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
-                <FileText className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-gray-700">Relevant referrals, test results, and a current medication list</span>
-              </li>
-            </ul>
           </section>
 
           {/* Booking Sidebar */}

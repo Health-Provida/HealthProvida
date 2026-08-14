@@ -71,7 +71,7 @@ function App() {
               {/* Standalone pages (no header/footer) */}
               <Route path="/clinic/:slug/photos" element={<ClinicPhotosPage />} />
               <Route path="/map" element={<MapPage />} />
-              <Route path="/join-provider" element={<JoinProviderPage />} />
+              <Route path="/join-provider" element={<ProtectedRoute><JoinProviderPage /></ProtectedRoute>} />
 
               {/* Public pages with header/footer */}
               <Route path="*" element={
