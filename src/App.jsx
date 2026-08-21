@@ -23,6 +23,7 @@ import AppointmentsPage from '@/pages/AppointmentsPage';
 import MessagesPage from '@/pages/MessagesPage';
 import ScrollToTop from '@/components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import AdminRouter from '@/pages/admin/AdminRouter';
 import ProviderRouter from '@/pages/provider/ProviderRouter';
 import { AuthProvider } from '@/context/AuthContext';
@@ -37,6 +38,7 @@ function App() {
         <FavoritesProvider>
           <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-teal-50 flex flex-col">
             <ScrollToTop />
+            <MobileBottomNav />
             <Routes>
               {/* Auth pages — no header/footer */}
               <Route path="/login" element={<LoginPage />} />

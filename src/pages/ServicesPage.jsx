@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ShieldCheck, Briefcase, Hotel as Hospital, UserCheck, CalendarDays, BarChart2, Search, UserCircle } from 'lucide-react';
+import { ShieldCheck, Briefcase, Hotel as Hospital, UserCheck, CalendarDays, BarChart2, Search, UserCircle, Smartphone, LayoutDashboard, Building2, ArrowRight } from 'lucide-react';
 import insurer from '../components/ui/insurer.jpg';
 import employer from '../components/ui/employer.jpg';
 import provider from "../components/ui/provider.jpg"
@@ -26,7 +26,7 @@ const ServiceCard = ({ icon, title, description, delay }) => (
   </motion.div>
 );
 
-const AudienceSection = ({ icon, title, description, features, imageSrc, imageAlt, reverse = false }) => (
+const AudienceSection = ({ icon, title, description, features, imageSrc, imageAlt, reverse = false, cta }) => (
   <div className="container mx-auto px-4 py-16">
     <div className={`grid md:grid-cols-2 gap-12 items-center ${reverse ? 'md:grid-flow-col-dense' : ''}`}>
       <motion.div
@@ -53,7 +53,7 @@ const AudienceSection = ({ icon, title, description, features, imageSrc, imageAl
           <h2 className="text-3xl font-bold text-gray-900">{title}</h2>
         </div>
         <p className="text-gray-600 mb-6">{description}</p>
-        <ul className="space-y-4">
+        <ul className="space-y-4 mb-8">
           {features.map((feature, index) => (
             <li key={index} className="flex items-start">
               <div className="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center mr-3 mt-1 flex-shrink-0">
@@ -63,6 +63,7 @@ const AudienceSection = ({ icon, title, description, features, imageSrc, imageAl
             </li>
           ))}
         </ul>
+        {cta}
       </motion.div>
     </div>
   </div>
@@ -70,23 +71,8 @@ const AudienceSection = ({ icon, title, description, features, imageSrc, imageAl
 
 const ServicesPage = () => {
     const navigate = useNavigate();
-    // const location = useLocation();
-    // const currentPagePath = location.pathname;
-  
-    // // Handle scrolling to search after navigation
-    // useEffect(() => {
-    //   if (shouldScroll && currentPagePath === '/' && searchRef.current) {
-    //     // Small delay to ensure page is rendered
-    //     setTimeout(() => {
-    //       searchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    //       setTimeout(() => searchRef.current?.focus(), 500);
-    //       setShouldScroll(false);
-    //     }, 100);
-    //   }
-    // }, [currentPagePath, shouldScroll]);
-  
+
      const handleSearchClick = () => {
-      // Navigate to home page with state to trigger scroll
       navigate('/', { state: { scrollToSearch: true } });
     };
   
@@ -169,6 +155,7 @@ const ServicesPage = () => {
           </div>
         </section>
 
+        {/* FOR HEALTH INSURERS */}
         <div className="bg-gradient-to-b from-gray-50 to-blue-50">
           <AudienceSection
             icon={<ShieldCheck className="w-8 h-8 text-blue-600" />}
@@ -183,9 +170,30 @@ const ServicesPage = () => {
             imageSrc={insurer}
             imageAlt="Insurance manager reviewing data on a tablet"
             reverse={false}
+            cta={
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  to="/services/insurer-dashboard"
+                  id="insurer-dashboard-cta"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-md hover:shadow-lg"
+                >
+                  <LayoutDashboard className="w-5 h-5" />
+                  See How the Dashboard Works
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/contact?type=insurer-demo"
+                  id="insurer-demo-cta"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-blue-600 text-blue-700 hover:bg-blue-50 font-semibold rounded-xl transition"
+                >
+                  Book a Demo
+                </Link>
+              </div>
+            }
           />
         </div>
 
+        {/* FOR EMPLOYERS */}
         <div className="bg-white">
           <AudienceSection
             icon={<Briefcase className="w-8 h-8 text-green-600" />}
@@ -200,9 +208,23 @@ const ServicesPage = () => {
             imageSrc={employer}
             imageAlt="HR manager presenting to a group of employees"
             reverse={true}
+            cta={
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  to="/contact?type=employer"
+                  id="employer-cta"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition shadow-md hover:shadow-lg"
+                >
+                  <CalendarDays className="w-5 h-5" />
+                  Book an Appointment
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            }
           />
         </div>
 
+        {/* FOR HEALTHCARE PROVIDERS / HOSPITALS */}
         <div className="bg-gradient-to-b from-gray-50 to-green-50">
           <AudienceSection
             icon={<Hospital className="w-8 h-8 text-teal-600" />}
@@ -217,9 +239,23 @@ const ServicesPage = () => {
             imageAlt="Doctor smiling in a modern clinic hallway"
             imageSrc={provider}
             reverse={false}
-            />
+            cta={
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  to="/join-provider"
+                  id="provider-signup-cta"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-green-600 hover:from-teal-700 hover:to-green-700 text-white font-semibold rounded-xl transition shadow-md hover:shadow-lg"
+                >
+                  <Building2 className="w-5 h-5" />
+                  Sign Up as a Hospital / Provider
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            }
+          />
         </div>
 
+        {/* FOR PATIENTS */}
         <div className="bg-white">
           <AudienceSection
             icon={<UserCheck className="w-8 h-8 text-indigo-600" />}
@@ -234,7 +270,30 @@ const ServicesPage = () => {
             imageAlt="Patient using a smartphone to book an appointment"
             imageSrc={patient}
             reverse={true}
-            />
+            cta={
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a
+                  href="https://apps.apple.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  id="patient-app-store-cta"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition shadow-md hover:shadow-lg"
+                >
+                  <Smartphone className="w-5 h-5" />
+                  Download on the App Store
+                </a>
+                <a
+                  href="https://play.google.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  id="patient-play-store-cta"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-900 text-gray-900 hover:bg-gray-50 font-semibold rounded-xl transition"
+                >
+                  Get it on Google Play
+                </a>
+              </div>
+            }
+          />
         </div>
 
         <section className="py-16 md:py-24 text-center bg-gray-50">
@@ -251,11 +310,9 @@ const ServicesPage = () => {
               <p className="max-w-2xl mx-auto text-gray-600 mb-8">
                 Join HealthProvida today and be part of the revolution in healthcare access and management across Sub-Saharan Africa.
               </p>
-              {/* <Link to="/"> */}
                 <Button size="lg" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700" onClick={handleSearchClick}>
                   Get Started Now
                 </Button>
-              {/* </Link> */}
             </motion.div>
           </div>
         </section>

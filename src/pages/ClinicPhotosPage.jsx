@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Share, Heart, X, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import { useClinics } from '@/context/ClinicsContext';
 import { fetchGallery } from '@/utils/supabaseQueries';
+import { commonGallery } from '@/components/ClinicGrid';
 import ShareModal from '@/components/ShareModal';
 
 export default function ClinicPhotosPage() {
@@ -75,8 +76,14 @@ export default function ClinicPhotosPage() {
       const { data } = await fetchGallery();
       if (cancelled) return;
       if (data && data.length > 0) {
-        setGalleryData(data);
-        setActiveSection(data[0].id);
+        // Filter to only wards that have at least one image
+        const withImages = data.filter(w => w.images && w.images.length > 0);
+        const galleryToUse = withImages.length > 0 ? withImages : commonGallery;
+        setGalleryData(galleryToUse);
+        setActiveSection(galleryToUse[0].id);
+      } else {
+        setGalleryData(commonGallery);
+        setActiveSection(commonGallery[0].id);
       }
       setGalleryLoading(false);
     }

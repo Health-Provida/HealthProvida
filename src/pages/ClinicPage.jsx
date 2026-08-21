@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, X, Search, PenLine, Navigation, Clock, CheckCircle2, Sparkles, Quote, Award } from 'lucide-react';
+import { Star, MapPin, Phone, Heart, ArrowLeft, Calendar, Shield, Stethoscope, LayoutGrid, MessageSquare, ThumbsUp, X, Search, PenLine, Navigation, Clock, CheckCircle2, Sparkles, Quote, Award, MessageCircle } from 'lucide-react';
 import { fetchClinicBySlug, fetchGallery } from '@/utils/supabaseQueries';
 import { getClinicUrl } from '@/utils/slugUtils';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -1175,26 +1175,30 @@ export default function ClinicPage() {
                   <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
                     <Calendar className="w-8 h-8 text-blue-400" />
                   </div>
-                  <h3 className="font-semibold text-gray-800 mb-1">No online slots available</h3>
+                  <h3 className="font-semibold text-gray-800 mb-1">Book an appointment</h3>
                   <p className="text-sm text-gray-500 mb-6">
-                    This provider hasn't published online appointment slots yet. Contact them directly to book.
+                    Contact this provider directly to confirm your appointment.
                   </p>
+
+                  {/* Chat to Book — primary CTA */}
+                  <a
+                    href={`https://wa.me/${(clinic.phone || '').replace(/[^0-9]/g, '')}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 px-6 rounded-lg text-base font-semibold transition shadow-md hover:shadow-lg mb-3"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    Chat to Book
+                  </a>
+
+                  {/* Call to Book — secondary CTA */}
                   {clinic.phone && (
                     <a
                       href={`tel:${clinic.phone}`}
-                      className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 px-6 rounded-lg text-base font-semibold transition shadow-md hover:shadow-lg mb-3"
+                      className="w-full flex items-center justify-center gap-2 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-700 py-3 px-6 rounded-lg text-base font-semibold transition"
                     >
                       <Phone className="w-5 h-5" />
                       Call to Book
-                    </a>
-                  )}
-                  {clinic.email && (
-                    <a
-                      href={`mailto:${clinic.email}`}
-                      className="w-full flex items-center justify-center gap-2 border-2 border-gray-200 hover:border-blue-300 text-gray-700 hover:bg-gray-50 py-3 px-6 rounded-lg text-base font-semibold transition"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
-                      Send an Email
                     </a>
                   )}
                 </div>

@@ -27,6 +27,9 @@ import imgReception from '../assets/gallery/modern_hospital_reception_1777236657
 import imgOperatingTheater from '../assets/gallery/modern_operating_theater_1777236986447.png';
 import imgPrivateRoom from '../assets/gallery/private_patient_room_1777236673043.png';
 import imgNationalCancerInstitute from '../assets/gallery/national-cancer-institute-aelk4Tn0vlI-unsplash.jpg';
+import imgOutpatientArea from '../assets/gallery/outpatient_area.jpg';
+import imgPhlebotomyRoom from '../assets/gallery/phlebotomy_room.jpg';
+import imgSemiPrivateWard from '../assets/gallery/semi_private_ward.jpg';
 
 // To avoid hitting rate limits, using realistic unsplash placeholder images to supplement the generated ones.
 export const commonGallery = [
@@ -39,6 +42,26 @@ export const commonGallery = [
       'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1519494080410-f9aa76cb4283?auto=format&fit=crop&q=80&w=800'
+    ]
+  },
+  {
+    id: 'outpatient_area',
+    title: 'Outpatient Area',
+    description: 'Spacious outpatient waiting area designed for patient comfort, with organised queuing, check-in screens, and friendly staff on hand.',
+    images: [
+      imgOutpatientArea,
+      'https://images.unsplash.com/photo-1580281657702-257584239a55?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1562243057-02dae7bb3bb4?auto=format&fit=crop&q=80&w=800'
+    ]
+  },
+  {
+    id: 'phlebotomy_room',
+    title: 'Phlebotomy Room',
+    description: 'Dedicated blood collection suite equipped with modern phlebotomy chairs, sterile equipment, and trained staff to ensure a safe and comfortable experience.',
+    images: [
+      imgPhlebotomyRoom,
+      'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1584483766114-2cea6facdf57?auto=format&fit=crop&q=80&w=800'
     ]
   },
   {
@@ -60,6 +83,16 @@ export const commonGallery = [
       'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1505692952047-1a78307da8f2?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1512678080530-7760d81faba6?auto=format&fit=crop&q=80&w=800'
+    ]
+  },
+  {
+    id: 'semi_private_ward',
+    title: 'Semi-Private Ward',
+    description: 'Comfortable shared rooms with privacy curtains, offering quality care and monitoring equipment at an accessible price point.',
+    images: [
+      imgSemiPrivateWard,
+      imgGeneralWard,
+      'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&q=80&w=800'
     ]
   },
   {
@@ -98,7 +131,7 @@ export const clinicsData = [
     distance_from_location: "10 km",
     phone: "+234 901 234 5678",
     tags: ["General Practice", "Family Medicine", "Telemedicine Available", "Diagnostic Services", "Preventative Care", "Telehealth Available", "Walk-in Clinic"],
-    nextAvailable: "Tomorrow 10:00 AM",
+    operatingHours: "24 Hours",
     specialties: ["Family Medicine", "Pediatrics", "Women's Health", "Vaccinations", "Health Screenings"],
     supportedHMOs: ["Hygeia HMO", "Avon Healthcare", "Reliance HMO", "AXA Mansard"],
     equipment: ["X-Ray Machine", "Ultrasound", "ECG Monitor", "Laboratory", "Pharmacy"],
@@ -124,7 +157,7 @@ export const clinicsData = [
     distance_from_location: "5 km",
     phone: "+234 902 345 6789",
     tags: ["General Surgery", "Cardiology", "Orthopedics", "Emergency Services", "Intensive Care", "Specialist Consultations"],
-    nextAvailable: "Today 2:30 PM",
+    operatingHours: "24 Hours",
     specialties: ["Cardiology", "Orthopedics", "Surgery", "Emergency Medicine", "Radiology"],
     supportedHMOs: ["Hygeia HMO", "MetroHealth HMO", "Apex Healthcare", "Total Health Trust"],
     equipment: ["CT Scan", "MRI Machine", "Digital X-Ray", "ICU Facilities", "Operating Theaters"],
@@ -149,7 +182,7 @@ export const clinicsData = [
     number_of_reviews: 550,
     distance_from_location: "3 km",
     phone: "+234 903 456 7890",
-    nextAvailable: "Today 2:30 PM",
+    operatingHours: "Mon–Fri 8am–5pm",
     tags: ["Tertiary Care", "Research Hospital", "Specialized Surgery", "Pediatrics", "Oncology", "Public Health"],
     specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
     supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
@@ -175,7 +208,7 @@ export const clinicsData = [
     number_of_reviews: 240,
     distance_from_location: "10 km",
     phone: "+234 904 567 8901",
-    nextAvailable: "Today 2:30 PM",
+    operatingHours: "Mon–Sat 9am–9pm",
     tags: ["Premium Healthcare", "Executive Check-ups", "Diagnostic Imaging", "Family Health", "Women's Health", "Urgent Care"],
     specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
     supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
@@ -201,7 +234,7 @@ export const clinicsData = [
     number_of_reviews: 120,
     distance_from_location: "8 km",
     phone: "+234 905 678 9012",
-    nextAvailable: "Today 2:30 PM",
+    operatingHours: "Mon–Sat 8am–6pm",
     tags: ["IVF", "Reproductive Medicine", "Gynecological Services", "Male Fertility", "Counseling Services", "Women's Health"],
     specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
     supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
@@ -227,7 +260,7 @@ export const clinicsData = [
     number_of_reviews: 95,
     distance_from_location: "6 km",
     phone: "+234 906 789 0123",
-    nextAvailable: "Today 2:30 PM",
+    operatingHours: "Mon–Fri 9am–5pm",
     tags: ["Family Planning", "Contraception", "Women's Health", "Maternal Health", "Sexual Health", "Counseling Services"],
     specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
     supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
@@ -253,7 +286,7 @@ export const clinicsData = [
     number_of_reviews: 280,
     distance_from_location: "4 km",
     phone: "+234 907 890 1234",
-    nextAvailable: "Today 2:30 PM",
+    operatingHours: "24 Hours",
     tags: ["General Medicine", "Pediatrics", "Surgery", "Diagnostics", "Pharmacy Services", "Emergency Department"],
     specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
     supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
@@ -279,7 +312,7 @@ export const clinicsData = [
     number_of_reviews: 150,
     distance_from_location: "11 km",
     phone: "+234 908 901 2345",
-    nextAvailable: "Today 2:30 PM",
+    operatingHours: "24 Hours",
     tags: ["International Healthcare", "Advanced Diagnostics", "Cardiology", "Neurosurgery", "Orthopedic Surgery", "Patient-Centric Care"],
     specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
     supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
@@ -305,7 +338,7 @@ export const clinicsData = [
     number_of_reviews: 110,
     distance_from_location: "15 km",
     phone: "+234 909 012 3456",
-    nextAvailable: "Today 2:30 PM",
+    operatingHours: "Mon–Sat 8am–8pm",
     tags: ["General Surgery", "Urology", "Laparoscopic Surgery", "Endoscopy", "Critical Care", "Post-operative Rehabilitation"],
     specialties: ["Dermatology", "Cosmetic Procedures", "Acne Treatment", "Skin Cancer Screening"],
     supportedHMOs: ["Avon Healthcare", "AXA Mansard", "Hygeia HMO"],
@@ -555,7 +588,7 @@ function ClinicCard({ clinic, onClick }) {
           <span className="hidden sm:inline text-gray-300">•</span>
           <div className="flex items-center">
             <Clock className="w-3.5 h-3.5 text-gray-400 mr-1.5 flex-shrink-0" />
-            <span>Next: <span className="text-green-600 font-medium">{clinic.nextAvailable}</span></span>
+            <span className="text-gray-600">{clinic.operatingHours || 'Hours not listed'}</span>
           </div>
         </div>
 

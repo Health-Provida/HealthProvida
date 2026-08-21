@@ -8,7 +8,7 @@ import { fetchStats } from '@/utils/supabaseQueries';
 import { findSpecialtiesByPartialMatch, findSpecialtyByAlias } from '@/utils/healthcareSearchDictionary';
 
 // Words that rotate in the hero heading
-const ROTATING_WORDS = ['Healthcare', 'Hospitals', 'Clinics', 'Pharmacies', 'Practitioners'];
+const ROTATING_WORDS = ['Healthcare', 'Hospitals', 'Clinics', 'Laboratories', 'Pharmacies', 'Practitioners'];
 
 // Quick-access category chips — these map to common search queries
 const QUICK_CATEGORIES = [
@@ -319,7 +319,7 @@ const Hero = () => {
             <span className="block text-green-300">Near You</span>
           </h1>
           <p className="text-base sm:text-lg md:text-xl mb-8 sm:mb-10 text-blue-100 max-w-2xl mx-auto px-2 sm:px-0">
-            Discover trusted medical providers, compare services, and book appointments — all in one place.
+            Discover trusted medical providers — ranked by patient bookings.
           </p>
 
           {/* ── Search Bar ──────────────────────────────────── */}
@@ -507,7 +507,7 @@ const Hero = () => {
             {[
               { value: stats.providerCount, label: 'Providers' },
               { value: stats.reviewCount, label: 'Reviews' },
-              { value: stats.hmoCount, label: 'HMOs Accepted' },
+              { value: stats.hmoCount, label: 'HMOs' },
             ].map((stat, i) => (
               <React.Fragment key={stat.label}>
                 {i > 0 && <div className="w-px h-8 bg-white/10" />}
