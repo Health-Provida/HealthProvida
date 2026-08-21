@@ -1,10 +1,16 @@
 /**
  * ScheduleManagementPage.jsx
- * Manage operating hours per day and generate appointment slots.
+ * ──────────────────────────────────────────────────────────────
+ * Manage operating hours per day, generate appointment slots,
+ * and configure doctor/service availability.
+ * ──────────────────────────────────────────────────────────────
  */
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Save, AlertCircle, CheckCircle, Zap } from 'lucide-react';
+import {
+  Clock, Save, AlertCircle, CheckCircle, Zap, User, Plus,
+  Trash2, Stethoscope, FlaskConical,
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
   fetchProviderClinic,
@@ -21,6 +27,19 @@ const DEFAULT_HOURS = DAYS.map((day) => ({
   closeTime: '17:00',
 }));
 
+const SERVICE_OPTIONS = [
+  'General Practitioner',
+  'Cardiologist',
+  'Dermatologist',
+  'Paediatrician',
+  'Gynaecologist',
+  'ENT Specialist',
+  'Orthopaedic Surgeon',
+  'Neurologist',
+  'Ophthalmologist',
+  'Laboratory',
+];
+
 export default function ScheduleManagementPage() {
   const [clinic, setClinic] = useState(null);
   const [hours, setHours] = useState(DEFAULT_HOURS);
@@ -31,6 +50,30 @@ export default function ScheduleManagementPage() {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [message, setMessage] = useState(null);
+
+  // Doctor/service availability
+  const [doctors, setDoctors] = useState([
+    {
+      id: 'doc-1',
+      name: 'Dr. Default',
+      service: 'General Practitioner',
+      days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+      startTime: '09:00',
+      endTime: '17:00',
+      slotDuration: 30,
+      available: true,
+    },
+  ]);
+  const [showAddDoctor, setShowAddDoctor] = useState(false);
+  const [newDoctor, setNewDoctor] = useState({
+    name: '',
+    service: 'General Practitioner',
+    days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    startTime: '09:00',
+    endTime: '17:00',
+    slotDuration: 30,
+    available: true,
+  });
 
   const { user } = useAuth();
 
@@ -105,6 +148,45 @@ export default function ScheduleManagementPage() {
     setGenerating(false);
   };
 
+  const handleAddDoctor = () => {
+    if (!newDoctor.name.trim()) {
+      setMessage({ type: 'error', text: 'Please enter a doctor name.' });
+      return;
+    }
+    setDoctors(prev => [...prev, {
+      ...newDoctor,
+      id: `doc-${Date.now()}`,
+    }]);
+    setNewDoctor({
+      name: '',
+      service: 'General Practitioner',
+      days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+      startTime: '09:00',
+      endTime: '17:00',
+      slotDuration: 30,
+      available: true,
+    });
+    setShowAddDoctor(false);
+    setMessage({ type: 'success', text: 'Doctor availability added!' });
+  };
+
+  const handleRemoveDoctor = (docId) => {
+    setDoctors(prev => prev.filter(d => d.id !== docId));
+  };
+
+  const toggleDoctorAvailability = (docId) => {
+    setDoctors(prev => prev.map(d =>
+      d.id === docId ? { ...d, available: !d.available } : d
+    ));
+  };
+
+  const toggleDoctorDay = (day) => {
+    setNewDoctor(prev => ({
+      ...prev,
+      days: prev.days.includes(day) ? prev.days.filter(d => d !== day) : [...prev.days, day],
+    }));
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -122,7 +204,7 @@ export default function ScheduleManagementPage() {
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
-        <p className="text-gray-500 text-sm mt-1">Set your operating hours and generate appointment slots</p>
+        <p className="text-gray-500 text-sm mt-1">Set your operating hours, manage doctor availability, and generate appointment slots</p>
       </div>
 
       {/* Message */}
@@ -203,6 +285,167 @@ export default function ScheduleManagementPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Doctor / Service Availability */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+            <Stethoscope className="w-5 h-5 text-blue-500" /> Doctor Availability
+          </h2>
+          <button
+            onClick={() => setShowAddDoctor(!showAddDoctor)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-semibold transition"
+          >
+            <Plus className="w-4 h-4" />
+            Add Doctor
+          </button>
+        </div>
+
+        {/* Existing doctors */}
+        <div className="space-y-3 mb-4">
+          {doctors.map((doc) => (
+            <div key={doc.id} className={`p-4 rounded-xl border transition ${doc.available ? 'bg-white border-gray-100' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{doc.name}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{doc.service}</p>
+                  <div className="flex gap-1 mt-2 flex-wrap">
+                    {doc.days.map((day) => (
+                      <span key={day} className="text-[10px] font-medium bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
+                        {day.slice(0, 3)}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {doc.startTime} – {doc.endTime} · {doc.slotDuration} min slots
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="relative cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={doc.available}
+                      onChange={() => toggleDoctorAvailability(doc.id)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-checked:bg-blue-500 rounded-full transition-colors" />
+                    <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-4 transition-transform" />
+                  </label>
+                  <button
+                    onClick={() => handleRemoveDoctor(doc.id)}
+                    className="p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Add doctor form */}
+        {showAddDoctor && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="border-t border-gray-100 pt-4 space-y-4"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Doctor Name</label>
+                <input
+                  type="text"
+                  value={newDoctor.name}
+                  onChange={(e) => setNewDoctor(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g. Dr. Adeyemi"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-blue-400 outline-none text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Service</label>
+                <select
+                  value={newDoctor.service}
+                  onChange={(e) => setNewDoctor(prev => ({ ...prev, service: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-blue-400 outline-none text-sm"
+                >
+                  {SERVICE_OPTIONS.map((svc) => (
+                    <option key={svc} value={svc}>{svc}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Consultation Days</label>
+              <div className="flex flex-wrap gap-2">
+                {DAYS.map((day) => (
+                  <button
+                    key={day}
+                    onClick={() => toggleDoctorDay(day)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                      newDoctor.days.includes(day)
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    }`}
+                  >
+                    {day.slice(0, 3)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Start Time</label>
+                <input
+                  type="time"
+                  value={newDoctor.startTime}
+                  onChange={(e) => setNewDoctor(prev => ({ ...prev, startTime: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-blue-400 outline-none text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">End Time</label>
+                <input
+                  type="time"
+                  value={newDoctor.endTime}
+                  onChange={(e) => setNewDoctor(prev => ({ ...prev, endTime: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-blue-400 outline-none text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Slot Duration</label>
+                <select
+                  value={newDoctor.slotDuration}
+                  onChange={(e) => setNewDoctor(prev => ({ ...prev, slotDuration: Number(e.target.value) }))}
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-blue-400 outline-none text-sm"
+                >
+                  <option value={15}>15 min</option>
+                  <option value={30}>30 min</option>
+                  <option value={45}>45 min</option>
+                  <option value={60}>60 min</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleAddDoctor}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+              >
+                <Plus className="w-4 h-4" />
+                Add
+              </button>
+              <button
+                onClick={() => setShowAddDoctor(false)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Generate Slots */}

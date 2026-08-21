@@ -47,7 +47,7 @@ const ClinicCard = ({ clinic }) => {
           <span className="hidden sm:inline text-gray-300">•</span>
           <div className="flex items-center">
             <Clock className="w-3.5 h-3.5 text-gray-400 mr-1.5 flex-shrink-0" />
-            <span>Next: <span className="text-green-600 font-medium">{clinic.nextAvailable}</span></span>
+            <span className="text-gray-600 font-medium">{clinic.operatingHours || clinic.operating_hours || '24 Hours'}</span>
           </div>
         </div>
 

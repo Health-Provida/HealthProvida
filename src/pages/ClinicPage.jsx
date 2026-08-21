@@ -370,9 +370,7 @@ export default function ClinicPage() {
   };
 
   const handleSecondaryBookClick = () => {
-    if (clinic?.phone) {
-      window.location.href = `tel:${clinic.phone}`;
-    }
+    navigate(`${getClinicUrl(clinic)}/book`);
   };
 
   const handleShowMore = (index) => {
@@ -1171,36 +1169,55 @@ export default function ClinicPage() {
                 Book an Appointment
               </h2>
 
-              <div className="flex flex-col items-center text-center py-6 px-2">
-                  <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                    <Calendar className="w-8 h-8 text-blue-400" />
+              <div className="flex flex-col items-center text-center py-4 px-2">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center mb-4 shadow-lg shadow-blue-200">
+                    <Calendar className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="font-semibold text-gray-800 mb-1">Book an appointment</h3>
                   <p className="text-sm text-gray-500 mb-6">
-                    Contact this provider directly to confirm your appointment.
+                    Book a GP consultation, specialist visit, or laboratory test online.
                   </p>
 
-                  {/* Chat to Book — primary CTA */}
-                  <a
-                    href={`https://wa.me/${(clinic.phone || '').replace(/[^0-9]/g, '')}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 px-6 rounded-lg text-base font-semibold transition shadow-md hover:shadow-lg mb-3"
+                  {/* Book Now — primary CTA */}
+                  <button
+                    onClick={() => navigate(`${getClinicUrl(clinic)}/book`)}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white py-3.5 px-6 rounded-xl text-base font-semibold transition shadow-lg hover:shadow-xl shadow-blue-200 mb-3"
                   >
-                    <MessageCircle className="w-5 h-5" />
-                    Chat to Book
-                  </a>
+                    <Stethoscope className="w-5 h-5" />
+                    Book Now
+                  </button>
 
-                  {/* Call to Book — secondary CTA */}
-                  {clinic.phone && (
-                    <a
-                      href={`tel:${clinic.phone}`}
-                      className="w-full flex items-center justify-center gap-2 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-700 py-3 px-6 rounded-lg text-base font-semibold transition"
-                    >
-                      <Phone className="w-5 h-5" />
-                      Call to Book
-                    </a>
-                  )}
+                  {/* Book Laboratory Test */}
+                  <button
+                    onClick={() => navigate(`${getClinicUrl(clinic)}/book?type=laboratory`)}
+                    className="w-full flex items-center justify-center gap-2 border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 text-purple-700 py-3 px-6 rounded-xl text-sm font-semibold transition mb-4"
+                  >
+                    🧪 Book Lab Test
+                  </button>
+
+                  <div className="w-full border-t border-gray-100 pt-4 space-y-2">
+                    <p className="text-xs text-gray-400 font-medium">Or contact directly</p>
+                    <div className="flex gap-2">
+                      <a
+                        href={`https://wa.me/${(clinic.phone || '').replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-1 flex items-center justify-center gap-1.5 bg-green-50 hover:bg-green-100 text-green-700 py-2.5 px-3 rounded-lg text-xs font-semibold transition"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        WhatsApp
+                      </a>
+                      {clinic.phone && (
+                        <a
+                          href={`tel:${clinic.phone}`}
+                          className="flex-1 flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 py-2.5 px-3 rounded-lg text-xs font-semibold transition"
+                        >
+                          <Phone className="w-4 h-4" />
+                          Call
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </div>
             </div>
 

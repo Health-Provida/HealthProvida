@@ -2,8 +2,9 @@
  * AppointmentsPage.jsx
  * ──────────────────────────────────────────────────────────────
  * Dedicated page for managing patient appointments.
- * Features filter tabs, search, status badges, cancel actions,
- * loading skeletons, and responsive design.
+ * Integrates with both Supabase (legacy) and BookingContext
+ * (new booking system). Features filter tabs, search, status
+ * badges, cancel/reschedule actions, and responsive design.
  * ──────────────────────────────────────────────────────────────
  */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -13,20 +14,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   CalendarCheck, Clock, Search, PlusCircle, Stethoscope,
   MapPin, FileText, ChevronRight, Filter, ArrowRight,
-  X, AlertCircle, Calendar, CheckCircle2
+  X, AlertCircle, Calendar, CheckCircle2, RefreshCw,
+  Activity, CreditCard, Building2, Copy, Check,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useBooking } from '@/context/BookingContext';
 import { useToast } from '@/components/ui/use-toast';
 import { fetchPatientAppointments, cancelAppointment } from '@/utils/supabaseQueries';
 import { getClinicUrl } from '@/utils/slugUtils';
 
 // ─── Status badge styles ─────────────────────────────────────────────────────
 const STATUS_STYLES = {
-  pending:   { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-400', border: 'border-amber-100', label: 'Pending', icon: Clock },
-  confirmed: { bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-400', border: 'border-blue-100', label: 'Confirmed', icon: CheckCircle2 },
-  completed: { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500', border: 'border-emerald-100', label: 'Completed', icon: CheckCircle2 },
-  cancelled: { bg: 'bg-red-50', text: 'text-red-600', dot: 'bg-red-400', border: 'border-red-100', label: 'Cancelled', icon: X },
-  no_show:   { bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-400', border: 'border-gray-200', label: 'No Show', icon: AlertCircle },
+  pending:      { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-400', border: 'border-amber-100', label: 'Pending', icon: Clock },
+  confirmed:    { bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-400', border: 'border-blue-100', label: 'Confirmed', icon: CheckCircle2 },
+  completed:    { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500', border: 'border-emerald-100', label: 'Completed', icon: CheckCircle2 },
+  cancelled:    { bg: 'bg-red-50', text: 'text-red-600', dot: 'bg-red-400', border: 'border-red-100', label: 'Cancelled', icon: X },
+  rescheduled:  { bg: 'bg-indigo-50', text: 'text-indigo-700', dot: 'bg-indigo-400', border: 'border-indigo-100', label: 'Rescheduled', icon: RefreshCw },
+  no_show:      { bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-400', border: 'border-gray-200', label: 'No Show', icon: AlertCircle },
 };
 
 // ─── Filter tabs ──────────────────────────────────────────────────────────────
@@ -37,18 +41,152 @@ const TABS = [
   { id: 'cancelled', label: 'Cancelled' },
 ];
 
+function formatNaira(amount) {
+  return `₦${amount.toLocaleString()}`;
+}
+
+// ─── Reschedule Modal ─────────────────────────────────────────────────────────
+function RescheduleModal({ appointment, isOpen, onClose, onReschedule }) {
+  const booking = useBooking();
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+
+  if (!isOpen || !appointment) return null;
+
+  const availability = booking.getAvailability(appointment.clinicId);
+  const availableSlots = availability.filter(s => !s.isBooked && s.id !== appointment.slotId);
+
+  // Group by date
+  const slotsByDate = {};
+  availableSlots.forEach(slot => {
+    if (!slotsByDate[slot.date]) {
+      slotsByDate[slot.date] = { date: slot.date, dayName: slot.dayName, slots: [] };
+    }
+    slotsByDate[slot.date].slots.push(slot);
+  });
+  const dateGroups = Object.values(slotsByDate).sort((a, b) => a.date.localeCompare(b.date));
+
+  const selectedDaySlots = selectedDate
+    ? dateGroups.find(d => d.date === selectedDate)?.slots || []
+    : [];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">Reschedule Appointment</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Select a new date and time</p>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 transition">
+            <X className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
+
+        {/* Current appointment info */}
+        <div className="px-5 pt-4 pb-2">
+          <div className="bg-gray-50 rounded-xl p-3 text-sm">
+            <p className="text-xs text-gray-500 font-medium mb-1">Current appointment</p>
+            <p className="font-semibold text-gray-800">
+              {appointment.dayName || ''}, {appointment.date} at {appointment.displayTime || appointment.time}
+            </p>
+          </div>
+        </div>
+
+        {/* Date selector */}
+        <div className="px-5 pt-3 pb-2">
+          <p className="text-sm font-semibold text-gray-700 mb-2">New date</p>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {dateGroups.slice(0, 10).map((day) => {
+              const dateObj = new Date(day.date + 'T00:00:00');
+              const isSelected = day.date === selectedDate;
+              return (
+                <button
+                  key={day.date}
+                  onClick={() => { setSelectedDate(day.date); setSelectedSlot(null); }}
+                  className={`flex-shrink-0 flex flex-col items-center w-16 py-2.5 rounded-xl transition-all ${
+                    isSelected
+                      ? 'bg-blue-500 text-white shadow-md'
+                      : 'bg-gray-50 text-gray-700 hover:bg-blue-50'
+                  }`}
+                >
+                  <span className={`text-[10px] font-bold uppercase ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
+                    {day.dayName.slice(0, 3)}
+                  </span>
+                  <span className={`text-base font-bold ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                    {dateObj.getDate()}
+                  </span>
+                  <span className={`text-[9px] ${isSelected ? 'text-blue-200' : 'text-emerald-500'}`}>
+                    {day.slots.length} slots
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Time slots */}
+        <div className="flex-1 overflow-y-auto px-5 pb-4">
+          {selectedDate && (
+            <>
+              <p className="text-sm font-semibold text-gray-700 mb-2">New time</p>
+              <div className="grid grid-cols-3 gap-2">
+                {selectedDaySlots.map((slot) => (
+                  <button
+                    key={slot.id}
+                    onClick={() => setSelectedSlot(slot)}
+                    className={`py-2.5 rounded-xl text-xs font-medium transition-all ${
+                      selectedSlot?.id === slot.id
+                        ? 'bg-blue-500 text-white shadow-md'
+                        : 'bg-gray-50 text-gray-700 hover:bg-blue-50'
+                    }`}
+                  >
+                    {slot.displayTime}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="p-5 border-t border-gray-100 flex gap-3">
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition">
+            Cancel
+          </button>
+          <button
+            onClick={() => selectedSlot && onReschedule(appointment.appointmentId, selectedSlot)}
+            disabled={!selectedSlot}
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-teal-500 text-white font-semibold text-sm shadow-md hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Confirm Reschedule
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ─── Appointment card ─────────────────────────────────────────────────────────
-function AppointmentCard({ appointment, onCancel, isCancelling }) {
+function AppointmentCard({ appointment, onCancel, onReschedule, isCancelling, isLocal }) {
   const s = STATUS_STYLES[appointment.status] || STATUS_STYLES.pending;
   const StatusIcon = s.icon;
   const canCancel = ['pending', 'confirmed'].includes(appointment.status);
+  const canReschedule = isLocal && ['confirmed'].includes(appointment.status);
+
   const formattedDate = appointment.date
     ? new Date(appointment.date + 'T00:00:00').toLocaleDateString('en-US', {
         weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
       })
     : '';
 
-  // Determine if appointment is upcoming
   const isUpcoming = appointment.date && new Date(appointment.date + 'T23:59:59') >= new Date();
 
   return (
@@ -68,6 +206,7 @@ function AppointmentCard({ appointment, onCancel, isCancelling }) {
               src={appointment.clinicImage}
               alt={appointment.clinicName}
               className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+              onError={(e) => { e.target.style.display = 'none'; }}
             />
           </div>
 
@@ -75,18 +214,14 @@ function AppointmentCard({ appointment, onCancel, isCancelling }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <Link
-                  to={`/clinic/${appointment.clinicId}`}
-                  className="font-bold text-gray-900 text-sm hover:text-blue-700 transition truncate block"
-                >
+                <p className="font-bold text-gray-900 text-sm truncate block">
                   {appointment.clinicName}
-                </Link>
+                </p>
                 <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
                   <Stethoscope className="w-3 h-3" />
-                  {appointment.clinicType}
+                  {appointment.clinicType || appointment.serviceLabel || 'Consultation'}
                 </p>
               </div>
-
               {/* Status badge */}
               <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase px-2.5 py-1 rounded-full ${s.bg} ${s.text} flex-shrink-0`}>
                 <StatusIcon className="w-3 h-3" />
@@ -102,20 +237,46 @@ function AppointmentCard({ appointment, onCancel, isCancelling }) {
               </span>
               <span className="flex items-center gap-1.5 text-xs text-gray-600 font-medium bg-gray-50 px-2.5 py-1.5 rounded-lg">
                 <Clock className="w-3.5 h-3.5 text-green-500" />
-                {appointment.time}
+                {appointment.displayTime || appointment.time}
               </span>
             </div>
 
+            {/* Booking ref */}
+            {appointment.bookingRef && (
+              <p className="text-[10px] text-gray-400 mt-2 font-mono">
+                Ref: {appointment.bookingRef}
+              </p>
+            )}
+
+            {/* Symptoms preview */}
+            {appointment.symptoms && (
+              <div className="mt-2.5 flex items-start gap-1.5 text-xs text-gray-400">
+                <Activity className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                <span className="italic line-clamp-1">{appointment.symptoms}</span>
+              </div>
+            )}
+
+            {/* Price */}
+            {appointment.amount > 0 && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-500">
+                <CreditCard className="w-3 h-3" />
+                <span className="font-semibold text-gray-700">{formatNaira(appointment.amount)}</span>
+                {appointment.paymentStatus === 'completed' && (
+                  <span className="text-emerald-600 font-bold">• Paid</span>
+                )}
+              </div>
+            )}
+
             {/* Address */}
-            {appointment.clinicAddress && (
-              <p className="text-xs text-gray-400 mt-2.5 flex items-center gap-1 truncate">
+            {(appointment.clinicAddress || appointment.hospitalAddress) && (
+              <p className="text-xs text-gray-400 mt-2 flex items-center gap-1 truncate">
                 <MapPin className="w-3 h-3 flex-shrink-0" />
-                {appointment.clinicAddress}
+                {appointment.clinicAddress || appointment.hospitalAddress}
               </p>
             )}
 
             {/* Notes */}
-            {appointment.notes && (
+            {appointment.notes && !appointment.symptoms && (
               <div className="mt-2.5 flex items-start gap-1.5 text-xs text-gray-400">
                 <FileText className="w-3 h-3 flex-shrink-0 mt-0.5" />
                 <span className="italic line-clamp-2">{appointment.notes}</span>
@@ -125,7 +286,7 @@ function AppointmentCard({ appointment, onCancel, isCancelling }) {
         </div>
 
         {/* Actions */}
-        {canCancel && (
+        {(canCancel || canReschedule) && (
           <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
             {isUpcoming && (
               <span className="text-[10px] uppercase tracking-wider font-bold text-blue-500 flex items-center gap-1">
@@ -133,20 +294,33 @@ function AppointmentCard({ appointment, onCancel, isCancelling }) {
                 Upcoming
               </span>
             )}
-            <button
-              onClick={() => onCancel(appointment.id)}
-              disabled={isCancelling}
-              className="ml-auto text-xs font-semibold text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
-            >
-              {isCancelling ? (
-                <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin" />
-                  Cancelling…
-                </span>
-              ) : (
-                'Cancel Appointment'
+            <div className="ml-auto flex items-center gap-2">
+              {canReschedule && (
+                <button
+                  onClick={() => onReschedule(appointment)}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Reschedule
+                </button>
               )}
-            </button>
+              {canCancel && (
+                <button
+                  onClick={() => onCancel(appointment.id || appointment.appointmentId)}
+                  disabled={isCancelling}
+                  className="text-xs font-semibold text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+                >
+                  {isCancelling ? (
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin" />
+                      Cancelling…
+                    </span>
+                  ) : (
+                    'Cancel'
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -179,21 +353,23 @@ function SkeletonCard() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AppointmentsPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
+  const booking = useBooking();
 
-  const [appointments, setAppointments] = useState([]);
+  const [supabaseAppointments, setSupabaseAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [rescheduleTarget, setRescheduleTarget] = useState(null);
 
-  // ── Load appointments ──────────────────────────────────────────────────────
+  // ── Load Supabase appointments ─────────────────────────────────────────────
   const loadAppointments = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
     const { data } = await fetchPatientAppointments(user.id);
-    setAppointments(data || []);
+    setSupabaseAppointments(data || []);
     setLoading(false);
   }, [user?.id]);
 
@@ -201,9 +377,65 @@ export default function AppointmentsPage() {
     loadAppointments();
   }, [loadAppointments]);
 
+  // ── Get local BookingContext appointments ───────────────────────────────────
+  const localAppointments = useMemo(() => {
+    const email = profile?.email || user?.email;
+    if (!email) return [];
+    return booking.getPatientAppointments(email).map(appt => ({
+      ...appt,
+      id: appt.appointmentId,
+      clinicId: appt.clinicId,
+      clinicName: appt.hospitalName,
+      clinicType: appt.bookingType === 'laboratory' ? 'Laboratory' :
+        appt.bookingType === 'specialist' ? `Specialist (${appt.specialistType || ''})` :
+        appt.bookingType === 'gp_preassessment' ? 'GP Preassessment' : 'General Practitioner',
+      serviceLabel: appt.bookingType === 'laboratory' ? 'Laboratory Test' :
+        appt.bookingType === 'specialist' ? 'Specialist Consultation' :
+        appt.bookingType === 'gp_preassessment' ? 'GP Preassessment' : 'GP Consultation',
+      clinicAddress: appt.hospitalAddress,
+      clinicImage: appt.hospitalImage,
+      date: appt.appointmentDate,
+      time: appt.displayTime || appt.appointmentTime,
+      displayTime: appt.displayTime,
+      rawTime: appt.appointmentTime,
+      status: appt.status,
+      notes: appt.symptoms,
+      symptoms: appt.symptoms,
+      amount: appt.amount,
+      bookingRef: appt.bookingRef,
+      paymentStatus: appt.paymentStatus,
+      isLocal: true,
+    }));
+  }, [booking, profile, user]);
+
+  // ── Merge all appointments ─────────────────────────────────────────────────
+  const appointments = useMemo(() => {
+    const all = [
+      ...localAppointments,
+      ...supabaseAppointments.map(a => ({ ...a, isLocal: false })),
+    ];
+    // Sort by date descending
+    return all.sort((a, b) => {
+      const dateA = a.date || a.appointmentDate || '';
+      const dateB = b.date || b.appointmentDate || '';
+      return dateB.localeCompare(dateA);
+    });
+  }, [localAppointments, supabaseAppointments]);
+
   // ── Cancel ────────────────────────────────────────────────────────────────
   const handleCancel = async (appointmentId) => {
     setCancellingId(appointmentId);
+
+    // Check if it's a local appointment
+    const localAppt = localAppointments.find(a => a.id === appointmentId);
+    if (localAppt) {
+      booking.cancelBooking(appointmentId);
+      toast({ title: 'Appointment cancelled', description: 'Your appointment has been cancelled and the slot released.' });
+      setCancellingId(null);
+      return;
+    }
+
+    // Supabase appointment
     const { error } = await cancelAppointment(appointmentId);
     if (error) {
       toast({ title: 'Error', description: error.message || 'Failed to cancel appointment.', variant: 'destructive' });
@@ -212,6 +444,16 @@ export default function AppointmentsPage() {
       await loadAppointments();
     }
     setCancellingId(null);
+  };
+
+  // ── Reschedule ────────────────────────────────────────────────────────────
+  const handleReschedule = (appointmentId, newSlot) => {
+    booking.rescheduleAppointment(appointmentId, newSlot);
+    toast({
+      title: 'Appointment rescheduled',
+      description: `Your appointment has been moved to ${newSlot.dayName}, ${newSlot.date} at ${newSlot.displayTime}.`,
+    });
+    setRescheduleTarget(null);
   };
 
   // ── Filter & search ─────────────────────────────────────────────────────
@@ -243,7 +485,9 @@ export default function AppointmentsPage() {
         (a) =>
           a.clinicName?.toLowerCase().includes(q) ||
           a.clinicType?.toLowerCase().includes(q) ||
-          a.clinicAddress?.toLowerCase().includes(q)
+          a.clinicAddress?.toLowerCase().includes(q) ||
+          a.bookingRef?.toLowerCase().includes(q) ||
+          a.symptoms?.toLowerCase().includes(q)
       );
     }
 
@@ -296,6 +540,37 @@ export default function AppointmentsPage() {
             </Link>
           </motion.div>
 
+          {/* ── Notifications ─────────────────────────────────────────── */}
+          {booking.notifications.filter(n => n.type === 'reminder' && !n.read).length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 space-y-2"
+            >
+              {booking.notifications
+                .filter(n => n.type === 'reminder' && !n.read)
+                .slice(0, 3)
+                .map((notif) => (
+                  <div key={notif.id} className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-4 h-4 text-amber-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-amber-800">{notif.title}</p>
+                      <p className="text-xs text-amber-700 mt-0.5">{notif.message}</p>
+                    </div>
+                    <button
+                      onClick={() => booking.markNotificationRead(notif.id)}
+                      className="text-xs text-amber-600 hover:text-amber-800 font-medium flex-shrink-0"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                ))
+              }
+            </motion.div>
+          )}
+
           {/* ── Stats row ───────────────────────────────────────────────── */}
           {!loading && appointments.length > 0 && (
             <motion.div
@@ -334,7 +609,7 @@ export default function AppointmentsPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by clinic name, type, or address…"
+                placeholder="Search by clinic name, type, address, or reference…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-sm transition shadow-sm"
@@ -389,7 +664,9 @@ export default function AppointmentsPage() {
                     key={appt.id}
                     appointment={appt}
                     onCancel={handleCancel}
+                    onReschedule={(apt) => setRescheduleTarget(apt)}
                     isCancelling={cancellingId === appt.id}
+                    isLocal={appt.isLocal}
                   />
                 ))}
               </div>
@@ -467,6 +744,18 @@ export default function AppointmentsPage() {
           )}
         </div>
       </div>
+
+      {/* Reschedule modal */}
+      <AnimatePresence>
+        {rescheduleTarget && (
+          <RescheduleModal
+            appointment={rescheduleTarget}
+            isOpen={!!rescheduleTarget}
+            onClose={() => setRescheduleTarget(null)}
+            onReschedule={handleReschedule}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

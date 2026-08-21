@@ -21,6 +21,7 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import SearchPage from '@/pages/SearchPage';
 import AppointmentsPage from '@/pages/AppointmentsPage';
 import MessagesPage from '@/pages/MessagesPage';
+import BookingPage from '@/pages/BookingPage';
 import ScrollToTop from '@/components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import MobileBottomNav from '@/components/MobileBottomNav';
@@ -29,6 +30,7 @@ import ProviderRouter from '@/pages/provider/ProviderRouter';
 import { AuthProvider } from '@/context/AuthContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { ClinicsProvider } from '@/context/ClinicsContext';
+import { BookingProvider } from '@/context/BookingContext';
 
 
 function App() {
@@ -36,6 +38,7 @@ function App() {
     <AuthProvider>
       <ClinicsProvider>
         <FavoritesProvider>
+          <BookingProvider>
           <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-teal-50 flex flex-col">
             <ScrollToTop />
             <MobileBottomNav />
@@ -72,6 +75,7 @@ function App() {
 
               {/* Standalone pages (no header/footer) */}
               <Route path="/clinic/:slug/photos" element={<ClinicPhotosPage />} />
+              <Route path="/clinic/:slug/book" element={<BookingPage />} />
               <Route path="/map" element={<MapPage />} />
               <Route path="/join-provider" element={<ProtectedRoute><JoinProviderPage /></ProtectedRoute>} />
 
@@ -120,6 +124,7 @@ function App() {
             </Routes>
             <Toaster />
           </div>
+          </BookingProvider>
         </FavoritesProvider>
       </ClinicsProvider>
     </AuthProvider>

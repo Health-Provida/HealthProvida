@@ -356,6 +356,42 @@ export const clinicsData = [
   }
 ];
 
+// Mock operating hours mapping for demo display
+const MOCK_HOURS_MAP = {
+  1: "24 Hours",
+  2: "24 Hours",
+  3: "Mon–Fri 8:00 AM – 5:00 PM",
+  4: "Mon–Sat 9:00 AM – 9:00 PM",
+  5: "Mon–Sat 8:00 AM – 6:00 PM",
+  6: "Mon–Fri 9:00 AM – 5:00 PM",
+  7: "24 Hours",
+  8: "24 Hours",
+  9: "Mon–Sat 8:00 AM – 8:00 PM",
+};
+
+const DEFAULT_MOCK_HOURS = [
+  "24 Hours",
+  "Mon–Fri 9:00 AM – 5:00 PM",
+  "Mon–Sat 8:00 AM – 8:00 PM",
+  "Mon–Sat 9:00 AM – 6:00 PM",
+  "24 Hours",
+  "Mon–Fri 8:00 AM – 6:00 PM",
+];
+
+export function getClinicMockOperatingHours(clinic) {
+  if (clinic?.operatingHours) return clinic.operatingHours;
+  if (clinic?.operating_hours) return clinic.operating_hours;
+  if (clinic?.id && MOCK_HOURS_MAP[clinic.id]) return MOCK_HOURS_MAP[clinic.id];
+  
+  const typeOrName = `${clinic?.practice_type || ''} ${clinic?.practitioner_name || ''}`.toLowerCase();
+  if (typeOrName.includes('hospital') || typeOrName.includes('emergency') || typeOrName.includes('tertiary')) {
+    return '24 Hours';
+  }
+  
+  const idNum = typeof clinic?.id === 'number' ? clinic.id : (clinic?.practitioner_name?.length || 0);
+  return DEFAULT_MOCK_HOURS[Math.abs(idNum) % DEFAULT_MOCK_HOURS.length];
+}
+
 function ClinicDialog({ clinic, isOpen, onClose }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
 
@@ -426,6 +462,10 @@ function ClinicDialog({ clinic, isOpen, onClose }) {
               <p className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 <a href={`tel:${clinic.phone}`} className="hover:text-blue-600">{clinic.phone}</a>
+              </p>
+              <p className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <span>Operating Hours: <span className="text-gray-900 font-medium">{getClinicMockOperatingHours(clinic)}</span></span>
               </p>
             </div>
           </div>
@@ -588,7 +628,7 @@ function ClinicCard({ clinic, onClick }) {
           <span className="hidden sm:inline text-gray-300">•</span>
           <div className="flex items-center">
             <Clock className="w-3.5 h-3.5 text-gray-400 mr-1.5 flex-shrink-0" />
-            <span className="text-gray-600">{clinic.operatingHours || 'Hours not listed'}</span>
+            <span className="text-gray-600">{getClinicMockOperatingHours(clinic)}</span>
           </div>
         </div>
 
