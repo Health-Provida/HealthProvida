@@ -47,23 +47,21 @@ export const commonGallery = [
   {
     id: 'outpatient_area',
     title: 'Outpatient Area',
-    description: 'Our outpatient area provides high-quality, walk-in medical services without the need for overnight admission. Patients benefit from swift consultations, diagnostics, and treatments in a calm, well-organised space designed to minimise wait times and maximise comfort.',
+    description: 'Spacious outpatient waiting area designed for patient comfort, with organised queuing, check-in screens, and friendly staff on hand.',
     images: [
       imgOutpatientArea,
       'https://images.unsplash.com/photo-1580281657702-257584239a55?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1562243057-02dae7bb3bb4?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800'
+      'https://images.unsplash.com/photo-1562243057-02dae7bb3bb4?auto=format&fit=crop&q=80&w=800'
     ]
   },
   {
     id: 'phlebotomy_room',
     title: 'Phlebotomy Room',
-    description: 'Our dedicated phlebotomy room offers a clean, hygienic, and patient-friendly environment for blood draws and specimen collection. Staffed by trained phlebotomists, we ensure a safe, efficient, and as comfortable an experience as possible for every patient.',
+    description: 'Dedicated blood collection suite equipped with modern phlebotomy chairs, sterile equipment, and trained staff to ensure a safe and comfortable experience.',
     images: [
       imgPhlebotomyRoom,
       'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1584483766114-2cea6facdf57?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?auto=format&fit=crop&q=80&w=800'
+      'https://images.unsplash.com/photo-1584483766114-2cea6facdf57?auto=format&fit=crop&q=80&w=800'
     ]
   },
   {
@@ -79,7 +77,7 @@ export const commonGallery = [
   {
     id: 'private_ward',
     title: 'Private Ward',
-    description: 'Our private wards offer a premium, fully private inpatient experience with en-suite bathrooms, personalised nursing care, and comfortable accommodation for a family member or loved one — ensuring rest, dignity, and peace of mind throughout recovery.',
+    description: 'Premium, private rooms designed for comfort and privacy, featuring en-suite bathrooms and accommodations for a loved one.',
     images: [
       imgPrivateRoom,
       'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800',
@@ -90,12 +88,11 @@ export const commonGallery = [
   {
     id: 'semi_private_ward',
     title: 'Semi-Private Ward',
-    description: 'Our semi-private wards provide quality inpatient care in a shared but thoughtfully partitioned space. Patients enjoy attentive nursing, essential amenities, and a comfortable environment, offering the right balance of care and value.',
+    description: 'Comfortable shared rooms with privacy curtains, offering quality care and monitoring equipment at an accessible price point.',
     images: [
       imgSemiPrivateWard,
       imgGeneralWard,
-      'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=800'
+      'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&q=80&w=800'
     ]
   },
   {
