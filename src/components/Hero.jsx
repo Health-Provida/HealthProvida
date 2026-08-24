@@ -319,7 +319,7 @@ const Hero = () => {
             <span className="block text-green-300">Near You</span>
           </h1>
           <p className="text-base sm:text-lg md:text-xl mb-8 sm:mb-10 text-blue-100 max-w-2xl mx-auto px-2 sm:px-0">
-            Discover trusted medical providers — ranked by patient bookings.
+            Discover trusted medical clinics, compare services, and book appointments with ease. Your health journey starts here.
           </p>
 
           {/* ── Search Bar ──────────────────────────────────── */}

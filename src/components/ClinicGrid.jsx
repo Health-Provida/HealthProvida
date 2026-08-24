@@ -683,7 +683,7 @@ export default function ClinicCardsApp() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-4 sm:mb-8 px-1 sm:px-0">
           <h1 className="text-xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">Most Popular Clinics</h1>
-          <p className="text-xs sm:text-base text-gray-600">Verified providers across Sub-Saharan Africa — ranked by patient popularity</p>
+          <p className="text-xs sm:text-base text-gray-600">Verified providers across Sub-Saharan Africa — ranked by patient bookings</p>
         </div>
 
         <div className="space-y-4 sm:space-y-6">
