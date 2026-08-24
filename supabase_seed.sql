@@ -326,6 +326,18 @@ INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
   ('reception', NULL, 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=800', 3),
   ('reception', NULL, 'https://images.unsplash.com/photo-1519494080410-f9aa76cb4283?auto=format&fit=crop&q=80&w=800', 4);
 
+-- Outpatient Area
+INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
+  ('outpatient_area', NULL, 'https://images.unsplash.com/photo-1580281657702-257584239a55?auto=format&fit=crop&q=80&w=800', 2),
+  ('outpatient_area', NULL, 'https://images.unsplash.com/photo-1562243057-02dae7bb3bb4?auto=format&fit=crop&q=80&w=800', 3),
+  ('outpatient_area', NULL, 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800', 4);
+
+-- Phlebotomy Room
+INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
+  ('phlebotomy_room', NULL, 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=800', 2),
+  ('phlebotomy_room', NULL, 'https://images.unsplash.com/photo-1584483766114-2cea6facdf57?auto=format&fit=crop&q=80&w=800', 3),
+  ('phlebotomy_room', NULL, 'https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?auto=format&fit=crop&q=80&w=800', 4);
+
 -- Consulting Room
 INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
   ('consulting_room', NULL, 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=800', 1),
@@ -338,12 +350,20 @@ INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
   ('private_ward', NULL, 'https://images.unsplash.com/photo-1505692952047-1a78307da8f2?auto=format&fit=crop&q=80&w=800', 3),
   ('private_ward', NULL, 'https://images.unsplash.com/photo-1512678080530-7760d81faba6?auto=format&fit=crop&q=80&w=800', 4);
 
+-- Semi-Private Ward
+INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
+  ('semi_private_ward', NULL, 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&q=80&w=800', 2),
+  ('semi_private_ward', NULL, 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=800', 3),
+  ('semi_private_ward', NULL, 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800', 4);
+
 -- Laboratory
 INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
   ('laboratory', NULL, 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=800', 1),
-  ('laboratory', NULL, 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&q=80&w=800', 3);
+  ('laboratory', NULL, 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&q=80&w=800', 2),
+  ('laboratory', NULL, 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=800', 3);
 
 -- Special Units
 INSERT INTO clinic_images (ward_id, clinic_id, image_url, sort_order) VALUES
   ('special_units', NULL, 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800', 2),
-  ('special_units', NULL, 'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&q=80&w=800', 4);
+  ('special_units', NULL, 'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&q=80&w=800', 3),
+  ('special_units', NULL, 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800', 4);
