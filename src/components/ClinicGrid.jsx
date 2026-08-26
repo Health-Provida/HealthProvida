@@ -45,9 +45,9 @@ export const commonGallery = [
     ]
   },
   {
-    id: 'outpatient_area',
+    id: 'ent_area',
     title: 'Outpatient Area',
-    description: 'Our outpatient area provides high-quality, walk-in medical services without the need for overnight admission. Patients benefit from swift consultations, diagnostics, and treatments in a calm, well-organised space designed to minimise wait times and maximise comfort.',
+    description: 'Walk-in consultations, diagnostics, and treatments — no overnight stay required. Swift service in a calm, well-organised space.',
     images: [
       imgOutpatientArea,
       'https://images.unsplash.com/photo-1580281657702-257584239a55?auto=format&fit=crop&q=80&w=800',
@@ -58,7 +58,7 @@ export const commonGallery = [
   {
     id: 'phlebotomy_room',
     title: 'Phlebotomy Room',
-    description: 'Our dedicated phlebotomy room offers a clean, hygienic, and patient-friendly environment for blood draws and specimen collection. Staffed by trained phlebotomists, we ensure a safe, efficient, and as comfortable an experience as possible for every patient.',
+    description: 'Clean, dedicated space for blood draws and specimen collection, staffed by trained phlebotomists for a safe and comfortable experience.',
     images: [
       imgPhlebotomyRoom,
       'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=800',
@@ -79,7 +79,7 @@ export const commonGallery = [
   {
     id: 'private_ward',
     title: 'Private Ward',
-    description: 'Our private wards offer a premium, fully private inpatient experience with en-suite bathrooms, personalised nursing care, and comfortable accommodation for a family member or loved one — ensuring rest, dignity, and peace of mind throughout recovery.',
+    description: 'En-suite private rooms with personalised nursing care and space for a loved one — rest, dignity, and peace of mind throughout recovery.',
     images: [
       imgPrivateRoom,
       'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800',
@@ -90,7 +90,7 @@ export const commonGallery = [
   {
     id: 'semi_private_ward',
     title: 'Semi-Private Ward',
-    description: 'Our semi-private wards provide quality inpatient care in a shared but thoughtfully partitioned space. Patients enjoy attentive nursing, essential amenities, and a comfortable environment, offering the right balance of care and value.',
+    description: 'Shared inpatient rooms with attentive nursing care, essential amenities, and comfortable recovery beds — quality care at great value.',
     images: [
       imgSemiPrivateWard,
       imgGeneralWard,
@@ -385,12 +385,12 @@ export function getClinicMockOperatingHours(clinic) {
   if (clinic?.operatingHours) return clinic.operatingHours;
   if (clinic?.operating_hours) return clinic.operating_hours;
   if (clinic?.id && MOCK_HOURS_MAP[clinic.id]) return MOCK_HOURS_MAP[clinic.id];
-  
+
   const typeOrName = `${clinic?.practice_type || ''} ${clinic?.practitioner_name || ''}`.toLowerCase();
   if (typeOrName.includes('hospital') || typeOrName.includes('emergency') || typeOrName.includes('tertiary')) {
     return '24 Hours';
   }
-  
+
   const idNum = typeof clinic?.id === 'number' ? clinic.id : (clinic?.practitioner_name?.length || 0);
   return DEFAULT_MOCK_HOURS[Math.abs(idNum) % DEFAULT_MOCK_HOURS.length];
 }
@@ -609,9 +609,8 @@ function ClinicCard({ clinic, onClick }) {
               e.stopPropagation();
               toggleFavorite(clinic.id);
             }}
-            className={`p-2 rounded-full flex-shrink-0 transition-all duration-200 hover:bg-gray-100 ${
-              favorited ? 'text-red-500' : 'text-gray-700 hover:text-red-500'
-            }`}
+            className={`p-2 rounded-full flex-shrink-0 transition-all duration-200 hover:bg-gray-100 ${favorited ? 'text-red-500' : 'text-gray-700 hover:text-red-500'
+              }`}
             title={favorited ? 'Remove from favorites' : 'Add to favorites'}
           >
             <Heart className={`w-5 h-5 ${favorited ? 'fill-red-500 text-red-500' : ''}`} />
