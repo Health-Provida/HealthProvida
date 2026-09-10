@@ -21,7 +21,7 @@ import {
   Calendar, Clock, MapPin, CheckCircle, AlertCircle, Loader2,
   Heart, Shield, ChevronDown, ChevronRight, CreditCard,
   FileText, Star, Sparkles, Activity, FlaskConical, Search,
-  Building2, Info, X, RefreshCw, Copy, Check,
+  Building2, Info, X, RefreshCw, Copy, Check, AlertTriangle, Siren,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useBooking } from '@/context/BookingContext';
@@ -224,6 +224,235 @@ function SymptomsStep({ data, onChange, durations, isLab }) {
           <p className="text-sm font-medium text-blue-800">This is not a diagnosis</p>
           <p className="text-xs text-blue-600 mt-0.5">
             This information helps your doctor prepare for your visit and provide better care. It does not replace a medical consultation.
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Emergency Symptom Screening Data ────────────────────────────
+const EMERGENCY_KEYWORD_MAP = [
+  {
+    id: 'heart_attack',
+    keywords: ['chest', 'heart', 'palpitat', 'pressure', 'squeezing', 'tightness', 'heaviness', 'angina', 'cardiac'],
+    title: 'Signs of a heart attack',
+    description: 'Chest pain, pressure, heaviness, tightness or squeezing across the chest',
+    icon: '❤️',
+  },
+  {
+    id: 'stroke',
+    keywords: ['face droop', 'arm', 'speech', 'slur', 'stroke', 'droop', 'numb', 'facial', 'paralys'],
+    title: 'Signs of a stroke',
+    description: 'Face dropping on one side, cannot hold both arms up, difficulty speaking',
+    icon: '🧠',
+  },
+  {
+    id: 'confusion',
+    keywords: ['confus', 'deliri', 'disorient', 'not making sense', 'slurred', 'forgot name', 'slur'],
+    title: 'Sudden confusion (delirium)',
+    description: 'Cannot be sure of own name or age, slurred speech or not making sense',
+    icon: '😵',
+  },
+  {
+    id: 'suicide',
+    keywords: ['self-harm', 'self harm', 'suicide', 'suicidal', 'overdose', 'cut myself', 'took pills', 'kill myself', 'end my life', 'harming myself'],
+    title: 'Suicide attempt',
+    description: 'By taking something or self-harming',
+    icon: '🆘',
+  },
+  {
+    id: 'breathing',
+    keywords: ['breath', 'chok', 'gasp', 'wheez', 'asthma', 'suffocat', 'can\'t breathe', 'cannot breathe', 'shortness of breath', 'out of breath', 'struggling to breathe'],
+    title: 'Severe difficulty breathing',
+    description: 'Not being able to get words out, breathing very fast, choking or gasping',
+    icon: '🫁',
+  },
+  {
+    id: 'bleeding',
+    keywords: ['bleed', 'blood', 'wound', 'cut', 'lacerat', 'haemorrhag', 'hemorrhag', 'gushing'],
+    title: 'Heavy bleeding',
+    description: 'Spraying, pouring or enough to make a puddle',
+    icon: '🩸',
+  },
+  {
+    id: 'injuries',
+    keywords: ['accident', 'injur', 'crash', 'fall', 'fell', 'fracture', 'trauma', 'broken bone', 'hit by', 'collision'],
+    title: 'Severe injuries',
+    description: 'After a serious accident',
+    icon: '🚑',
+  },
+  {
+    id: 'seizure',
+    keywords: ['seizure', 'fit', 'shaking', 'jerking', 'unconscious', 'faint', 'fainted', 'pass out', 'passed out', 'passing out', 'convuls', 'epilep', 'blackout', 'blacked out'],
+    title: 'Seizure (fit)',
+    description: 'Shaking or jerking, or unconscious',
+    icon: '⚡',
+  },
+  {
+    id: 'swelling',
+    keywords: ['swell', 'swollen', 'lips', 'mouth', 'throat', 'tongue', 'allerg', 'anaphyl', 'epipen'],
+    title: 'Sudden rapid swelling',
+    description: 'Lips, mouth, throat or tongue',
+    icon: '🫨',
+  },
+  {
+    id: 'labour',
+    keywords: ['pregnan', 'contraction', 'labour', 'labor', 'water break', 'water broke', 'cramp', 'baby', 'childbirth', 'giving birth', 'stomach pain', 'abdominal pain', 'tummy pain'],
+    title: "You're in labour",
+    description: 'Water has broken or contractions are regular',
+    icon: '🤰',
+  },
+  {
+    id: 'sepsis',
+    keywords: ['rash', 'fever', 'stiff neck', 'light sensitiv', 'blotch', 'pale', 'grey', 'gray', 'blue skin', 'infection', 'sepsis', 'septic', 'meningit'],
+    title: 'Signs of severe infection or sepsis',
+    description: 'Blue, grey, pale or blotchy skin, lips or tongue; rash that doesn\'t fade when you roll a glass over it; high temperature with stiff neck',
+    icon: '🦠',
+  },
+];
+
+/**
+ * Checks if keyword matches with word boundaries for short words
+ * to prevent false alarms like 'arm' matching 'warm' or 'fit' matching 'benefit'.
+ */
+function matchesKeyword(text, keyword) {
+  const lower = text.toLowerCase();
+  const kw = keyword.toLowerCase();
+  if (kw.length <= 4) {
+    const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}`, 'i');
+    return regex.test(lower);
+  }
+  return lower.includes(kw);
+}
+
+/**
+ * Given the user's symptom text, returns the matching emergency questions.
+ */
+function getMatchingEmergencyQuestions(symptomText) {
+  if (!symptomText || !symptomText.trim()) return [];
+  return EMERGENCY_KEYWORD_MAP.filter(item =>
+    item.keywords.some(kw => matchesKeyword(symptomText, kw))
+  );
+}
+
+// ─── Emergency Screening Sub-Step ───────────────────────────────
+function EmergencyScreeningStep({ questions, checkedItems, onToggle, clinicName }) {
+  const anyChecked = Object.values(checkedItems).some(Boolean);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-6"
+    >
+      <div className="text-center mb-6">
+        <motion.div
+          animate={{ scale: [1, 1.06, 1] }}
+          transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+          className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-red-200"
+        >
+          <AlertTriangle className="w-8 h-8 text-white" />
+        </motion.div>
+        <h2 className="text-xl font-bold text-gray-900">Important Safety Check</h2>
+        <p className="text-gray-500 mt-1.5 text-sm leading-relaxed max-w-xs mx-auto">
+          Based on what you described, please check if <strong>any</strong> of these apply to you right now
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {questions.map((q) => {
+          const isChecked = !!checkedItems[q.id];
+          return (
+            <button
+              key={q.id}
+              onClick={() => onToggle(q.id)}
+              className={`w-full flex items-start gap-3.5 p-4 rounded-2xl text-left transition-all duration-200 ${
+                isChecked
+                  ? 'bg-red-50 border-2 border-red-400 shadow-md shadow-red-100 ring-2 ring-red-200'
+                  : 'bg-white border-2 border-gray-100 hover:border-red-200 hover:bg-red-50/30'
+              }`}
+            >
+              {/* Checkbox */}
+              <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
+                isChecked
+                  ? 'bg-red-500 border-red-500'
+                  : 'border-gray-300 bg-white'
+              }`}>
+                {isChecked && (
+                  <motion.svg
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="w-3.5 h-3.5 text-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </motion.svg>
+                )}
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{q.icon}</span>
+                  <p className={`text-sm font-bold ${
+                    isChecked ? 'text-red-800' : 'text-gray-900'
+                  }`}>
+                    {q.title}
+                  </p>
+                </div>
+                <p className={`text-xs mt-1 leading-relaxed ${
+                  isChecked ? 'text-red-600 font-medium' : 'text-gray-500'
+                }`}>
+                  {q.description}
+                </p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Dynamic Alert Banner */}
+      {anyChecked ? (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-start gap-3 shadow-sm shadow-red-100"
+        >
+          <Siren className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5 animate-pulse" />
+          <div>
+            <p className="text-sm font-bold text-red-800">Emergency Red-Flag Checked</p>
+            <p className="text-xs text-red-700 mt-0.5 leading-relaxed">
+              Clicking <strong>Go to A&E Emergency Department</strong> will direct you straight to the Accident & Emergency (A&E) page for {clinicName || 'this hospital'} with urgent contact numbers and location directions.
+            </p>
+          </div>
+        </motion.div>
+      ) : (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-800">If any of these apply to you</p>
+            <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+              Tick the box to be directed to the hospital's Accident & Emergency (A&E) department. If none apply, leave all unchecked and click Continue to proceed with your normal booking.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Reassurance */}
+      <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
+        <Shield className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-medium text-blue-800">Your safety comes first</p>
+          <p className="text-xs text-blue-600 mt-0.5">
+            This quick safety check helps identify situations that may need urgent emergency attention. If you don't need emergency care, you can proceed normally.
           </p>
         </div>
       </div>
@@ -801,6 +1030,11 @@ export default function BookingPage() {
   const [bookingResult, setBookingResult] = useState(null);
   const [labSearchQuery, setLabSearchQuery] = useState('');
 
+  // Emergency screening state
+  const [showEmergencyScreening, setShowEmergencyScreening] = useState(false);
+  const [emergencyChecks, setEmergencyChecks] = useState({});
+  const [matchedEmergencyQuestions, setMatchedEmergencyQuestions] = useState([]);
+
   // Form data
   const [formData, setFormData] = useState({
     fullName: '',
@@ -902,6 +1136,9 @@ export default function BookingPage() {
       }
     }
 
+    // If emergency screening is active, always allow continue
+    if (showEmergencyScreening) return true;
+
     switch (currentStep) {
       case 0: return formData.fullName.trim() && formData.phone.trim() && formData.email.trim();
       case 1: return true; // symptoms optional but encourage
@@ -914,8 +1151,42 @@ export default function BookingPage() {
     }
   };
 
+  const toggleEmergencyCheck = (id) => {
+    setEmergencyChecks(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   const handleNext = async () => {
     const lastContentStep = steps.length - 2; // summary step
+
+    // ── Emergency screening intercept (non-lab, after symptoms step) ──
+    if (!isLab && currentStep === 1 && !showEmergencyScreening) {
+      const matched = getMatchingEmergencyQuestions(formData.symptoms);
+      if (matched.length > 0) {
+        setMatchedEmergencyQuestions(matched);
+        setEmergencyChecks({});
+        setShowEmergencyScreening(true);
+        return;
+      }
+    }
+
+    // ── Handle continue from emergency screening ──
+    if (showEmergencyScreening) {
+      const anyChecked = Object.values(emergencyChecks).some(Boolean);
+      if (anyChecked) {
+        // Redirect to A&E page with confirmed symptoms
+        const confirmedSymptoms = matchedEmergencyQuestions
+          .filter(q => emergencyChecks[q.id])
+          .map(q => `${q.title}: ${q.description}`)
+          .join('||');
+        navigate(`/clinic/${slug}/emergency?symptoms=${encodeURIComponent(confirmedSymptoms)}`);
+        return;
+      }
+      // None checked — proceed normally
+      setShowEmergencyScreening(false);
+      setCurrentStep(prev => prev + 1);
+      return;
+    }
+
     if (currentStep < lastContentStep) {
       setCurrentStep(prev => prev + 1);
       return;
@@ -958,6 +1229,11 @@ export default function BookingPage() {
   };
 
   const handleBack = () => {
+    if (showEmergencyScreening) {
+      setShowEmergencyScreening(false);
+      setEmergencyChecks({});
+      return;
+    }
     if (currentStep > 0) setCurrentStep(prev => prev - 1);
   };
 
@@ -1071,8 +1347,17 @@ export default function BookingPage() {
                 {currentStep === 0 && (
                   <PatientDetailsStep key="details" data={formData} onChange={updateForm} />
                 )}
-                {currentStep === 1 && (
+                {currentStep === 1 && !showEmergencyScreening && (
                   <SymptomsStep key="symptoms" data={formData} onChange={updateForm} durations={booking.SYMPTOM_DURATIONS} isLab={false} />
+                )}
+                {currentStep === 1 && showEmergencyScreening && (
+                  <EmergencyScreeningStep
+                    key="emergency-screening"
+                    questions={matchedEmergencyQuestions}
+                    checkedItems={emergencyChecks}
+                    onToggle={toggleEmergencyCheck}
+                    clinicName={clinic?.practitioner_name}
+                  />
                 )}
                 {currentStep === 2 && (
                   <CareRecommendationStep
@@ -1132,13 +1417,30 @@ export default function BookingPage() {
               <button
                 onClick={handleNext}
                 disabled={!canProceed() || isProcessing}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white hover:shadow-xl shadow-blue-200"
+                className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                  showEmergencyScreening && Object.values(emergencyChecks).some(Boolean)
+                    ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white shadow-red-200 animate-pulse font-bold'
+                    : 'bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white shadow-blue-200'
+                }`}
               >
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Processing Payment...
                   </>
+                ) : showEmergencyScreening ? (
+                  Object.values(emergencyChecks).some(Boolean) ? (
+                    <>
+                      <Siren className="w-4 h-4" />
+                      Go to Emergency (A&E) Department
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  ) : (
+                    <>
+                      None of these apply — Continue
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )
                 ) : currentStep === steps.length - 2 ? (
                   <>
                     <CreditCard className="w-4 h-4" />
