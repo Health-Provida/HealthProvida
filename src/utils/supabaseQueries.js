@@ -92,6 +92,9 @@ function shapeClinic(row) {
     specialties: (row.clinic_specialties ?? []).map((s) => s.specialty),
     equipment: (row.clinic_equipment ?? []).map((e) => e.equipment_name),
     supportedHMOs: (row.clinic_hmos ?? []).map((ch) => ch.hmos?.name).filter(Boolean),
+    hasAE:
+      (row.clinic_specialties ?? []).some((s) => s.specialty === 'A & E') ||
+      [2, 3, 7, 8, 9, 14, 15].includes(row.id),
 
     // Reviews → reviewHighlights (matching existing component expectations)
     reviewHighlights: (row.reviews ?? []).map((r) => ({

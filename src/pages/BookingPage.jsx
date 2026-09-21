@@ -27,36 +27,123 @@ import { useAuth } from '@/context/AuthContext';
 import { useBooking } from '@/context/BookingContext';
 import { useToast } from '@/components/ui/use-toast';
 import { fetchClinicBySlug } from '@/utils/supabaseQueries';
+import {
+  RED_FLAGS,
+  COMPLAINT_CATEGORIES,
+  COMPLAINT_RED_FLAG_MAP,
+  matchFreeTextToCategories,
+  getRedFlagsForComplaints,
+  getRemainingRedFlags,
+  SHOW_ALL_RED_FLAGS,
+} from '@/data/redFlags';
 
-// ─── Step indicator ─────────────────────────────────────────────
-function StepIndicator({ steps, currentStep }) {
+// ─── Process Tabs Indicator ─────────────────────────────────────
+function StepIndicator({ steps, currentStep, onStepClick }) {
+  const scrollRef = React.useRef(null);
+  const activeTabRef = React.useRef(null);
+
+  // Exclude the 'Done' / confirmation step from the process tabs strip
+  const visibleSteps = steps.slice(0, steps.length - 1);
+  const currentStepData = steps[currentStep] || steps[0];
+  const progressPercent = Math.min(
+    100,
+    Math.round(((currentStep + 1) / visibleSteps.length) * 100)
+  );
+
+  // Auto-scroll active tab into view when currentStep changes
+  React.useEffect(() => {
+    if (activeTabRef.current && scrollRef.current) {
+      const container = scrollRef.current;
+      const element = activeTabRef.current;
+      const elementLeft = element.offsetLeft;
+      const elementWidth = element.offsetWidth;
+      const containerWidth = container.offsetWidth;
+      container.scrollTo({
+        left: elementLeft - containerWidth / 2 + elementWidth / 2,
+        behavior: 'smooth',
+      });
+    }
+  }, [currentStep]);
+
   return (
-    <div className="flex items-center justify-center gap-1 sm:gap-2 mb-8">
-      {steps.map((step, idx) => (
-        <React.Fragment key={step.id}>
-          <div className="flex items-center gap-1.5">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-              idx < currentStep
-                ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md shadow-green-200'
-                : idx === currentStep
-                  ? 'bg-gradient-to-r from-blue-600 to-teal-500 text-white shadow-lg shadow-blue-200 scale-110'
-                  : 'bg-gray-100 text-gray-400'
-            }`}>
-              {idx < currentStep ? <Check className="w-4 h-4" /> : idx + 1}
-            </div>
-            <span className={`text-xs font-medium hidden sm:block ${
-              idx === currentStep ? 'text-blue-700' : idx < currentStep ? 'text-emerald-600' : 'text-gray-400'
-            }`}>
-              {step.label}
+    <div className="mb-6 space-y-2.5">
+      {/* Current Process Progress Banner */}
+      <div className="bg-white rounded-2xl p-3.5 border border-gray-200/90 shadow-sm">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="bg-gradient-to-r from-blue-600 to-teal-500 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-sm flex-shrink-0">
+              Step {currentStep + 1} of {visibleSteps.length}
+            </span>
+            <span className="text-sm font-bold text-gray-900 truncate">
+              {currentStepData.label}
             </span>
           </div>
-          {idx < steps.length - 1 && (
-            <div className={`w-6 sm:w-10 h-0.5 rounded-full transition-all duration-300 ${
-              idx < currentStep ? 'bg-emerald-400' : 'bg-gray-200'
-            }`} />
-          )}
-        </React.Fragment>
-      ))}
+          <span className="text-xs font-semibold text-blue-600 flex-shrink-0">
+            {progressPercent}% Complete
+          </span>
+        </div>
+
+        {/* Animated Progress Bar */}
+        <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500 rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 0.35, ease: 'easeInOut' }}
+          />
+        </div>
+      </div>
+
+      {/* Process Tabs Navigation Strip (ALWAYS displays all tab labels on all devices) */}
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="flex items-center gap-2 overflow-x-auto py-1 px-1 scroll-smooth"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          {visibleSteps.map((step, idx) => {
+            const isActive = idx === currentStep;
+            const isCompleted = idx < currentStep;
+
+            return (
+              <button
+                key={step.id}
+                type="button"
+                ref={isActive ? activeTabRef : null}
+                onClick={() => {
+                  if (isCompleted && onStepClick) {
+                    onStepClick(idx);
+                  }
+                }}
+                disabled={!isCompleted && !isActive}
+                title={step.label}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 flex-shrink-0 select-none ${isActive
+                    ? 'bg-gradient-to-r from-blue-600 to-teal-600 text-white shadow-md shadow-blue-200 ring-2 ring-blue-300 scale-100'
+                    : isCompleted
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 cursor-pointer'
+                      : 'bg-white text-gray-400 border border-gray-200 cursor-default opacity-70'
+                  }`}
+              >
+                <span
+                  className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 ${isActive
+                      ? 'bg-white/30 text-white'
+                      : isCompleted
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-gray-200 text-gray-500'
+                    }`}
+                >
+                  {isCompleted ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : idx + 1}
+                </span>
+                <span className="tracking-tight">{step.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -206,11 +293,10 @@ function SymptomsStep({ data, onChange, durations, isLab }) {
             <button
               key={d.value}
               onClick={() => onChange({ symptomDuration: d.value })}
-              className={`px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${
-                data.symptomDuration === d.value
+              className={`px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${data.symptomDuration === d.value
                   ? 'bg-rose-50 border-2 border-rose-400 text-rose-700 shadow-sm'
                   : 'bg-gray-50 border-2 border-transparent text-gray-600 hover:bg-gray-100 hover:border-gray-200'
-              }`}
+                }`}
             >
               {d.label}
             </button>
@@ -231,115 +317,229 @@ function SymptomsStep({ data, onChange, durations, isLab }) {
   );
 }
 
-// ─── Emergency Symptom Screening Data ────────────────────────────
-const EMERGENCY_KEYWORD_MAP = [
-  {
-    id: 'heart_attack',
-    keywords: ['chest', 'heart', 'palpitat', 'pressure', 'squeezing', 'tightness', 'heaviness', 'angina', 'cardiac'],
-    title: 'Signs of a heart attack',
-    description: 'Chest pain, pressure, heaviness, tightness or squeezing across the chest',
-    icon: '❤️',
-  },
-  {
-    id: 'stroke',
-    keywords: ['face droop', 'arm', 'speech', 'slur', 'stroke', 'droop', 'numb', 'facial', 'paralys'],
-    title: 'Signs of a stroke',
-    description: 'Face dropping on one side, cannot hold both arms up, difficulty speaking',
-    icon: '🧠',
-  },
-  {
-    id: 'confusion',
-    keywords: ['confus', 'deliri', 'disorient', 'not making sense', 'slurred', 'forgot name', 'slur'],
-    title: 'Sudden confusion (delirium)',
-    description: 'Cannot be sure of own name or age, slurred speech or not making sense',
-    icon: '😵',
-  },
-  {
-    id: 'suicide',
-    keywords: ['self-harm', 'self harm', 'suicide', 'suicidal', 'overdose', 'cut myself', 'took pills', 'kill myself', 'end my life', 'harming myself'],
-    title: 'Suicide attempt',
-    description: 'By taking something or self-harming',
-    icon: '🆘',
-  },
-  {
-    id: 'breathing',
-    keywords: ['breath', 'chok', 'gasp', 'wheez', 'asthma', 'suffocat', 'can\'t breathe', 'cannot breathe', 'shortness of breath', 'out of breath', 'struggling to breathe'],
-    title: 'Severe difficulty breathing',
-    description: 'Not being able to get words out, breathing very fast, choking or gasping',
-    icon: '🫁',
-  },
-  {
-    id: 'bleeding',
-    keywords: ['bleed', 'blood', 'wound', 'cut', 'lacerat', 'haemorrhag', 'hemorrhag', 'gushing'],
-    title: 'Heavy bleeding',
-    description: 'Spraying, pouring or enough to make a puddle',
-    icon: '🩸',
-  },
-  {
-    id: 'injuries',
-    keywords: ['accident', 'injur', 'crash', 'fall', 'fell', 'fracture', 'trauma', 'broken bone', 'hit by', 'collision'],
-    title: 'Severe injuries',
-    description: 'After a serious accident',
-    icon: '🚑',
-  },
-  {
-    id: 'seizure',
-    keywords: ['seizure', 'fit', 'shaking', 'jerking', 'unconscious', 'faint', 'fainted', 'pass out', 'passed out', 'passing out', 'convuls', 'epilep', 'blackout', 'blacked out'],
-    title: 'Seizure (fit)',
-    description: 'Shaking or jerking, or unconscious',
-    icon: '⚡',
-  },
-  {
-    id: 'swelling',
-    keywords: ['swell', 'swollen', 'lips', 'mouth', 'throat', 'tongue', 'allerg', 'anaphyl', 'epipen'],
-    title: 'Sudden rapid swelling',
-    description: 'Lips, mouth, throat or tongue',
-    icon: '🫨',
-  },
-  {
-    id: 'labour',
-    keywords: ['pregnan', 'contraction', 'labour', 'labor', 'water break', 'water broke', 'cramp', 'baby', 'childbirth', 'giving birth', 'stomach pain', 'abdominal pain', 'tummy pain'],
-    title: "You're in labour",
-    description: 'Water has broken or contractions are regular',
-    icon: '🤰',
-  },
-  {
-    id: 'sepsis',
-    keywords: ['rash', 'fever', 'stiff neck', 'light sensitiv', 'blotch', 'pale', 'grey', 'gray', 'blue skin', 'infection', 'sepsis', 'septic', 'meningit'],
-    title: 'Signs of severe infection or sepsis',
-    description: 'Blue, grey, pale or blotchy skin, lips or tongue; rash that doesn\'t fade when you roll a glass over it; high temperature with stiff neck',
-    icon: '🦠',
-  },
-];
+// ─── Complaint Category Emojis ───────────────────────────────────
+const COMPLAINT_ICONS = {
+  chest_pain: '🫀',
+  abdominal_pain: '🤢',
+  headache: '🤕',
+  breathing_problems: '🫁',
+  fever: '🌡️',
+  injury_or_trauma: '🩹',
+  rash_or_allergic_reaction: '🫧',
+  dizziness_or_fainting: '💫',
+  vomiting_or_diarrhoea: '🚽',
+  mental_health_or_low_mood: '🧠',
+  pregnancy_related: '🤰',
+  weakness_or_numbness: '⚡',
+  throat_or_swallowing: '🗣️',
+  back_pain: '🦴',
+  other: '💬',
+};
 
-/**
- * Checks if keyword matches with word boundaries for short words
- * to prevent false alarms like 'arm' matching 'warm' or 'fit' matching 'benefit'.
- */
-function matchesKeyword(text, keyword) {
-  const lower = text.toLowerCase();
-  const kw = keyword.toLowerCase();
-  if (kw.length <= 4) {
-    const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\b${escaped}`, 'i');
-    return regex.test(lower);
-  }
-  return lower.includes(kw);
-}
+// ─── Triage Step 1: Presenting Complaint ─────────────────────────
+function PresentingComplaintStep({
+  selectedComplaints,
+  onToggleComplaint,
+  customComplaintText,
+  onChangeCustomText,
+  detectedCategories,
+}) {
+  const [searchFilter, setSearchFilter] = useState('');
 
-/**
- * Given the user's symptom text, returns the matching emergency questions.
- */
-function getMatchingEmergencyQuestions(symptomText) {
-  if (!symptomText || !symptomText.trim()) return [];
-  return EMERGENCY_KEYWORD_MAP.filter(item =>
-    item.keywords.some(kw => matchesKeyword(symptomText, kw))
+  const filteredCategories = useMemo(() => {
+    if (!searchFilter.trim()) return COMPLAINT_CATEGORIES;
+    const term = searchFilter.toLowerCase().trim();
+    return COMPLAINT_CATEGORIES.filter((c) =>
+      c.label.toLowerCase().includes(term)
+    );
+  }, [searchFilter]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-6"
+    >
+      <div className="text-center mb-6">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
+          <Stethoscope className="w-8 h-8 text-white" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900">What brings you in today?</h2>
+        <p className="text-gray-500 mt-1 text-sm max-w-sm mx-auto">
+          Select all concerns that apply. We check for urgent symptoms before connecting you with a doctor.
+        </p>
+      </div>
+
+      {/* Search / Filter bar */}
+      <div className="relative">
+        <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        <input
+          type="text"
+          value={searchFilter}
+          onChange={(e) => setSearchFilter(e.target.value)}
+          placeholder="Filter symptoms (e.g., headache, fever, chest)..."
+          className="w-full pl-10 pr-16 py-3 rounded-xl border border-gray-200 bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-sm transition-all"
+        />
+        {searchFilter && (
+          <button
+            type="button"
+            onClick={() => setSearchFilter('')}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-semibold"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Category Selection Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        {filteredCategories.map((cat) => {
+          const isSelected = selectedComplaints.includes(cat.id);
+          const icon = COMPLAINT_ICONS[cat.id] || '🩺';
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => onToggleComplaint(cat.id)}
+              className={`flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all ${isSelected
+                  ? 'bg-blue-50 border-blue-500 shadow-sm ring-2 ring-blue-100 text-blue-900 font-semibold'
+                  : 'bg-white border-gray-200 hover:border-blue-200 hover:bg-blue-50/20 text-gray-700'
+                }`}
+            >
+              <span className="text-xl flex-shrink-0">{icon}</span>
+              <span className="flex-1 text-sm">{cat.label}</span>
+              <div
+                className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-all ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-300 bg-white'
+                  }`}
+              >
+                {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Free text input if user selected 'other' or wants to describe specifically */}
+      <div className="bg-gray-50/80 rounded-2xl border border-gray-200 p-4 space-y-3">
+        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+          Or describe your main symptoms in your own words
+        </label>
+        <textarea
+          rows={3}
+          value={customComplaintText}
+          onChange={(e) => onChangeCustomText(e.target.value)}
+          placeholder="e.g. Started having sharp lower abdominal pain this morning with nausea..."
+          className="w-full p-3 rounded-xl border border-gray-200 bg-white text-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
+        />
+
+        {/* Dynamic detected categories feedback */}
+        {detectedCategories.length > 0 && !detectedCategories.includes('other') && (
+          <div className="flex items-center gap-2 flex-wrap text-xs text-blue-700 bg-blue-50 p-2.5 rounded-lg border border-blue-100">
+            <span className="font-semibold">Detected matching categories:</span>
+            {detectedCategories.map((catId) => {
+              const cat = COMPLAINT_CATEGORIES.find((c) => c.id === catId);
+              return cat ? (
+                <span
+                  key={catId}
+                  className="px-2 py-0.5 rounded-full bg-blue-200/70 font-medium text-blue-900 text-[11px]"
+                >
+                  {cat.label}
+                </span>
+              ) : null;
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Triage reassurance */}
+      <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
+        <Shield className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-medium text-blue-800">Triage Safety Protocol</p>
+          <p className="text-xs text-blue-600 mt-0.5">
+            Next, we will verify whether you have any emergency red flags requiring immediate hospital attention.
+          </p>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
-// ─── Emergency Screening Sub-Step ───────────────────────────────
-function EmergencyScreeningStep({ questions, checkedItems, onToggle, clinicName }) {
-  const anyChecked = Object.values(checkedItems).some(Boolean);
+// ─── Triage Step 2: Red Flag Check ───────────────────────────────
+function RedFlagCheckStep({
+  selectedComplaints,
+  redFlagChecks,
+  onToggleFlag,
+  noneApply,
+  onToggleNoneApply,
+  clinicName,
+}) {
+  const mappedFlagIds = useMemo(() => {
+    return getRedFlagsForComplaints(selectedComplaints);
+  }, [selectedComplaints]);
+
+  const mappedFlags = useMemo(() => {
+    return mappedFlagIds.map((id) => RED_FLAGS.find((rf) => rf.id === id)).filter(Boolean);
+  }, [mappedFlagIds]);
+
+  const remainingFlags = useMemo(() => {
+    return getRemainingRedFlags(mappedFlagIds);
+  }, [mappedFlagIds]);
+
+  const anyChecked = Object.values(redFlagChecks).some(Boolean);
+
+  const complaintLabels = selectedComplaints
+    .map((id) => COMPLAINT_CATEGORIES.find((c) => c.id === id)?.label)
+    .filter(Boolean)
+    .join(', ');
+
+  const renderFlagItem = (flag) => {
+    const isChecked = !!redFlagChecks[flag.id];
+    return (
+      <button
+        key={flag.id}
+        type="button"
+        role="checkbox"
+        aria-checked={isChecked}
+        onClick={() => onToggleFlag(flag.id)}
+        className={`w-full flex items-start gap-3.5 p-4 rounded-2xl text-left transition-all duration-200 ${isChecked
+            ? 'bg-red-50 border-2 border-red-500 shadow-md shadow-red-100 ring-2 ring-red-200'
+            : 'bg-white border-2 border-gray-100 hover:border-red-200 hover:bg-red-50/30'
+          }`}
+      >
+        <div
+          className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${isChecked ? 'bg-red-500 border-red-500' : 'border-gray-300 bg-white'
+            }`}
+        >
+          {isChecked && (
+            <motion.svg
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="w-3.5 h-3.5 text-white"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </motion.svg>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm font-bold ${isChecked ? 'text-red-900' : 'text-gray-900'}`}>
+            {flag.label}
+          </p>
+          <p className={`text-xs mt-1 leading-relaxed ${isChecked ? 'text-red-700 font-medium' : 'text-gray-500'}`}>
+            {flag.description}
+          </p>
+        </div>
+      </button>
+    );
+  };
 
   return (
     <motion.div
@@ -356,81 +556,112 @@ function EmergencyScreeningStep({ questions, checkedItems, onToggle, clinicName 
         >
           <AlertTriangle className="w-8 h-8 text-white" />
         </motion.div>
-        <h2 className="text-xl font-bold text-gray-900">Important Safety Check</h2>
-        <p className="text-gray-500 mt-1.5 text-sm leading-relaxed max-w-xs mx-auto">
-          Based on what you described, please check if <strong>any</strong> of these apply to you right now
+        <h2 className="text-2xl font-bold text-gray-900">Safety Triage Check</h2>
+        <p className="text-gray-500 mt-1.5 text-sm leading-relaxed max-w-sm mx-auto">
+          Please check if <strong>any</strong> of these emergency red-flag symptoms apply to you right now
         </p>
       </div>
 
-      <div className="space-y-3">
-        {questions.map((q) => {
-          const isChecked = !!checkedItems[q.id];
-          return (
-            <button
-              key={q.id}
-              onClick={() => onToggle(q.id)}
-              className={`w-full flex items-start gap-3.5 p-4 rounded-2xl text-left transition-all duration-200 ${
-                isChecked
-                  ? 'bg-red-50 border-2 border-red-400 shadow-md shadow-red-100 ring-2 ring-red-200'
-                  : 'bg-white border-2 border-gray-100 hover:border-red-200 hover:bg-red-50/30'
+      <fieldset className="space-y-5">
+        <legend className="sr-only">Emergency Red Flag Safety Checks</legend>
+
+        {/* Group 1: Mapped Red Flags based on complaint */}
+        {mappedFlags.length > 0 && (
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wider px-1">
+              <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
+              <span>Based on your concern {complaintLabels ? `(${complaintLabels})` : ''}</span>
+            </div>
+            <div className="space-y-2.5">
+              {mappedFlags.map(renderFlagItem)}
+            </div>
+          </div>
+        )}
+
+        {/* Group 2: Remaining Red Flags */}
+        {SHOW_ALL_RED_FLAGS && remainingFlags.length > 0 && (
+          <div className="space-y-2.5 pt-2">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
+              <Shield className="w-3.5 h-3.5 text-gray-400" />
+              <span>Other emergency symptoms to rule out</span>
+            </div>
+            <div className="space-y-2.5">
+              {remainingFlags.map(renderFlagItem)}
+            </div>
+          </div>
+        )}
+
+        {/* Mutual Exclusivity Option: None of these apply to me */}
+        <div className="pt-2">
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={noneApply}
+            onClick={onToggleNoneApply}
+            className={`w-full flex items-start gap-3.5 p-4 rounded-2xl text-left transition-all duration-200 ${noneApply
+                ? 'bg-emerald-50 border-2 border-emerald-500 shadow-md shadow-emerald-100 ring-2 ring-emerald-200'
+                : 'bg-gray-50 border-2 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/20'
               }`}
+          >
+            <div
+              className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${noneApply ? 'bg-emerald-600 border-emerald-600' : 'border-gray-300 bg-white'
+                }`}
             >
-              {/* Checkbox */}
-              <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
-                isChecked
-                  ? 'bg-red-500 border-red-500'
-                  : 'border-gray-300 bg-white'
-              }`}>
-                {isChecked && (
-                  <motion.svg
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="w-3.5 h-3.5 text-white"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={3}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </motion.svg>
-                )}
-              </div>
+              {noneApply && (
+                <motion.svg
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="w-3.5 h-3.5 text-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </motion.svg>
+              )}
+            </div>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{q.icon}</span>
-                  <p className={`text-sm font-bold ${
-                    isChecked ? 'text-red-800' : 'text-gray-900'
-                  }`}>
-                    {q.title}
-                  </p>
-                </div>
-                <p className={`text-xs mt-1 leading-relaxed ${
-                  isChecked ? 'text-red-600 font-medium' : 'text-gray-500'
-                }`}>
-                  {q.description}
-                </p>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-bold ${noneApply ? 'text-emerald-900' : 'text-gray-800'}`}>
+                None of these apply to me
+              </p>
+              <p className={`text-xs mt-0.5 leading-relaxed ${noneApply ? 'text-emerald-700 font-medium' : 'text-gray-500'}`}>
+                I do not have any of the urgent red-flag symptoms listed above.
+              </p>
+            </div>
+          </button>
+        </div>
+      </fieldset>
 
-      {/* Dynamic Alert Banner */}
+      {/* Dynamic Status Banner */}
       {anyChecked ? (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-start gap-3 shadow-sm shadow-red-100"
+          className="bg-red-50 border-2 border-red-400 rounded-xl p-4 flex items-start gap-3 shadow-sm shadow-red-100"
         >
           <Siren className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5 animate-pulse" />
           <div>
-            <p className="text-sm font-bold text-red-800">Emergency Red-Flag Checked</p>
+            <p className="text-sm font-bold text-red-800">Emergency Red Flag Ticked</p>
             <p className="text-xs text-red-700 mt-0.5 leading-relaxed">
-              Clicking <strong>Go to A&E Emergency Department</strong> will direct you straight to the Accident & Emergency (A&E) page for {clinicName || 'this hospital'} with urgent contact numbers and location directions.
+              Clicking <strong>Go to Emergency (A&E) Now</strong> will direct you immediately to emergency guidance with 24/7 Accident & Emergency hospitals and direct call options.
+            </p>
+          </div>
+        </motion.div>
+      ) : noneApply ? (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-emerald-50 border border-emerald-300 rounded-xl p-4 flex items-start gap-3"
+        >
+          <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-emerald-800">Screening Cleared</p>
+            <p className="text-xs text-emerald-700 mt-0.5 leading-relaxed">
+              No emergency red flags reported. You can now proceed to describe your symptoms for your routine booking.
             </p>
           </div>
         </motion.div>
@@ -438,24 +669,13 @@ function EmergencyScreeningStep({ questions, checkedItems, onToggle, clinicName 
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-amber-800">If any of these apply to you</p>
+            <p className="text-sm font-semibold text-amber-800">Please complete this check</p>
             <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-              Tick the box to be directed to the hospital's Accident & Emergency (A&E) department. If none apply, leave all unchecked and click Continue to proceed with your normal booking.
+              Select any emergency signs that apply, or check <strong>"None of these apply to me"</strong> to continue.
             </p>
           </div>
         </div>
       )}
-
-      {/* Reassurance */}
-      <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
-        <Shield className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-medium text-blue-800">Your safety comes first</p>
-          <p className="text-xs text-blue-600 mt-0.5">
-            This quick safety check helps identify situations that may need urgent emergency attention. If you don't need emergency care, you can proceed normally.
-          </p>
-        </div>
-      </div>
     </motion.div>
   );
 }
@@ -467,9 +687,9 @@ function CareRecommendationStep({ data, onChange, specialists, isLab, labTests, 
   if (isLab) {
     const filteredTests = labSearchQuery.trim()
       ? labTests.filter(t =>
-          t.name.toLowerCase().includes(labSearchQuery.toLowerCase()) ||
-          t.category.toLowerCase().includes(labSearchQuery.toLowerCase())
-        )
+        t.name.toLowerCase().includes(labSearchQuery.toLowerCase()) ||
+        t.category.toLowerCase().includes(labSearchQuery.toLowerCase())
+      )
       : labTests;
 
     return (
@@ -503,11 +723,10 @@ function CareRecommendationStep({ data, onChange, specialists, isLab, labTests, 
             <button
               key={test.id}
               onClick={() => onChange({ labTestId: test.id })}
-              className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-all ${
-                data.labTestId === test.id
+              className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-all ${data.labTestId === test.id
                   ? 'bg-purple-50 border-2 border-purple-400 shadow-sm'
                   : 'bg-white border-2 border-gray-100 hover:border-purple-200 hover:bg-purple-50/30'
-              }`}
+                }`}
             >
               <div>
                 <p className={`text-sm font-semibold ${data.labTestId === test.id ? 'text-purple-800' : 'text-gray-800'}`}>
@@ -541,11 +760,10 @@ function CareRecommendationStep({ data, onChange, specialists, isLab, labTests, 
       </div>
 
       {/* GP Recommendation Card */}
-      <div className={`relative p-5 rounded-2xl transition-all cursor-pointer ${
-        data.serviceType === 'general_practitioner'
+      <div className={`relative p-5 rounded-2xl transition-all cursor-pointer ${data.serviceType === 'general_practitioner'
           ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-400 shadow-md shadow-emerald-100'
           : 'bg-white border-2 border-gray-100 hover:border-emerald-200'
-      }`}
+        }`}
         onClick={() => {
           onChange({ serviceType: 'general_practitioner', specialistType: null });
           setShowSpecialists(false);
@@ -576,11 +794,10 @@ function CareRecommendationStep({ data, onChange, specialists, isLab, labTests, 
       </div>
 
       {/* Specialist Option */}
-      <div className={`relative p-5 rounded-2xl transition-all cursor-pointer ${
-        data.serviceType === 'specialist'
+      <div className={`relative p-5 rounded-2xl transition-all cursor-pointer ${data.serviceType === 'specialist'
           ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-400 shadow-md shadow-amber-100'
           : 'bg-white border-2 border-gray-100 hover:border-amber-200'
-      }`}
+        }`}
         onClick={() => {
           onChange({ serviceType: 'specialist' });
           setShowSpecialists(true);
@@ -637,11 +854,10 @@ function CareRecommendationStep({ data, onChange, specialists, isLab, labTests, 
                 <button
                   key={spec.id}
                   onClick={() => onChange({ specialistType: spec.id })}
-                  className={`p-3 rounded-xl text-left transition-all ${
-                    data.specialistType === spec.id
+                  className={`p-3 rounded-xl text-left transition-all ${data.specialistType === spec.id
                       ? 'bg-amber-50 border-2 border-amber-400 shadow-sm'
                       : 'bg-white border-2 border-gray-100 hover:border-amber-200 hover:bg-amber-50/30'
-                  }`}
+                    }`}
                 >
                   <span className="text-lg">{spec.icon}</span>
                   <p className={`text-xs font-semibold mt-1 ${data.specialistType === spec.id ? 'text-amber-800' : 'text-gray-800'}`}>
@@ -715,11 +931,10 @@ function AppointmentSelectionStep({ data, onChange, availability }) {
               <button
                 key={day.date}
                 onClick={() => setSelectedDate(day.date)}
-                className={`flex-shrink-0 flex flex-col items-center w-[72px] py-3 rounded-xl transition-all ${
-                  isSelected
+                className={`flex-shrink-0 flex flex-col items-center w-[72px] py-3 rounded-xl transition-all ${isSelected
                     ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200'
                     : 'bg-white border-2 border-gray-100 text-gray-700 hover:border-blue-200 hover:bg-blue-50/30'
-                }`}
+                  }`}
               >
                 <span className={`text-[10px] font-bold uppercase tracking-wider ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
                   {day.dayName.slice(0, 3)}
@@ -750,11 +965,10 @@ function AppointmentSelectionStep({ data, onChange, availability }) {
               <button
                 key={slot.id}
                 onClick={() => onChange({ selectedSlot: slot })}
-                className={`py-3 px-2 rounded-xl text-sm font-medium transition-all ${
-                  data.selectedSlot?.id === slot.id
+                className={`py-3 px-2 rounded-xl text-sm font-medium transition-all ${data.selectedSlot?.id === slot.id
                     ? 'bg-blue-500 text-white shadow-md shadow-blue-200 ring-2 ring-blue-300 ring-offset-1'
                     : 'bg-gray-50 text-gray-700 hover:bg-blue-50 hover:text-blue-700 border border-gray-100'
-                }`}
+                  }`}
               >
                 {slot.displayTime}
               </button>
@@ -820,7 +1034,7 @@ function BookingSummaryStep({ clinic, data, priceBreakdown, totalAmount, isLab, 
       <div className="bg-gray-50/80 rounded-xl border border-gray-100 p-4 space-y-3">
         <DetailRow icon={<Stethoscope className="w-4 h-4 text-teal-500" />} label="Service" value={
           isLab ? labTest?.name || 'Laboratory Test' :
-          data.serviceType === 'specialist' ? `${specialistName} (Specialist)` : 'General Practitioner'
+            data.serviceType === 'specialist' ? `${specialistName} (Specialist)` : 'General Practitioner'
         } />
         {data.selectedSlot?.doctorName && (
           <DetailRow icon={<User className="w-4 h-4 text-blue-500" />} label="Doctor" value={data.selectedSlot.doctorName} />
@@ -950,7 +1164,7 @@ function ConfirmationStep({ result, data, clinic, isLab, labTest, specialistName
         <ConfirmRow label="Hospital" value={clinic?.practitioner_name} />
         <ConfirmRow label="Service" value={
           isLab ? labTest?.name :
-          data.serviceType === 'specialist' ? `${specialistName} (Specialist)` : 'General Practitioner'
+            data.serviceType === 'specialist' ? `${specialistName} (Specialist)` : 'General Practitioner'
         } />
         {data.selectedSlot?.doctorName && <ConfirmRow label="Doctor" value={data.selectedSlot.doctorName} />}
         <ConfirmRow label="Date" value={
@@ -1002,9 +1216,8 @@ function ConfirmRow({ label, value, highlight, badge }) {
     <div className="flex items-center justify-between py-1">
       <span className="text-xs text-gray-500">{label}</span>
       {badge ? (
-        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-          badge === 'emerald' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
-        }`}>{value}</span>
+        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${badge === 'emerald' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
+          }`}>{value}</span>
       ) : (
         <span className={`text-sm ${highlight ? 'font-bold text-emerald-700' : 'font-medium text-gray-800'}`}>{value}</span>
       )}
@@ -1030,10 +1243,11 @@ export default function BookingPage() {
   const [bookingResult, setBookingResult] = useState(null);
   const [labSearchQuery, setLabSearchQuery] = useState('');
 
-  // Emergency screening state
-  const [showEmergencyScreening, setShowEmergencyScreening] = useState(false);
-  const [emergencyChecks, setEmergencyChecks] = useState({});
-  const [matchedEmergencyQuestions, setMatchedEmergencyQuestions] = useState([]);
+  // Triage state
+  const [selectedComplaints, setSelectedComplaints] = useState([]);
+  const [customComplaintText, setCustomComplaintText] = useState('');
+  const [redFlagChecks, setRedFlagChecks] = useState({});
+  const [noneRedFlagsApply, setNoneRedFlagsApply] = useState(false);
 
   // Form data
   const [formData, setFormData] = useState({
@@ -1078,21 +1292,23 @@ export default function BookingPage() {
   // Steps
   const steps = isLab
     ? [
-        { id: 'details', label: 'Details' },
-        { id: 'test', label: 'Test' },
-        { id: 'notes', label: 'Notes' },
-        { id: 'appointment', label: 'Date' },
-        { id: 'summary', label: 'Review' },
-        { id: 'confirmation', label: 'Done' },
-      ]
+      { id: 'details', label: 'Details' },
+      { id: 'test', label: 'Test' },
+      { id: 'notes', label: 'Notes' },
+      { id: 'appointment', label: 'Date' },
+      { id: 'summary', label: 'Review' },
+      { id: 'confirmation', label: 'Done' },
+    ]
     : [
-        { id: 'details', label: 'Details' },
-        { id: 'symptoms', label: 'Symptoms' },
-        { id: 'recommendation', label: 'Service' },
-        { id: 'appointment', label: 'Date' },
-        { id: 'summary', label: 'Review' },
-        { id: 'confirmation', label: 'Done' },
-      ];
+      { id: 'details', label: 'Details' },
+      { id: 'complaint', label: 'Triage' },
+      { id: 'redflags', label: 'Safety' },
+      { id: 'symptoms', label: 'Symptoms' },
+      { id: 'recommendation', label: 'Service' },
+      { id: 'appointment', label: 'Date' },
+      { id: 'summary', label: 'Review' },
+      { id: 'confirmation', label: 'Done' },
+    ];
 
   const updateForm = (updates) => {
     setFormData(prev => ({ ...prev, ...updates }));
@@ -1121,6 +1337,50 @@ export default function BookingPage() {
 
   const totalAmount = priceBreakdown.reduce((sum, item) => sum + item.amount, 0);
 
+  // Triage helpers & derived state
+  const toggleComplaint = (categoryId) => {
+    setSelectedComplaints((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const toggleRedFlag = (flagId) => {
+    setRedFlagChecks((prev) => {
+      const next = { ...prev, [flagId]: !prev[flagId] };
+      return next;
+    });
+    // Mutual exclusivity: uncheck "None of these apply"
+    setNoneRedFlagsApply(false);
+  };
+
+  const toggleNoneRedFlagsApply = () => {
+    const nextVal = !noneRedFlagsApply;
+    setNoneRedFlagsApply(nextVal);
+    if (nextVal) {
+      // Mutual exclusivity: clear all red flag checks
+      setRedFlagChecks({});
+    }
+  };
+
+  const detectedCategories = useMemo(() => {
+    return matchFreeTextToCategories(customComplaintText);
+  }, [customComplaintText]);
+
+  const effectiveComplaints = useMemo(() => {
+    const set = new Set(selectedComplaints);
+    for (const catId of detectedCategories) {
+      if (catId && catId !== 'other') {
+        set.add(catId);
+      }
+    }
+    if (set.size === 0 && selectedComplaints.includes('other')) {
+      set.add('other');
+    }
+    return Array.from(set);
+  }, [selectedComplaints, detectedCategories]);
+
   // Validation
   const canProceed = () => {
     if (bookingResult) return false;
@@ -1136,59 +1396,51 @@ export default function BookingPage() {
       }
     }
 
-    // If emergency screening is active, always allow continue
-    if (showEmergencyScreening) return true;
-
     switch (currentStep) {
-      case 0: return formData.fullName.trim() && formData.phone.trim() && formData.email.trim();
-      case 1: return true; // symptoms optional but encourage
-      case 2:
+      case 0:
+        return !!(formData.fullName.trim() && formData.phone.trim() && formData.email.trim());
+      case 1: // Presenting Complaint
+        return selectedComplaints.length > 0 || customComplaintText.trim().length > 0;
+      case 2: // Red Flag Check
+        return Object.values(redFlagChecks).some(Boolean) || noneRedFlagsApply;
+      case 3: // Symptoms
+        return true;
+      case 4: // Service
         if (formData.serviceType === 'specialist') return !!formData.specialistType;
         return !!formData.serviceType;
-      case 3: return !!formData.selectedSlot;
-      case 4: return true;
-      default: return false;
+      case 5: // Appointment
+        return !!formData.selectedSlot;
+      case 6: // Review
+        return true;
+      default:
+        return false;
     }
-  };
-
-  const toggleEmergencyCheck = (id) => {
-    setEmergencyChecks(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   const handleNext = async () => {
     const lastContentStep = steps.length - 2; // summary step
 
-    // ── Emergency screening intercept (non-lab, after symptoms step) ──
-    if (!isLab && currentStep === 1 && !showEmergencyScreening) {
-      const matched = getMatchingEmergencyQuestions(formData.symptoms);
-      if (matched.length > 0) {
-        setMatchedEmergencyQuestions(matched);
-        setEmergencyChecks({});
-        setShowEmergencyScreening(true);
+    // Step 2 Red Flag intercept for non-lab
+    if (!isLab && currentStep === 2) {
+      const anyFlagChecked = Object.values(redFlagChecks).some(Boolean);
+      if (anyFlagChecked) {
+        const ticked = Object.keys(redFlagChecks).filter((k) => redFlagChecks[k]);
+        navigate(
+          `/emergency?flags=${encodeURIComponent(ticked.join(','))}&clinic=${encodeURIComponent(
+            slug
+          )}&from=${encodeURIComponent(`/clinic/${slug}/book`)}`
+        );
         return;
       }
-    }
-
-    // ── Handle continue from emergency screening ──
-    if (showEmergencyScreening) {
-      const anyChecked = Object.values(emergencyChecks).some(Boolean);
-      if (anyChecked) {
-        // Redirect to A&E page with confirmed symptoms
-        const confirmedSymptoms = matchedEmergencyQuestions
-          .filter(q => emergencyChecks[q.id])
-          .map(q => `${q.title}: ${q.description}`)
-          .join('||');
-        navigate(`/clinic/${slug}/emergency?symptoms=${encodeURIComponent(confirmedSymptoms)}`);
+      if (noneRedFlagsApply) {
+        setCurrentStep(3);
         return;
       }
-      // None checked — proceed normally
-      setShowEmergencyScreening(false);
-      setCurrentStep(prev => prev + 1);
       return;
     }
 
     if (currentStep < lastContentStep) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
       return;
     }
 
@@ -1229,12 +1481,7 @@ export default function BookingPage() {
   };
 
   const handleBack = () => {
-    if (showEmergencyScreening) {
-      setShowEmergencyScreening(false);
-      setEmergencyChecks({});
-      return;
-    }
-    if (currentStep > 0) setCurrentStep(prev => prev - 1);
+    if (currentStep > 0) setCurrentStep((prev) => prev - 1);
   };
 
   if (loading) {
@@ -1280,7 +1527,12 @@ export default function BookingPage() {
               </button>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-gray-900 truncate">{clinic.practitioner_name}</p>
-                <p className="text-[10px] text-gray-500">{isLab ? 'Laboratory Booking' : 'Book Appointment'}</p>
+                <div className="flex items-center gap-1.5 text-xs text-blue-600 font-semibold mt-0.5">
+                  <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    Step {currentStep + 1} of {steps.length - 1}
+                  </span>
+                  <span className="truncate">{steps[currentStep]?.label}</span>
+                </div>
               </div>
               <button onClick={() => navigate(-1)} className="p-2 rounded-lg hover:bg-gray-100 transition">
                 <X className="w-5 h-5 text-gray-400" />
@@ -1291,7 +1543,17 @@ export default function BookingPage() {
 
         <div className="max-w-lg mx-auto px-4 py-6 pb-32">
           {/* Step indicator */}
-          {!isConfirmation && <StepIndicator steps={steps} currentStep={currentStep} />}
+          {!isConfirmation && (
+            <StepIndicator
+              steps={steps}
+              currentStep={currentStep}
+              onStepClick={(stepIdx) => {
+                if (stepIdx < currentStep) {
+                  setCurrentStep(stepIdx);
+                }
+              }}
+            />
+          )}
 
           {/* Step content */}
           <AnimatePresence mode="wait">
@@ -1347,19 +1609,37 @@ export default function BookingPage() {
                 {currentStep === 0 && (
                   <PatientDetailsStep key="details" data={formData} onChange={updateForm} />
                 )}
-                {currentStep === 1 && !showEmergencyScreening && (
-                  <SymptomsStep key="symptoms" data={formData} onChange={updateForm} durations={booking.SYMPTOM_DURATIONS} isLab={false} />
-                )}
-                {currentStep === 1 && showEmergencyScreening && (
-                  <EmergencyScreeningStep
-                    key="emergency-screening"
-                    questions={matchedEmergencyQuestions}
-                    checkedItems={emergencyChecks}
-                    onToggle={toggleEmergencyCheck}
-                    clinicName={clinic?.practitioner_name}
+                {currentStep === 1 && (
+                  <PresentingComplaintStep
+                    key="complaint"
+                    selectedComplaints={selectedComplaints}
+                    onToggleComplaint={toggleComplaint}
+                    customComplaintText={customComplaintText}
+                    onChangeCustomText={setCustomComplaintText}
+                    detectedCategories={detectedCategories}
                   />
                 )}
                 {currentStep === 2 && (
+                  <RedFlagCheckStep
+                    key="redflags"
+                    selectedComplaints={effectiveComplaints}
+                    redFlagChecks={redFlagChecks}
+                    onToggleFlag={toggleRedFlag}
+                    noneApply={noneRedFlagsApply}
+                    onToggleNoneApply={toggleNoneRedFlagsApply}
+                    clinicName={clinic?.practitioner_name}
+                  />
+                )}
+                {currentStep === 3 && (
+                  <SymptomsStep
+                    key="symptoms"
+                    data={formData}
+                    onChange={updateForm}
+                    durations={booking.SYMPTOM_DURATIONS}
+                    isLab={false}
+                  />
+                )}
+                {currentStep === 4 && (
                   <CareRecommendationStep
                     key="recommendation"
                     data={formData}
@@ -1368,13 +1648,18 @@ export default function BookingPage() {
                     isLab={false}
                     labTests={[]}
                     labSearchQuery=""
-                    onLabSearchChange={() => {}}
+                    onLabSearchChange={() => { }}
                   />
                 )}
-                {currentStep === 3 && (
-                  <AppointmentSelectionStep key="appointment" data={formData} onChange={updateForm} availability={availability} />
+                {currentStep === 5 && (
+                  <AppointmentSelectionStep
+                    key="appointment"
+                    data={formData}
+                    onChange={updateForm}
+                    availability={availability}
+                  />
                 )}
-                {currentStep === 4 && (
+                {currentStep === 6 && (
                   <BookingSummaryStep
                     key="summary"
                     clinic={clinic}
@@ -1386,7 +1671,7 @@ export default function BookingPage() {
                     specialistName={specialistName}
                   />
                 )}
-                {currentStep === 5 && bookingResult && (
+                {currentStep === 7 && bookingResult && (
                   <ConfirmationStep
                     key="confirmation"
                     result={bookingResult}
@@ -1417,27 +1702,26 @@ export default function BookingPage() {
               <button
                 onClick={handleNext}
                 disabled={!canProceed() || isProcessing}
-                className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
-                  showEmergencyScreening && Object.values(emergencyChecks).some(Boolean)
+                className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${!isLab && currentStep === 2 && Object.values(redFlagChecks).some(Boolean)
                     ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white shadow-red-200 animate-pulse font-bold'
                     : 'bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white shadow-blue-200'
-                }`}
+                  }`}
               >
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Processing Payment...
                   </>
-                ) : showEmergencyScreening ? (
-                  Object.values(emergencyChecks).some(Boolean) ? (
+                ) : !isLab && currentStep === 2 ? (
+                  Object.values(redFlagChecks).some(Boolean) ? (
                     <>
-                      <Siren className="w-4 h-4" />
-                      Go to Emergency (A&E) Department
+                      <Siren className="w-4 h-4 animate-pulse" />
+                      Go to Emergency (A&E) Now
                       <ArrowRight className="w-4 h-4" />
                     </>
                   ) : (
                     <>
-                      None of these apply — Continue
+                      Continue to Symptom Checker
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )
