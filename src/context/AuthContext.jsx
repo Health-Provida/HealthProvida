@@ -43,6 +43,9 @@ export function AuthProvider({ children }) {
         .eq('id', userId)
         .single();
 
+      console.log('[AuthContext DEBUG] fetchProfile result:', { userId, data, error });
+      console.log('[AuthContext DEBUG] role from DB:', data?.role);
+
       if (error) {
         console.error('AuthContext: Failed to fetch profile:', error);
         setProfile(null);
@@ -200,6 +203,16 @@ export function AuthProvider({ children }) {
   const value = useMemo(() => {
     const role = profile?.role ?? 'patient';
     const isProfileIncomplete = !profile?.full_name || profile.full_name.trim() === '';
+
+    console.log('[AuthContext DEBUG] useMemo recalc:', {
+      'profile?.role': profile?.role,
+      resolvedRole: role,
+      isAdmin: ADMIN_ROLES.includes(role),
+      isProvider: role === 'provider',
+      isSuperAdmin: role === 'super_admin',
+      isAuthenticated: !!session,
+      hasProfile: !!profile,
+    });
 
     return {
       user,
