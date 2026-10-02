@@ -554,9 +554,9 @@ export default function ClinicPage() {
       {isSecondaryNavVisible && (
         <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-xs transition-all duration-300">
           <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between min-h-[40px]">
               {/* Navigation tabs */}
-              <nav className="flex items-center space-x-6 sm:space-x-8 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <nav className="flex items-center space-x-6 sm:space-x-8 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] min-w-0 mr-4">
                 <button
                   onClick={() => scrollToSection('photos')}
                   className={`text-base transition-colors whitespace-nowrap ${
@@ -602,8 +602,8 @@ export default function ClinicPage() {
               {/* Right action area: Rating + Book button (appears when crossed into reviews section) */}
               {showBookInNav && (
                 <div className="flex items-center gap-4 flex-shrink-0 animate-in fade-in duration-300">
-                  <div className="hidden md:flex flex-col items-end">
-                    <div className="flex items-center gap-1 font-bold text-gray-900 text-sm">
+                  <div className="hidden md:flex flex-col items-end justify-center">
+                    <div className="flex items-center gap-1 font-bold text-gray-900 text-sm leading-tight">
                       {(clinic.number_of_reviews ?? 0) >= 3 ? (
                         <>
                           <Star className="w-4 h-4 text-yellow-500 fill-current" />
@@ -616,14 +616,14 @@ export default function ClinicPage() {
                         </span>
                       )}
                     </div>
-                    <span className="text-xs text-gray-500 font-medium truncate max-w-[180px]">{clinic.practitioner_name}</span>
+                    <span className="text-xs text-gray-500 font-medium truncate max-w-[180px] leading-tight">{clinic.practitioner_name}</span>
                   </div>
 
                   <button
                     onClick={handleSecondaryBookClick}
-                    className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition shadow-sm hover:shadow flex items-center gap-2"
+                    className="h-10 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold px-5 rounded-lg text-sm transition shadow-sm hover:shadow flex items-center gap-2 whitespace-nowrap"
                   >
-                    <Calendar className="w-4 h-4 hidden sm:block" />
+                    <Calendar className="w-4 h-4 hidden sm:block flex-shrink-0" />
                     <span>Book appointment</span>
                   </button>
                 </div>

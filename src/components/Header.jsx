@@ -297,6 +297,28 @@ const Header = () => {
                             <User className="w-4 h-4 flex-shrink-0" />
                             <span className="flex-1">Profile</span>
                           </Link>
+
+                          {isAdmin && (
+                            <Link
+                              to="/admin"
+                              onClick={() => setIsMenuOpen(false)}
+                              className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+                            >
+                              <Shield className="w-4 h-4 flex-shrink-0" />
+                              <span className="flex-1">Admin Dashboard</span>
+                            </Link>
+                          )}
+
+                          {isProvider && (
+                            <Link
+                              to="/provider/dashboard"
+                              onClick={() => setIsMenuOpen(false)}
+                              className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-xl bg-gradient-to-r from-teal-600 to-green-600 text-white hover:from-teal-700 hover:to-green-700 transition-colors"
+                            >
+                              <Stethoscope className="w-4 h-4 flex-shrink-0" />
+                              <span className="flex-1">Provider Dashboard</span>
+                            </Link>
+                          )}
                         </>
                       )}
                     </div>
