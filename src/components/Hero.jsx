@@ -379,11 +379,10 @@ const Hero = () => {
                               role="option"
                               aria-selected={i === activeSuggestionIndex}
                               onClick={() => handleSuggestionClick(suggestion)}
-                              className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-100 ${
-                                i === activeSuggestionIndex
+                              className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-100 ${i === activeSuggestionIndex
                                   ? 'bg-white/15 text-white'
                                   : 'text-gray-200 hover:bg-white/10 hover:text-white'
-                              }`}
+                                }`}
                             >
                               <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                               <div className="flex-1 min-w-0">
@@ -429,11 +428,10 @@ const Hero = () => {
                       whileTap={{ scale: 0.9 }}
                       onClick={handleUseMyLocation}
                       disabled={isLocating}
-                      className={`p-2 rounded-lg flex-shrink-0 transition-colors duration-200 ${
-                        isLocating
+                      className={`p-2 rounded-lg flex-shrink-0 transition-colors duration-200 ${isLocating
                           ? 'text-green-300 animate-pulse cursor-wait'
                           : 'text-blue-200/60 hover:text-green-300 hover:bg-white/10 cursor-pointer'
-                      }`}
+                        }`}
                       title="Use my current location"
                       aria-label="Use my current location"
                     >

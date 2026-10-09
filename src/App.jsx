@@ -22,6 +22,8 @@ import SearchPage from '@/pages/SearchPage';
 import AppointmentsPage from '@/pages/AppointmentsPage';
 import MessagesPage from '@/pages/MessagesPage';
 import BookingPage from '@/pages/BookingPage';
+import EmergencyAEPage from '@/pages/EmergencyAEPage';
+import EmergencyTriagePage from '@/pages/EmergencyTriagePage';
 import ScrollToTop from '@/components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import MobileBottomNav from '@/components/MobileBottomNav';
@@ -76,6 +78,8 @@ function App() {
               {/* Standalone pages (no header/footer) */}
               <Route path="/clinic/:slug/photos" element={<ClinicPhotosPage />} />
               <Route path="/clinic/:slug/book" element={<BookingPage />} />
+              <Route path="/clinic/:slug/emergency" element={<EmergencyAEPage />} />
+              <Route path="/emergency" element={<EmergencyTriagePage />} />
               <Route path="/map" element={<MapPage />} />
               <Route path="/join-provider" element={<ProtectedRoute><JoinProviderPage /></ProtectedRoute>} />
 
