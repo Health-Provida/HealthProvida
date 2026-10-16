@@ -27,6 +27,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import AdminRouter from '@/pages/admin/AdminRouter';
 import ProviderRouter from '@/pages/provider/ProviderRouter';
+import LabRouter from '@/pages/lab/LabRouter';
 import { AuthProvider } from '@/context/AuthContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { ClinicsProvider } from '@/context/ClinicsContext';
@@ -69,6 +70,16 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="provider">
                     <ProviderRouter />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Laboratory portal — its own layout, requires auth only (lab_staff checked inside) */}
+              <Route
+                path="/lab/*"
+                element={
+                  <ProtectedRoute>
+                    <LabRouter />
                   </ProtectedRoute>
                 }
               />
