@@ -501,11 +501,11 @@ INSERT INTO hmos (name) VALUES
 -- Gallery Ward Categories
 INSERT INTO gallery_wards (id, title, description, sort_order) VALUES
   ('reception', 'Reception', 'Modern, comfortable seating, 24/7 front desk, and a welcoming environment for all patients and visitors.', 1),
-  ('outpatient_area', 'Outpatient Area', 'Our outpatient area provides high-quality, walk-in medical services without the need for overnight admission. Patients benefit from swift consultations, diagnostics, and treatments in a calm, well-organised space designed to minimise wait times and maximise comfort.', 2),
-  ('phlebotomy_room', 'Phlebotomy Room', 'Our dedicated phlebotomy room offers a clean, hygienic, and patient-friendly environment for blood draws and specimen collection. Staffed by trained phlebotomists, we ensure a safe, efficient, and as comfortable an experience as possible for every patient.', 3),
+  ('outpatient_area', 'Outpatient Area', 'Walk-in consultations, diagnostics, and treatments — no overnight stay required. Swift service in a calm, well-organised space.', 2),
+  ('phlebotomy_room', 'Phlebotomy Room', 'Clean, dedicated space for blood draws and specimen collection, staffed by trained phlebotomists for a safe and comfortable experience.', 3),
   ('consulting_room', 'Consulting Room', 'Private and comfortable consulting rooms designed to facilitate open communication and comprehensive medical examinations.', 4),
-  ('private_ward', 'Private Ward', 'Our private wards offer a premium, fully private inpatient experience with en-suite bathrooms, personalised nursing care, and comfortable accommodation for a family member or loved one — ensuring rest, dignity, and peace of mind throughout recovery.', 5),
-  ('semi_private_ward', 'Semi-Private Ward', 'Our semi-private wards provide quality inpatient care in a shared but thoughtfully partitioned space. Patients enjoy attentive nursing, essential amenities, and a comfortable environment, offering the right balance of care and value.', 6),
+  ('private_ward', 'Private Ward', 'En-suite private rooms with personalised nursing care and space for a loved one — rest, dignity, and peace of mind throughout recovery.', 5),
+  ('semi_private_ward', 'Semi-Private Ward', 'Shared inpatient rooms with attentive nursing care, essential amenities, and comfortable recovery beds — quality care at great value.', 6),
   ('laboratory', 'Laboratory', 'State-of-the-art diagnostic laboratory equipped with advanced technology for accurate and timely test results.', 7),
   ('special_units', 'Special Units', 'Dedicated intensive care and maternity units with advanced life support systems and specialized nursing.', 8);
 
