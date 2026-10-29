@@ -2,6 +2,9 @@ node_modules
 .env
 .env.local
 
+# Internal Documentation & Specs
+Project Bible/
+
 # Logs
 logs
 *.log
@@ -145,3 +148,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+
+# Turborepo
+.turbo

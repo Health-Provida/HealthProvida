@@ -1,7 +1,14 @@
 {
+  "buildCommand": "pnpm run build:vercel",
+  "installCommand": "pnpm install",
+  "outputDirectory": "apps/patient-portal/dist",
   "rewrites": [
     {
-      "source": "/:path*",
+      "source": "/lab/:path*",
+      "destination": "/lab/index.html"
+    },
+    {
+      "source": "/((?!lab/).*)",
       "destination": "/index.html"
     }
   ]
