@@ -9,7 +9,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 
-import * as api from "./mock-services";
+import * as api from "./supabase-services";
 import type {
   Appointment,
   AppointmentStatus,
