@@ -149,11 +149,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInVerifyOtp = useCallback(async ({ email, token }: { email: string; token: string }) => {
     if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
 
+    // Try 'email' type first (returning user login OTP)
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token,
       type: 'email',
     });
+
+    // If 'email' type fails, retry with 'signup' type.
+    // signInWithOtp with shouldCreateUser:true issues a 'signup' token
+    // for new accounts, which won't verify under type 'email'.
+    if (error) {
+      const { data: signupData, error: signupError } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'signup',
+      });
+
+      if (!signupError) {
+        return { data: signupData, error: null };
+      }
+
+      // Return the original error if both fail
+      return { data: null, error };
+    }
 
     return { data, error };
   }, []);
