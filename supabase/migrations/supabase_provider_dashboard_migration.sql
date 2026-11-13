@@ -10,47 +10,66 @@
 -- ============================================================
 
 -- ==================== ENUM TYPES ====================
+-- Wrapped in DO blocks so they're safe to re-run if partially applied.
 
--- Clinic verification lifecycle
-CREATE TYPE verification_state AS ENUM (
-  'pending', 'verified', 'changes_required', 'rejected'
-);
+DO $$ BEGIN
+  CREATE TYPE verification_state AS ENUM (
+    'pending', 'verified', 'changes_required', 'rejected'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- How the patient pays
-CREATE TYPE payer_type AS ENUM ('direct_pay', 'hmo');
+DO $$ BEGIN
+  CREATE TYPE payer_type AS ENUM ('direct_pay', 'hmo');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- Provider-side appointment workflow
-CREATE TYPE provider_appointment_status AS ENUM (
-  'confirmed', 'checked_in', 'in_consultation', 'completed', 'cancelled', 'no_show'
-);
+DO $$ BEGIN
+  CREATE TYPE provider_appointment_status AS ENUM (
+    'confirmed', 'checked_in', 'in_consultation', 'completed', 'cancelled', 'no_show'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- Encounter lifecycle
-CREATE TYPE encounter_status AS ENUM (
-  'arrived', 'in_consultation', 'completed', 'checked_out'
-);
+DO $$ BEGIN
+  CREATE TYPE encounter_status AS ENUM (
+    'arrived', 'in_consultation', 'completed', 'checked_out'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- HMO authorization verdict
-CREATE TYPE authorization_status AS ENUM (
-  'approved', 'manual_review', 'pending', 'declined'
-);
+DO $$ BEGIN
+  CREATE TYPE authorization_status AS ENUM (
+    'approved', 'manual_review', 'pending', 'declined'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- How a consultation is delivered
-CREATE TYPE consultation_type AS ENUM ('physical', 'telemedicine');
+DO $$ BEGIN
+  CREATE TYPE consultation_type AS ENUM ('physical', 'telemedicine');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- Photo slot within a facility profile
-CREATE TYPE facility_photo_slot AS ENUM (
-  'exterior', 'reception', 'consultation_room'
-);
+DO $$ BEGIN
+  CREATE TYPE facility_photo_slot AS ENUM (
+    'exterior', 'reception', 'consultation_room'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- Review state for uploaded photos
-CREATE TYPE facility_photo_status AS ENUM (
-  'missing', 'pending_review', 'approved', 'rejected'
-);
+DO $$ BEGIN
+  CREATE TYPE facility_photo_status AS ENUM (
+    'missing', 'pending_review', 'approved', 'rejected'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- Provider ↔ HMO connection state
-CREATE TYPE hmo_network_status AS ENUM (
-  'connected', 'pending', 'not_connected'
-);
+DO $$ BEGIN
+  CREATE TYPE hmo_network_status AS ENUM (
+    'connected', 'pending', 'not_connected'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ==================== ADD COLUMNS TO clinics ====================
 -- These extend the base clinics table with provider-dashboard fields.
@@ -61,12 +80,18 @@ ALTER TABLE clinics
   ADD COLUMN IF NOT EXISTS city TEXT DEFAULT '',
   ADD COLUMN IF NOT EXISTS verification verification_state NOT NULL DEFAULT 'pending',
   ADD COLUMN IF NOT EXISTS verification_note TEXT,
-  ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'organic'
+  ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'organic';
+
+-- Add check constraint only if it doesn't exist
+DO $$ BEGIN
+  ALTER TABLE clinics ADD CONSTRAINT clinics_visibility_check
     CHECK (visibility IN ('organic', 'promoted'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ==================== FACILITY PHOTOS ====================
 
-CREATE TABLE facility_photos (
+CREATE TABLE IF NOT EXISTS facility_photos (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   slot facility_photo_slot NOT NULL,
@@ -80,7 +105,7 @@ CREATE TABLE facility_photos (
 
 -- ==================== VERIFICATION STEPS ====================
 
-CREATE TABLE verification_steps (
+CREATE TABLE IF NOT EXISTS verification_steps (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   label TEXT NOT NULL,
@@ -92,7 +117,7 @@ CREATE TABLE verification_steps (
 
 -- ==================== PROVIDER DOCTORS ====================
 
-CREATE TABLE provider_doctors (
+CREATE TABLE IF NOT EXISTS provider_doctors (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -107,7 +132,7 @@ CREATE TABLE provider_doctors (
 
 -- ==================== PROVIDER SCHEDULES ====================
 
-CREATE TABLE provider_schedules (
+CREATE TABLE IF NOT EXISTS provider_schedules (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   doctor_id UUID NOT NULL REFERENCES provider_doctors(id) ON DELETE CASCADE,
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
@@ -124,7 +149,7 @@ CREATE TABLE provider_schedules (
 -- ==================== PROVIDER PATIENTS ====================
 -- Patients as seen by the provider (may differ from the auth user profile)
 
-CREATE TABLE provider_patients (
+CREATE TABLE IF NOT EXISTS provider_patients (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   reference TEXT NOT NULL,
@@ -143,7 +168,7 @@ CREATE TABLE provider_patients (
 
 -- ==================== PROVIDER APPOINTMENTS ====================
 
-CREATE TABLE provider_appointments (
+CREATE TABLE IF NOT EXISTS provider_appointments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   reference TEXT NOT NULL,
@@ -168,7 +193,7 @@ CREATE TABLE provider_appointments (
 
 -- ==================== PROVIDER ENCOUNTERS ====================
 
-CREATE TABLE provider_encounters (
+CREATE TABLE IF NOT EXISTS provider_encounters (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   appointment_id UUID NOT NULL REFERENCES provider_appointments(id) ON DELETE CASCADE,
@@ -186,7 +211,7 @@ CREATE TABLE provider_encounters (
 -- ==================== PROVIDER HMO CONNECTIONS ====================
 -- Provider-specific HMO view with network status and plans
 
-CREATE TABLE provider_hmo_connections (
+CREATE TABLE IF NOT EXISTS provider_hmo_connections (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   hmo_id BIGINT REFERENCES hmos(id) ON DELETE SET NULL,
@@ -199,7 +224,7 @@ CREATE TABLE provider_hmo_connections (
 
 -- ==================== PROVIDER AUTHORIZATIONS ====================
 
-CREATE TABLE provider_authorizations (
+CREATE TABLE IF NOT EXISTS provider_authorizations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   code TEXT,
@@ -220,7 +245,7 @@ CREATE TABLE provider_authorizations (
 
 -- ==================== SERVICE TARIFFS ====================
 
-CREATE TABLE service_tariffs (
+CREATE TABLE IF NOT EXISTS service_tariffs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   service TEXT NOT NULL,
@@ -234,7 +259,7 @@ CREATE TABLE service_tariffs (
 
 -- ==================== PROVIDER NOTIFICATIONS ====================
 
-CREATE TABLE provider_notifications (
+CREATE TABLE IF NOT EXISTS provider_notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   type TEXT NOT NULL DEFAULT 'appointment'
@@ -248,7 +273,7 @@ CREATE TABLE provider_notifications (
 
 -- ==================== EMR SYNC ====================
 
-CREATE TABLE emr_sync_state (
+CREATE TABLE IF NOT EXISTS emr_sync_state (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE UNIQUE,
   connected BOOLEAN NOT NULL DEFAULT false,
@@ -259,7 +284,7 @@ CREATE TABLE emr_sync_state (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE emr_sync_history (
+CREATE TABLE IF NOT EXISTS emr_sync_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   time TEXT NOT NULL,
@@ -273,7 +298,7 @@ CREATE TABLE emr_sync_history (
 
 -- ==================== PROMOTED CAMPAIGNS ====================
 
-CREATE TABLE promoted_campaigns (
+CREATE TABLE IF NOT EXISTS promoted_campaigns (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   clinic_id BIGINT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   location TEXT NOT NULL DEFAULT '',
@@ -288,33 +313,35 @@ CREATE TABLE promoted_campaigns (
 
 -- ==================== INDEXES ====================
 
-CREATE INDEX idx_facility_photos_clinic ON facility_photos(clinic_id);
-CREATE INDEX idx_verification_steps_clinic ON verification_steps(clinic_id);
-CREATE INDEX idx_provider_doctors_clinic ON provider_doctors(clinic_id);
-CREATE INDEX idx_provider_schedules_doctor ON provider_schedules(doctor_id);
-CREATE INDEX idx_provider_schedules_clinic ON provider_schedules(clinic_id);
-CREATE INDEX idx_provider_patients_clinic ON provider_patients(clinic_id);
-CREATE INDEX idx_provider_appointments_clinic ON provider_appointments(clinic_id);
-CREATE INDEX idx_provider_appointments_date ON provider_appointments(date);
-CREATE INDEX idx_provider_appointments_patient ON provider_appointments(patient_id);
-CREATE INDEX idx_provider_appointments_doctor ON provider_appointments(doctor_id);
-CREATE INDEX idx_provider_encounters_clinic ON provider_encounters(clinic_id);
-CREATE INDEX idx_provider_encounters_appointment ON provider_encounters(appointment_id);
-CREATE INDEX idx_provider_hmo_connections_clinic ON provider_hmo_connections(clinic_id);
-CREATE INDEX idx_provider_authorizations_clinic ON provider_authorizations(clinic_id);
-CREATE INDEX idx_provider_authorizations_patient ON provider_authorizations(patient_id);
-CREATE INDEX idx_service_tariffs_clinic ON service_tariffs(clinic_id);
-CREATE INDEX idx_provider_notifications_clinic ON provider_notifications(clinic_id);
-CREATE INDEX idx_provider_notifications_read ON provider_notifications(clinic_id, read);
-CREATE INDEX idx_emr_sync_history_clinic ON emr_sync_history(clinic_id);
-CREATE INDEX idx_promoted_campaigns_clinic ON promoted_campaigns(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_facility_photos_clinic ON facility_photos(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_verification_steps_clinic ON verification_steps(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_provider_doctors_clinic ON provider_doctors(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_provider_schedules_doctor ON provider_schedules(doctor_id);
+CREATE INDEX IF NOT EXISTS idx_provider_schedules_clinic ON provider_schedules(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_provider_patients_clinic ON provider_patients(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_provider_appointments_clinic ON provider_appointments(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_provider_appointments_date ON provider_appointments(date);
+CREATE INDEX IF NOT EXISTS idx_provider_appointments_patient ON provider_appointments(patient_id);
+CREATE INDEX IF NOT EXISTS idx_provider_appointments_doctor ON provider_appointments(doctor_id);
+CREATE INDEX IF NOT EXISTS idx_provider_encounters_clinic ON provider_encounters(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_provider_encounters_appointment ON provider_encounters(appointment_id);
+CREATE INDEX IF NOT EXISTS idx_provider_hmo_connections_clinic ON provider_hmo_connections(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_provider_authorizations_clinic ON provider_authorizations(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_provider_authorizations_patient ON provider_authorizations(patient_id);
+CREATE INDEX IF NOT EXISTS idx_service_tariffs_clinic ON service_tariffs(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_provider_notifications_clinic ON provider_notifications(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_provider_notifications_read ON provider_notifications(clinic_id, read);
+CREATE INDEX IF NOT EXISTS idx_emr_sync_history_clinic ON emr_sync_history(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_promoted_campaigns_clinic ON promoted_campaigns(clinic_id);
 
 -- ==================== TRIGGERS (updated_at) ====================
 
+DROP TRIGGER IF EXISTS trg_provider_doctors_updated_at ON provider_doctors;
 CREATE TRIGGER trg_provider_doctors_updated_at
   BEFORE UPDATE ON provider_doctors
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
+DROP TRIGGER IF EXISTS trg_provider_appointments_updated_at ON provider_appointments;
 CREATE TRIGGER trg_provider_appointments_updated_at
   BEFORE UPDATE ON provider_appointments
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
@@ -339,72 +366,113 @@ ALTER TABLE promoted_campaigns ENABLE ROW LEVEL SECURITY;
 -- Helper: get the current provider's clinic ID (reused by all policies)
 -- Note: get_provider_clinic_id() already exists in supabase_provider_migration.sql
 
--- RLS macro: provider can only access rows belonging to their clinic
+-- RLS policies: DROP IF EXISTS then CREATE (safe to re-run)
 -- facility_photos
+DROP POLICY IF EXISTS fp_provider_select ON facility_photos;
+DROP POLICY IF EXISTS fp_provider_insert ON facility_photos;
+DROP POLICY IF EXISTS fp_provider_update ON facility_photos;
 CREATE POLICY fp_provider_select ON facility_photos FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY fp_provider_insert ON facility_photos FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 CREATE POLICY fp_provider_update ON facility_photos FOR UPDATE USING (clinic_id = get_provider_clinic_id());
 
 -- verification_steps
+DROP POLICY IF EXISTS vs_provider_select ON verification_steps;
+DROP POLICY IF EXISTS vs_provider_update ON verification_steps;
 CREATE POLICY vs_provider_select ON verification_steps FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY vs_provider_update ON verification_steps FOR UPDATE USING (clinic_id = get_provider_clinic_id());
 
 -- provider_doctors
+DROP POLICY IF EXISTS pd_provider_select ON provider_doctors;
+DROP POLICY IF EXISTS pd_provider_insert ON provider_doctors;
+DROP POLICY IF EXISTS pd_provider_update ON provider_doctors;
 CREATE POLICY pd_provider_select ON provider_doctors FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY pd_provider_insert ON provider_doctors FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 CREATE POLICY pd_provider_update ON provider_doctors FOR UPDATE USING (clinic_id = get_provider_clinic_id());
 
 -- provider_schedules
+DROP POLICY IF EXISTS ps_provider_select ON provider_schedules;
+DROP POLICY IF EXISTS ps_provider_insert ON provider_schedules;
+DROP POLICY IF EXISTS ps_provider_update ON provider_schedules;
+DROP POLICY IF EXISTS ps_provider_delete ON provider_schedules;
 CREATE POLICY ps_provider_select ON provider_schedules FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY ps_provider_insert ON provider_schedules FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 CREATE POLICY ps_provider_update ON provider_schedules FOR UPDATE USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY ps_provider_delete ON provider_schedules FOR DELETE USING (clinic_id = get_provider_clinic_id());
 
 -- provider_patients
+DROP POLICY IF EXISTS pp_provider_select ON provider_patients;
+DROP POLICY IF EXISTS pp_provider_insert ON provider_patients;
+DROP POLICY IF EXISTS pp_provider_update ON provider_patients;
 CREATE POLICY pp_provider_select ON provider_patients FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY pp_provider_insert ON provider_patients FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 CREATE POLICY pp_provider_update ON provider_patients FOR UPDATE USING (clinic_id = get_provider_clinic_id());
 
 -- provider_appointments
+DROP POLICY IF EXISTS pa_provider_select ON provider_appointments;
+DROP POLICY IF EXISTS pa_provider_insert ON provider_appointments;
+DROP POLICY IF EXISTS pa_provider_update ON provider_appointments;
 CREATE POLICY pa_provider_select ON provider_appointments FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY pa_provider_insert ON provider_appointments FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 CREATE POLICY pa_provider_update ON provider_appointments FOR UPDATE USING (clinic_id = get_provider_clinic_id());
 
 -- provider_encounters
+DROP POLICY IF EXISTS pe_provider_select ON provider_encounters;
+DROP POLICY IF EXISTS pe_provider_insert ON provider_encounters;
+DROP POLICY IF EXISTS pe_provider_update ON provider_encounters;
 CREATE POLICY pe_provider_select ON provider_encounters FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY pe_provider_insert ON provider_encounters FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 CREATE POLICY pe_provider_update ON provider_encounters FOR UPDATE USING (clinic_id = get_provider_clinic_id());
 
 -- provider_hmo_connections
+DROP POLICY IF EXISTS phc_provider_select ON provider_hmo_connections;
+DROP POLICY IF EXISTS phc_provider_insert ON provider_hmo_connections;
+DROP POLICY IF EXISTS phc_provider_update ON provider_hmo_connections;
 CREATE POLICY phc_provider_select ON provider_hmo_connections FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY phc_provider_insert ON provider_hmo_connections FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 CREATE POLICY phc_provider_update ON provider_hmo_connections FOR UPDATE USING (clinic_id = get_provider_clinic_id());
 
 -- provider_authorizations
+DROP POLICY IF EXISTS pau_provider_select ON provider_authorizations;
+DROP POLICY IF EXISTS pau_provider_insert ON provider_authorizations;
+DROP POLICY IF EXISTS pau_provider_update ON provider_authorizations;
 CREATE POLICY pau_provider_select ON provider_authorizations FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY pau_provider_insert ON provider_authorizations FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 CREATE POLICY pau_provider_update ON provider_authorizations FOR UPDATE USING (clinic_id = get_provider_clinic_id());
 
 -- service_tariffs
+DROP POLICY IF EXISTS st_provider_select ON service_tariffs;
+DROP POLICY IF EXISTS st_provider_insert ON service_tariffs;
+DROP POLICY IF EXISTS st_provider_update ON service_tariffs;
 CREATE POLICY st_provider_select ON service_tariffs FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY st_provider_insert ON service_tariffs FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 CREATE POLICY st_provider_update ON service_tariffs FOR UPDATE USING (clinic_id = get_provider_clinic_id());
 
 -- provider_notifications
+DROP POLICY IF EXISTS pn_provider_select ON provider_notifications;
+DROP POLICY IF EXISTS pn_provider_insert ON provider_notifications;
+DROP POLICY IF EXISTS pn_provider_update ON provider_notifications;
 CREATE POLICY pn_provider_select ON provider_notifications FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY pn_provider_insert ON provider_notifications FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 CREATE POLICY pn_provider_update ON provider_notifications FOR UPDATE USING (clinic_id = get_provider_clinic_id());
 
 -- emr_sync_state
+DROP POLICY IF EXISTS ess_provider_select ON emr_sync_state;
+DROP POLICY IF EXISTS ess_provider_insert ON emr_sync_state;
+DROP POLICY IF EXISTS ess_provider_update ON emr_sync_state;
 CREATE POLICY ess_provider_select ON emr_sync_state FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY ess_provider_insert ON emr_sync_state FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 CREATE POLICY ess_provider_update ON emr_sync_state FOR UPDATE USING (clinic_id = get_provider_clinic_id());
 
 -- emr_sync_history
+DROP POLICY IF EXISTS esh_provider_select ON emr_sync_history;
+DROP POLICY IF EXISTS esh_provider_insert ON emr_sync_history;
 CREATE POLICY esh_provider_select ON emr_sync_history FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY esh_provider_insert ON emr_sync_history FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 
 -- promoted_campaigns
+DROP POLICY IF EXISTS pc_provider_select ON promoted_campaigns;
+DROP POLICY IF EXISTS pc_provider_insert ON promoted_campaigns;
+DROP POLICY IF EXISTS pc_provider_update ON promoted_campaigns;
 CREATE POLICY pc_provider_select ON promoted_campaigns FOR SELECT USING (clinic_id = get_provider_clinic_id());
 CREATE POLICY pc_provider_insert ON promoted_campaigns FOR INSERT WITH CHECK (clinic_id = get_provider_clinic_id());
 CREATE POLICY pc_provider_update ON promoted_campaigns FOR UPDATE USING (clinic_id = get_provider_clinic_id());
@@ -424,6 +492,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS trg_create_verification_steps ON clinics;
 CREATE TRIGGER trg_create_verification_steps
   AFTER INSERT ON clinics
   FOR EACH ROW EXECUTE FUNCTION create_default_verification_steps();
@@ -442,6 +511,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS trg_create_facility_photos ON clinics;
 CREATE TRIGGER trg_create_facility_photos
   AFTER INSERT ON clinics
   FOR EACH ROW EXECUTE FUNCTION create_default_facility_photos();
@@ -458,7 +528,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS trg_create_emr_state ON clinics;
 CREATE TRIGGER trg_create_emr_state
   AFTER INSERT ON clinics
   FOR EACH ROW EXECUTE FUNCTION create_default_emr_state();
+
 
