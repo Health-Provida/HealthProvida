@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { VerificationBadge } from "@/components/provider/status-badges";
 import { useProvider } from "@/lib/provider-store";
+import { useAuth } from "@/context/AuthContext";
 
 const titles: Record<string, string> = {
   "/": "Dashboard",
@@ -59,7 +60,16 @@ export function AppHeader() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { hospital, notifications, markAllRead, markRead } = useProvider();
+  const { profile, signOut } = useAuth();
   const [query, setQuery] = useState("");
+
+  const displayName = profile?.full_name || hospital?.name || "Provider";
+  const initials = displayName
+    .split(" ")
+    .map((w: string) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   const base = `/${pathname.split("/")[1] ?? ""}`;
   const isDetail = pathname.startsWith("/appointments/") && pathname !== "/appointments";
@@ -173,7 +183,7 @@ export function AppHeader() {
           <DropdownMenuTrigger asChild>
             <button className="flex min-w-0 shrink-0 items-center gap-2 rounded-full border border-transparent px-1.5 py-1 transition-colors hover:border-border hover:bg-muted">
               <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground ring-1 ring-border">
-                HP
+                {initials}
               </span>
               <span className="hidden min-w-0 text-left md:block">
                 <span className="block max-w-[10rem] truncate text-xs font-semibold">
@@ -185,8 +195,8 @@ export function AppHeader() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
-              <p className="text-sm font-medium">Chidinma Eze</p>
-              <p className="text-xs font-normal text-muted-foreground">Facility Administrator</p>
+              <p className="text-sm font-medium">{displayName}</p>
+              <p className="text-xs font-normal text-muted-foreground">{profile?.email ?? "Facility Administrator"}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -205,8 +215,8 @@ export function AppHeader() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>
-              <LogOut className="size-4" /> Sign out (prototype)
+            <DropdownMenuItem onClick={() => { void signOut(); navigate("/login"); }}>
+              <LogOut className="size-4" /> Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -2,7 +2,7 @@
  * Canonical list of HMOs supported by HealthProvida.
  * Used in both the JoinProvider form and the clinic search/filter on the HomePage.
  */
-export const availableHMOs = [
+export const availableHMOs: readonly string[] = [
   "AIHS",
   "Alleanza Health",
   "Anchor HMO",

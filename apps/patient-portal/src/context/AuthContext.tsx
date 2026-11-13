@@ -1,37 +1,59 @@
 /**
- * AuthContext.jsx
+ * AuthContext.tsx
  * ──────────────────────────────────────────────────────────────
  * Provides authentication state and methods to the entire app.
- * 
- * Auth model: passwordless email OTP.
- *  - signIn  → sends a 6-digit OTP to the user's email
- *  - signInVerifyOtp → verifies the OTP and establishes session
- *  - Users are auto-created on first OTP sign-in by Supabase.
- *  - Password is optional and can be set/changed in-app while
- *    already authenticated (no reset email needed).
- *
- * Exposes: signIn, signInVerifyOtp, signOut, verifyOtp,
- *          updatePassword, refreshProfile,
- *          isAdmin, isProvider, isSuperAdmin, isModerator,
- *          hasAdminWrite, adminRole, isProfileIncomplete.
  * ──────────────────────────────────────────────────────────────
  */
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/utils/supabase';
+import type { User, Session } from '@supabase/supabase-js';
 
-const AuthContext = createContext(null);
+export interface Profile {
+  id: string;
+  full_name: string | null;
+  email: string;
+  phone: string | null;
+  avatar_url: string | null;
+  role: string;
+  created_at: string;
+  date_of_birth: string | null;
+  bio: string | null;
+}
+
+export interface AuthContextValue {
+  user: User | null;
+  session: Session | null;
+  profile: Profile | null;
+  loading: boolean;
+  signIn: (params: { email: string }) => Promise<{ data: any; error: any }>;
+  signInVerifyOtp: (params: { email: string; token: string }) => Promise<{ data: any; error: any }>;
+  signOut: () => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<{ data: any; error: any }>;
+  refreshProfile: () => Promise<Profile | null>;
+  verifyOtp: (params: { email: string; token: string }) => Promise<{ data: any; error: any }>;
+  isProfileIncomplete: boolean;
+  isAuthenticated: boolean;
+  role: string;
+  isAdmin: boolean;
+  isProvider: boolean;
+  isSuperAdmin: boolean;
+  isModerator: boolean;
+  hasAdminWrite: boolean;
+  adminRole: string | null;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 const ADMIN_ROLES = ['super_admin', 'admin', 'moderator'];
 const ADMIN_WRITE_ROLES = ['super_admin', 'admin'];
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState(null);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch the user's profile from the profiles table
-  const fetchProfile = useCallback(async (userId) => {
+  const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
     if (!supabase || !userId) {
       setProfile(null);
       return null;
@@ -51,8 +73,8 @@ export function AuthProvider({ children }) {
         setProfile(null);
         return null;
       }
-      setProfile(data);
-      return data;
+      setProfile(data as Profile);
+      return data as Profile;
     } catch (err) {
       console.error('AuthContext: Profile fetch exception:', err);
       setProfile(null);
@@ -60,14 +82,12 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Initialize auth state
   useEffect(() => {
     if (!supabase) {
       setLoading(false);
       return;
     }
 
-    // Get initial session
     const initAuth = async () => {
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
@@ -86,14 +106,12 @@ export function AuthProvider({ children }) {
 
     initAuth();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
         if (newSession?.user) {
-          // Small delay to allow the profile trigger to create the row on signup
           if (event === 'SIGNED_IN') {
             setTimeout(() => fetchProfile(newSession.user.id), 500);
           } else {
@@ -114,15 +132,8 @@ export function AuthProvider({ children }) {
     };
   }, [fetchProfile]);
 
-  // ─── Auth Methods ────────────────────────────────────────
-
-  /**
-   * Send a 6-digit OTP to the user's email.
-   * If the user doesn't exist, Supabase auto-creates the account.
-   * @param {{ email: string }} params
-   */
-  const signIn = useCallback(async ({ email }) => {
-    if (!supabase) return { error: { message: 'Supabase not configured' } };
+  const signIn = useCallback(async ({ email }: { email: string }) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
 
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
@@ -134,13 +145,8 @@ export function AuthProvider({ children }) {
     return { data, error };
   }, []);
 
-  /**
-   * Verify a 6-digit OTP code sent to email during sign-in.
-   * On success, establishes the session (auto-login).
-   * @param {{ email: string, token: string }} params
-   */
-  const signInVerifyOtp = useCallback(async ({ email, token }) => {
-    if (!supabase) return { error: { message: 'Supabase not configured' } };
+  const signInVerifyOtp = useCallback(async ({ email, token }: { email: string; token: string }) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
 
     const { data, error } = await supabase.auth.verifyOtp({
       email,
@@ -151,13 +157,8 @@ export function AuthProvider({ children }) {
     return { data, error };
   }, []);
 
-  /**
-   * Verify an OTP code (6-digit) sent to email during signup.
-   * Kept for backward compatibility with older signup-type flows.
-   * @param {{ email: string, token: string }} params
-   */
-  const verifyOtp = useCallback(async ({ email, token }) => {
-    if (!supabase) return { error: { message: 'Supabase not configured' } };
+  const verifyOtp = useCallback(async ({ email, token }: { email: string; token: string }) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
 
     const { data, error } = await supabase.auth.verifyOtp({
       email,
@@ -168,13 +169,8 @@ export function AuthProvider({ children }) {
     return { data, error };
   }, []);
 
-  /**
-   * Update the user's password while already authenticated.
-   * No reset email required — works directly with the current session.
-   * @param {string} newPassword
-   */
-  const updatePassword = useCallback(async (newPassword) => {
-    if (!supabase) return { error: { message: 'Supabase not configured' } };
+  const updatePassword = useCallback(async (newPassword: string) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
 
     const { data, error } = await supabase.auth.updateUser({
       password: newPassword,
@@ -191,16 +187,14 @@ export function AuthProvider({ children }) {
     setProfile(null);
   }, []);
 
-  const refreshProfile = useCallback(async () => {
+  const refreshProfile = useCallback(async (): Promise<Profile | null> => {
     if (user?.id) {
       return await fetchProfile(user.id);
     }
     return null;
   }, [user, fetchProfile]);
 
-  // ─── Computed Role Checks ────────────────────────────────
-
-  const value = useMemo(() => {
+  const value = useMemo((): AuthContextValue => {
     const role = profile?.role ?? 'patient';
     const isProfileIncomplete = !profile?.full_name || profile.full_name.trim() === '';
 
@@ -219,16 +213,13 @@ export function AuthProvider({ children }) {
       session,
       profile,
       loading,
-      // Auth methods
       signIn,
       signInVerifyOtp,
       signOut,
       updatePassword,
       refreshProfile,
       verifyOtp,
-      // Profile state
       isProfileIncomplete,
-      // Role checks
       isAuthenticated: !!session,
       role,
       isAdmin: ADMIN_ROLES.includes(role),
@@ -247,11 +238,7 @@ export function AuthProvider({ children }) {
   );
 }
 
-/**
- * Hook to access auth state and methods.
- * Must be used within an <AuthProvider>.
- */
-export function useAuth() {
+export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');

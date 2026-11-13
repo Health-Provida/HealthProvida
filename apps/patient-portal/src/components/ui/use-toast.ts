@@ -1,22 +1,40 @@
 import { useState, useEffect } from "react"
+import type React from "react"
 
 const TOAST_LIMIT = 1
 
 let count = 0
-function generateId() {
+function generateId(): string {
   count = (count + 1) % Number.MAX_VALUE
   return count.toString()
 }
 
+export interface ToastData {
+  id: string;
+  title?: string;
+  description?: string;
+  action?: React.ReactElement;
+  duration?: number;
+  variant?: 'default' | 'destructive';
+  dismiss: () => void;
+  [key: string]: unknown;
+}
+
+interface ToastState {
+  toasts: ToastData[];
+}
+
+type Listener = (state: ToastState) => void;
+
 const toastStore = {
   state: {
     toasts: [],
-  },
-  listeners: [],
+  } as ToastState,
+  listeners: [] as Listener[],
   
-  getState: () => toastStore.state,
+  getState: (): ToastState => toastStore.state,
   
-  setState: (nextState) => {
+  setState: (nextState: ToastState | ((prev: ToastState) => ToastState)) => {
     if (typeof nextState === 'function') {
       toastStore.state = nextState(toastStore.state)
     } else {
@@ -26,7 +44,7 @@ const toastStore = {
     toastStore.listeners.forEach(listener => listener(toastStore.state))
   },
   
-  subscribe: (listener) => {
+  subscribe: (listener: Listener) => {
     toastStore.listeners.push(listener)
     return () => {
       toastStore.listeners = toastStore.listeners.filter(l => l !== listener)
@@ -34,14 +52,14 @@ const toastStore = {
   }
 }
 
-export const toast = ({ ...props }) => {
+export const toast = (props: Omit<ToastData, 'id' | 'dismiss'> & Record<string, unknown>) => {
   const id = generateId()
 
-  const update = (props) =>
+  const update = (updateProps: Partial<ToastData>) =>
     toastStore.setState((state) => ({
       ...state,
       toasts: state.toasts.map((t) =>
-        t.id === id ? { ...t, ...props } : t
+        t.id === id ? { ...t, ...updateProps } : t
       ),
     }))
 
@@ -53,7 +71,7 @@ export const toast = ({ ...props }) => {
   toastStore.setState((state) => ({
     ...state,
     toasts: [
-      { ...props, id, dismiss },
+      { ...props, id, dismiss } as ToastData,
       ...state.toasts,
     ].slice(0, TOAST_LIMIT),
   }))
@@ -66,27 +84,27 @@ export const toast = ({ ...props }) => {
 }
 
 export function useToast() {
-  const [state, setState] = useState(toastStore.getState())
+  const [state, setState] = useState<ToastState>(toastStore.getState())
   
   useEffect(() => {
-    const unsubscribe = toastStore.subscribe((state) => {
-      setState(state)
+    const unsubscribe = toastStore.subscribe((newState) => {
+      setState(newState)
     })
     
     return unsubscribe
   }, [])
   
   useEffect(() => {
-    const timeouts = []
+    const timeouts: ReturnType<typeof setTimeout>[] = []
 
-    state.toasts.forEach((toast) => {
-      if (toast.duration === Infinity) {
+    state.toasts.forEach((t) => {
+      if (t.duration === Infinity) {
         return
       }
 
       const timeout = setTimeout(() => {
-        toast.dismiss()
-      }, toast.duration || 5000)
+        t.dismiss()
+      }, (t.duration as number) || 5000)
 
       timeouts.push(timeout)
     })

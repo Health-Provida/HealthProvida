@@ -455,11 +455,11 @@ export async function getPerformance(): Promise<ProviderPerformance> {
     await Promise.all([
       supabase
         .from("provider_appointments")
-        .select("status")
+        .select("status, date")
         .eq("clinic_id", cid),
       supabase
         .from("provider_encounters")
-        .select("status")
+        .select("status, created_at")
         .eq("clinic_id", cid),
       supabase.from("reviews").select("rating").eq("clinic_id", cid),
       supabase.from("promoted_campaigns").select("status").eq("clinic_id", cid),
@@ -470,8 +470,8 @@ export async function getPerformance(): Promise<ProviderPerformance> {
         .single(),
     ]);
 
-  const appointments = unwrap(apptResult) as { status: string }[];
-  const encounters = unwrap(encResult) as { status: string }[];
+  const appointments = unwrap(apptResult) as { status: string; date: string }[];
+  const encounters = unwrap(encResult) as { status: string; created_at: string }[];
   const reviews = unwrap(reviewResult) as { rating: number }[];
   const campaigns = unwrap(campaignResult) as { status: string }[];
   const clinic = unwrap(clinicResult) as { verification: string };
@@ -500,6 +500,43 @@ export async function getPerformance(): Promise<ProviderPerformance> {
         ? "active"
         : "pending";
 
+  // ─── Monthly aggregation ───────────────────────────────────
+  // Group appointments by YYYY-MM and encounters by YYYY-MM
+  const monthlyMap = new Map<string, { bookings: number; encounters: number }>();
+
+  for (const appt of appointments) {
+    if (!appt.date) continue;
+    const month = appt.date.slice(0, 7); // "YYYY-MM"
+    const entry = monthlyMap.get(month) ?? { bookings: 0, encounters: 0 };
+    entry.bookings++;
+    monthlyMap.set(month, entry);
+  }
+
+  for (const enc of encounters) {
+    if (!enc.created_at) continue;
+    const month = enc.created_at.slice(0, 7); // "YYYY-MM"
+    const entry = monthlyMap.get(month) ?? { bookings: 0, encounters: 0 };
+    entry.encounters++;
+    monthlyMap.set(month, entry);
+  }
+
+  // Sort by month and format for display
+  const monthNames = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
+  const monthly = Array.from(monthlyMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12) // last 12 months
+    .map(([key, val]) => {
+      const [, m] = key.split("-");
+      return {
+        month: monthNames[parseInt(m, 10) - 1] ?? key,
+        bookings: val.bookings,
+        encounters: val.encounters,
+      };
+    });
+
   return {
     activeBookings: active,
     completedBookings: completed,
@@ -509,7 +546,7 @@ export async function getPerformance(): Promise<ProviderPerformance> {
     popularityScore,
     searchVisibility,
     promotedPlacement,
-    monthly: [], // TODO: aggregate monthly from provider_appointments.date
+    monthly,
   };
 }
 

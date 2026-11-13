@@ -1,14 +1,22 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useClinics } from '@/context/ClinicsContext';
 
-const FavoritesContext = createContext(null);
+export interface FavoritesContextValue {
+  favorites: string[];
+  toggleFavorite: (clinicId: string) => void;
+  isFavorite: (clinicId: string) => boolean;
+  getFavoriteClinics: () => any[];
+  favoritesCount: number;
+}
+
+const FavoritesContext = createContext<FavoritesContextValue | null>(null);
 
 const STORAGE_KEY = 'healthprovida_favorites';
 
-export function FavoritesProvider({ children }) {
+export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const { clinics } = useClinics();
 
-  const [favorites, setFavorites] = useState(() => {
+  const [favorites, setFavorites] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -17,7 +25,6 @@ export function FavoritesProvider({ children }) {
     }
   });
 
-  // Sync to localStorage whenever favorites change
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
@@ -26,7 +33,7 @@ export function FavoritesProvider({ children }) {
     }
   }, [favorites]);
 
-  const toggleFavorite = useCallback((clinicId) => {
+  const toggleFavorite = useCallback((clinicId: string) => {
     setFavorites(prev => {
       if (prev.includes(clinicId)) {
         return prev.filter(id => id !== clinicId);
@@ -35,12 +42,12 @@ export function FavoritesProvider({ children }) {
     });
   }, []);
 
-  const isFavorite = useCallback((clinicId) => {
+  const isFavorite = useCallback((clinicId: string) => {
     return favorites.includes(clinicId);
   }, [favorites]);
 
   const getFavoriteClinics = useCallback(() => {
-    return clinics.filter(clinic => favorites.includes(clinic.id));
+    return clinics.filter((clinic: any) => favorites.includes(clinic.id));
   }, [favorites, clinics]);
 
   const favoritesCount = favorites.length;
@@ -52,7 +59,7 @@ export function FavoritesProvider({ children }) {
   );
 }
 
-export function useFavorites() {
+export function useFavorites(): FavoritesContextValue {
   const context = useContext(FavoritesContext);
   if (!context) {
     throw new Error('useFavorites must be used within a FavoritesProvider');

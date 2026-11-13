@@ -1,15 +1,11 @@
 /**
- * lab-data.js
+ * lab-data.ts
  * ──────────────────────────────────────────────────────────────
  * Constants, label maps, and utility functions for the lab portal.
- * This file replaces the Lovable-generated lab-data.ts, keeping
- * the status labels, formatters, and enums but removing all seed
- * data (now served from Supabase).
  * ──────────────────────────────────────────────────────────────
  */
 
-/** @type {Record<string, string>} */
-export const orderStatusLabel = {
+export const orderStatusLabel: Record<string, string> = {
   new: 'New',
   awaiting_sample: 'Awaiting Sample',
   processing: 'Processing',
@@ -18,8 +14,7 @@ export const orderStatusLabel = {
   cancelled: 'Cancelled',
 };
 
-/** @type {Record<string, string>} */
-export const sampleStatusLabel = {
+export const sampleStatusLabel: Record<string, string> = {
   awaiting: 'Awaiting Collection',
   collected: 'Collected',
   processing: 'Processing',
@@ -27,16 +22,14 @@ export const sampleStatusLabel = {
   rejected: 'Rejected',
 };
 
-/** @type {Record<string, string>} */
-export const resultStatusLabel = {
+export const resultStatusLabel: Record<string, string> = {
   pending: 'Pending',
   processing: 'Processing',
   review: 'Ready for Review',
   published: 'Published',
 };
 
-/** Valid order status transitions */
-export const orderTransitions = {
+export const orderTransitions: Record<string, string[]> = {
   new: ['awaiting_sample', 'cancelled'],
   awaiting_sample: ['processing', 'cancelled'],
   processing: ['results_ready'],
@@ -45,8 +38,7 @@ export const orderTransitions = {
   cancelled: [],
 };
 
-/** Valid sample status transitions */
-export const sampleTransitions = {
+export const sampleTransitions: Record<string, string[]> = {
   awaiting: ['collected', 'rejected'],
   collected: ['processing'],
   processing: ['completed'],
@@ -54,8 +46,7 @@ export const sampleTransitions = {
   rejected: [],
 };
 
-/** Next sample action for UI buttons */
-export const sampleNextAction = {
+export const sampleNextAction: Record<string, { status: string; label: string } | null> = {
   awaiting: { status: 'collected', label: 'Mark collected' },
   collected: { status: 'processing', label: 'Start processing' },
   processing: { status: 'completed', label: 'Mark completed' },
@@ -63,30 +54,25 @@ export const sampleNextAction = {
   rejected: null,
 };
 
-/** Format Naira currency */
-export function formatNaira(value) {
+export function formatNaira(value: number): string {
   return '₦' + Number(value).toLocaleString('en-NG', { maximumFractionDigits: 0 });
 }
 
-/** Calculate order total from tests array */
-export function orderTotal(tests) {
+export function orderTotal(tests: Array<{ price?: number }> | null | undefined): number {
   if (!tests || !Array.isArray(tests)) return 0;
   return tests.reduce((sum, t) => sum + Number(t.price || 0), 0);
 }
 
-/** Lab staff role labels for display */
-export const labRoleLabel = {
+export const labRoleLabel: Record<string, string> = {
   lab_admin: 'Laboratory Administrator',
   lab_scientist: 'Medical Laboratory Scientist',
   lab_technician: 'Laboratory Technician',
   lab_phlebotomist: 'Phlebotomist',
 };
 
-/** Order timeline steps */
-export const orderTimelineSteps = ['Order received', 'Sample collected', 'Processing', 'Result ready', 'Delivered'];
+export const orderTimelineSteps: string[] = ['Order received', 'Sample collected', 'Processing', 'Result ready', 'Delivered'];
 
-/** Map order status to timeline step index */
-export const orderStepIndex = {
+export const orderStepIndex: Record<string, number> = {
   new: 0,
   awaiting_sample: 0,
   processing: 2,
@@ -95,8 +81,7 @@ export const orderStepIndex = {
   cancelled: 0,
 };
 
-/** Format a date string or Date for display */
-export function formatDate(dateStr) {
+export function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '—';
   try {
     const d = new Date(dateStr);
@@ -106,8 +91,7 @@ export function formatDate(dateStr) {
   }
 }
 
-/** Format relative time (e.g. "5 minutes ago") */
-export function timeAgo(dateStr) {
+export function timeAgo(dateStr: string | null | undefined): string {
   if (!dateStr) return '';
   try {
     const now = Date.now();
