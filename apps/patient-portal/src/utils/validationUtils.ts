@@ -160,6 +160,10 @@ const SUPABASE_ERROR_MAP = [
     match: /invalid.*otp|otp.*invalid/i,
     message: 'Invalid verification code. Please check and try again.',
   },
+  {
+    match: /error sending.*email|confirmation email/i,
+    message: 'Failed to send verification email. Please check your Supabase SMTP settings or rate limits.',
+  },
 ];
 
 /**

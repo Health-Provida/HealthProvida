@@ -44,7 +44,7 @@ function assert(client: typeof supabase): asserts client is NonNullable<typeof s
 }
 
 /** Throw on Supabase error, otherwise return data */
-function unwrap<T>(result: { data: T | null; error: { message: string } | null }): T {
+function unwrap<T = any>(result: { data: T | null; error: { message: string } | null }): T {
   if (result.error) throw new Error(result.error.message);
   return result.data as T;
 }
@@ -86,7 +86,7 @@ export function resetClinicId() {
 
 /* ----------------------- row → domain mappers ------------------------- */
 
-function toHospital(row: Record<string, unknown>, photos: FacilityPhoto[]): Hospital {
+function toHospital(row: Record<string, any>, photos: FacilityPhoto[]): Hospital {
   return {
     id: String(row.id),
     name: (row.practitioner_name ?? "") as string,
@@ -105,7 +105,7 @@ function toHospital(row: Record<string, unknown>, photos: FacilityPhoto[]): Hosp
   };
 }
 
-function toPhoto(row: Record<string, unknown>): FacilityPhoto {
+function toPhoto(row: Record<string, any>): FacilityPhoto {
   return {
     id: row.id as string,
     slot: row.slot as FacilityPhoto["slot"],
@@ -116,7 +116,7 @@ function toPhoto(row: Record<string, unknown>): FacilityPhoto {
   };
 }
 
-function toDoctor(row: Record<string, unknown>): Doctor {
+function toDoctor(row: Record<string, any>): Doctor {
   return {
     id: row.id as string,
     name: row.name as string,
@@ -128,7 +128,7 @@ function toDoctor(row: Record<string, unknown>): Doctor {
   };
 }
 
-function toSchedule(row: Record<string, unknown>): Schedule {
+function toSchedule(row: Record<string, any>): Schedule {
   return {
     id: row.id as string,
     doctorId: row.doctor_id as string,
@@ -141,7 +141,7 @@ function toSchedule(row: Record<string, unknown>): Schedule {
   };
 }
 
-function toPatient(row: Record<string, unknown>): Patient {
+function toPatient(row: Record<string, any>): Patient {
   return {
     id: row.id as string,
     reference: row.reference as string,
@@ -157,7 +157,7 @@ function toPatient(row: Record<string, unknown>): Patient {
   };
 }
 
-function toAppointment(row: Record<string, unknown>): Appointment {
+function toAppointment(row: Record<string, any>): Appointment {
   return {
     id: row.id as string,
     reference: row.reference as string,
@@ -178,7 +178,7 @@ function toAppointment(row: Record<string, unknown>): Appointment {
   };
 }
 
-function toEncounter(row: Record<string, unknown>): Encounter {
+function toEncounter(row: Record<string, any>): Encounter {
   return {
     id: row.id as string,
     appointmentId: row.appointment_id as string,
@@ -192,7 +192,7 @@ function toEncounter(row: Record<string, unknown>): Encounter {
   };
 }
 
-function toHMO(row: Record<string, unknown>): HMO {
+function toHMO(row: Record<string, any>): HMO {
   return {
     id: row.id as string,
     name: row.name as string,
@@ -202,7 +202,7 @@ function toHMO(row: Record<string, unknown>): HMO {
   };
 }
 
-function toAuthorization(row: Record<string, unknown>): Authorization {
+function toAuthorization(row: Record<string, any>): Authorization {
   return {
     id: row.id as string,
     code: row.code as string | undefined,
@@ -222,7 +222,7 @@ function toAuthorization(row: Record<string, unknown>): Authorization {
   };
 }
 
-function toTariff(row: Record<string, unknown>): ServiceTariff {
+function toTariff(row: Record<string, any>): ServiceTariff {
   return {
     id: row.id as string,
     service: row.service as string,
@@ -233,7 +233,7 @@ function toTariff(row: Record<string, unknown>): ServiceTariff {
   };
 }
 
-function toNotification(row: Record<string, unknown>): Notification {
+function toNotification(row: Record<string, any>): Notification {
   return {
     id: row.id as string,
     type: row.type as Notification["type"],
@@ -244,7 +244,7 @@ function toNotification(row: Record<string, unknown>): Notification {
   };
 }
 
-function toVerificationStep(row: Record<string, unknown>): VerificationStep {
+function toVerificationStep(row: Record<string, any>): VerificationStep {
   return {
     id: row.id as string,
     label: row.label as string,
@@ -252,7 +252,7 @@ function toVerificationStep(row: Record<string, unknown>): VerificationStep {
   };
 }
 
-function toEMRSyncRecord(row: Record<string, unknown>): EMRSyncRecord {
+function toEMRSyncRecord(row: Record<string, any>): EMRSyncRecord {
   return {
     id: row.id as string,
     time: row.time as string,
@@ -263,7 +263,7 @@ function toEMRSyncRecord(row: Record<string, unknown>): EMRSyncRecord {
   };
 }
 
-function toCampaign(row: Record<string, unknown>): PromotedCampaign {
+function toCampaign(row: Record<string, any>): PromotedCampaign {
   return {
     id: row.id as string,
     location: (row.location ?? "") as string,
@@ -290,7 +290,7 @@ export async function getHospital(): Promise<Hospital> {
 
   const clinic = unwrap(clinicResult);
   const photos = unwrap(photosResult).map(toPhoto);
-  const hospital = toHospital(clinic as Record<string, unknown>, photos);
+  const hospital = toHospital(clinic as Record<string, any>, photos);
   hospital.specialties = unwrap(specialtiesResult).map(
     (r: { specialty: string }) => r.specialty,
   );
@@ -362,7 +362,7 @@ export async function getAppointmentById(
     .eq("id", appointmentId)
     .maybeSingle();
   const row = result.data;
-  return row ? toAppointment(row as Record<string, unknown>) : undefined;
+  return row ? toAppointment(row as Record<string, any>) : undefined;
 }
 
 export async function getEncounters(): Promise<Encounter[]> {
@@ -585,7 +585,7 @@ export async function updateHospital(
   const cid = await clinicId();
 
   // Map domain fields → DB columns
-  const updates: Record<string, unknown> = {};
+  const updates: Record<string, any> = {};
   if (patch.name !== undefined) updates.practitioner_name = patch.name;
   if (patch.facilityType !== undefined) updates.practice_type = patch.facilityType;
   if (patch.phone !== undefined) updates.phone = patch.phone;
@@ -721,7 +721,7 @@ export async function createDoctor(input: Omit<Doctor, "id">): Promise<Doctor> {
     })
     .select()
     .single();
-  return toDoctor(unwrap(result) as Record<string, unknown>);
+  return toDoctor(unwrap(result) as Record<string, any>);
 }
 
 export async function updateDoctor(
@@ -729,7 +729,7 @@ export async function updateDoctor(
   patch: Partial<Doctor>,
 ): Promise<Doctor[]> {
   assert(supabase);
-  const updates: Record<string, unknown> = {};
+  const updates: Record<string, any> = {};
   if (patch.name !== undefined) updates.name = patch.name;
   if (patch.title !== undefined) updates.title = patch.title;
   if (patch.specialty !== undefined) updates.specialty = patch.specialty;
@@ -768,7 +768,7 @@ export async function updateSchedule(
   patch: Partial<Schedule>,
 ): Promise<Schedule[]> {
   assert(supabase);
-  const updates: Record<string, unknown> = {};
+  const updates: Record<string, any> = {};
   if (patch.day !== undefined) updates.day = patch.day;
   if (patch.startTime !== undefined) updates.start_time = patch.startTime;
   if (patch.endTime !== undefined) updates.end_time = patch.endTime;
@@ -899,7 +899,7 @@ export async function createEncounter(
     .eq("appointment_id", appointment.id)
     .maybeSingle();
   if (existing.data) {
-    return toEncounter(existing.data as Record<string, unknown>);
+    return toEncounter(existing.data as Record<string, any>);
   }
 
   const result = await supabase
@@ -915,7 +915,7 @@ export async function createEncounter(
     })
     .select()
     .single();
-  return toEncounter(unwrap(result) as Record<string, unknown>);
+  return toEncounter(unwrap(result) as Record<string, any>);
 }
 
 export async function startConsultation(
@@ -1048,7 +1048,7 @@ export async function requestAuthorization(
     })
     .select()
     .single();
-  const record = toAuthorization(unwrap(result) as Record<string, unknown>);
+  const record = toAuthorization(unwrap(result) as Record<string, any>);
 
   // Link authorization to appointment
   if (input.appointmentId) {
@@ -1076,7 +1076,7 @@ export async function updateTariff(
   patch: Partial<ServiceTariff>,
 ): Promise<ServiceTariff[]> {
   assert(supabase);
-  const updates: Record<string, unknown> = {};
+  const updates: Record<string, any> = {};
   if (patch.service !== undefined) updates.service = patch.service;
   if (patch.category !== undefined) updates.category = patch.category;
   if (patch.providerPrice !== undefined) updates.provider_price = patch.providerPrice;

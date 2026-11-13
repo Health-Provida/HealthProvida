@@ -12,14 +12,13 @@
 // (some bots detect display:none and skip those fields)
 export const HONEYPOT_FIELD_NAME = 'website_url';
 
-export const HONEYPOT_STYLES = {
+export const HONEYPOT_STYLES: React.CSSProperties = {
   position: 'absolute',
   left: '-9999px',
   top: '-9999px',
   opacity: 0,
   height: 0,
   width: 0,
-  tabIndex: -1,
   overflow: 'hidden',
   pointerEvents: 'none',
 };

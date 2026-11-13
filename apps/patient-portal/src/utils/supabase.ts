@@ -12,6 +12,6 @@ if (!supabaseUrl || !supabaseKey) {
 
 // Only create a real client when credentials are available;
 // otherwise export null so query functions can gracefully return errors.
-export const supabase: SupabaseClient | null = (supabaseUrl && supabaseKey)
+export const supabase = ((supabaseUrl && supabaseKey)
   ? createClient(supabaseUrl, supabaseKey)
-  : null;
+  : null) as (SupabaseClient & { auth: any }) | null;

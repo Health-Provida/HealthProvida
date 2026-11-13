@@ -12,9 +12,9 @@ const RESEND_COOLDOWN = 60;
 
 export default function LoginPage() {
   // ─── State ────────────────────────────────────────────────
-  const [step, setStep] = useState('email'); // 'email' | 'otp'
+  const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
+  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [error, setError] = useState('');
   const [fieldError, setFieldError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ export default function LoginPage() {
   const [honeypot, setHoneypot] = useState('');
   const timestampTracker = useMemo(() => createTimestampTracker(), []);
 
-  const inputRefs = useRef([]);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const { signIn, signInVerifyOtp, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -68,7 +68,7 @@ export default function LoginPage() {
 
   // ─── Step 1: Send OTP ─────────────────────────────────────
 
-  const handleSendOtp = async (e) => {
+  const handleSendOtp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setFieldError('');
@@ -95,6 +95,7 @@ export default function LoginPage() {
     const { error: otpError } = await signIn({ email: email.trim() });
 
     if (otpError) {
+      console.error('[LoginPage] OTP signIn error:', otpError);
       if (/rate limit/i.test(otpError.message)) {
         setError('Too many requests. Please wait a few minutes and try again.');
       } else {
@@ -112,7 +113,7 @@ export default function LoginPage() {
   // ─── Step 2: OTP Input Handlers ───────────────────────────
 
   const handleOtpChange = useCallback(
-    (index, value) => {
+    (index: number, value: string) => {
       if (!/^[0-9]?$/.test(value)) return;
 
       const newOtp = [...otp];
@@ -134,7 +135,7 @@ export default function LoginPage() {
   );
 
   const handleOtpKeyDown = useCallback(
-    (index, e) => {
+    (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Backspace' && !otp[index] && index > 0) {
         inputRefs.current[index - 1]?.focus();
       }
@@ -148,7 +149,7 @@ export default function LoginPage() {
     [otp]
   );
 
-  const handleOtpPaste = useCallback((e) => {
+  const handleOtpPaste = useCallback((e: React.ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, OTP_LENGTH);
     if (!pasted) return;
@@ -170,7 +171,7 @@ export default function LoginPage() {
 
   // ─── Verify OTP ───────────────────────────────────────────
 
-  const handleVerifyOtp = async (code) => {
+  const handleVerifyOtp = async (code: string) => {
     if (!code || code.length !== OTP_LENGTH) return;
 
     setLoading(true);
@@ -204,6 +205,7 @@ export default function LoginPage() {
     const { error: resendError } = await signIn({ email: email.trim() });
 
     if (resendError) {
+      console.error('[LoginPage] Resend OTP error:', resendError);
       setError(mapSupabaseError(resendError));
     } else {
       setResendCooldown(RESEND_COOLDOWN);
