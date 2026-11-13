@@ -42,18 +42,18 @@ export default function LoginPage() {
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const { signIn, verifyOtp, isAuthenticated } = useAuth();
+  const { signIn, verifyOtp, isAuthenticated, isProvider, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated AND profile is loaded (authLoading = false)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !authLoading) {
       const from = (location.state as { from?: { pathname: string } })?.from
         ?.pathname;
       navigate(from ?? "/", { replace: true });
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [isAuthenticated, authLoading, navigate, location]);
 
   // Resend cooldown timer
   useEffect(() => {

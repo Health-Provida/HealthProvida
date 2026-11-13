@@ -18,6 +18,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -60,12 +61,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  // Tracks whether a profile fetch is in-flight after sign-in
+  const [profileLoading, setProfileLoading] = useState(false);
+  // Prevents double-init from React StrictMode
+  const initRef = useRef(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
     if (!supabase) {
       setProfile(null);
+      setProfileLoading(false);
       return;
     }
+    setProfileLoading(true);
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -82,6 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("[ProviderAuth] Profile fetch exception:", err);
       setProfile(null);
+    } finally {
+      setProfileLoading(false);
     }
   }, []);
 
@@ -91,6 +100,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
+    // Prevent double-init in StrictMode
+    if (initRef.current) return;
+    initRef.current = true;
 
     const initAuth = async () => {
       try {
@@ -120,12 +132,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(newSession?.user ?? null);
 
       if (newSession?.user) {
-        if (event === "SIGNED_IN") {
-          // Small delay to allow the profile trigger to create the row on signup
-          setTimeout(() => fetchProfile(newSession.user.id), 500);
-        } else {
-          await fetchProfile(newSession.user.id);
-        }
+        // Fetch profile immediately — no artificial delay needed since
+        // shouldCreateUser is false (user must already exist)
+        await fetchProfile(newSession.user.id);
       } else {
         setProfile(null);
       }
@@ -158,6 +167,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string, token: string): Promise<AuthResult> => {
       if (!supabase) return { error: { message: "Supabase not configured" } };
 
+      // Mark profile as loading BEFORE the OTP verify resolves
+      // so ProtectedRoute doesn't flash "Access Denied"
+      setProfileLoading(true);
+
       const { data, error } = await supabase.auth.verifyOtp({
         email,
         token,
@@ -188,12 +201,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(() => {
     const role = profile?.role ?? "patient";
+    // Still loading if: initial auth is loading OR profile is being fetched
+    const isLoading = loading || profileLoading;
 
     return {
       user,
       session,
       profile,
-      loading,
+      loading: isLoading,
       isAuthenticated: !!session,
       isProvider: role === "provider",
       signIn,
@@ -201,7 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       refreshProfile,
     };
-  }, [user, session, profile, loading, signIn, verifyOtp, signOut, refreshProfile]);
+  }, [user, session, profile, loading, profileLoading, signIn, verifyOtp, signOut, refreshProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -217,4 +232,3 @@ export function useAuth(): AuthContextValue {
   }
   return context;
 }
-
